@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.O.C.O.M.</title>
+ <link rel="icon" type="image/png" href="https://www.socom.mil/SOF-ATL/PublishingImages/eSOF-Logo.png">
+    <style>
+        @keyframes flicker { 0%, 100% { opacity: 0.95; } 50% { opacity: 1; } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        :root {
+            --bg-color: #050805; --scanline-color: rgba(0, 255, 85, 0.1); --text-color: #00ff55;
+            --accent-color: #00ff55; --border-color: #00521d; --input-bg: rgba(0, 31, 9, 0.5);
+            --danger-color: #ff4141; --danger-bg: rgba(255, 65, 65, 0.15); --container-bg: rgba(0,0,0,0.4);
+        }
+        body.officer-theme {
+            --bg-color: #1a160d; --scanline-color: rgba(255, 196, 0, 0.1); --text-color: #ffc400;
+            --accent-color: #ffc400; --border-color: #6d530e; --input-bg: rgba(43, 34, 13, 0.5);
+            --container-bg: rgba(10, 8, 3, 0.4);
+        }
+        body.navy-theme {
+            --bg-color: #0a1128; --text-color: #7bceff; --accent-color: #7bceff; 
+            --border-color: #00306b; --input-bg: rgba(20, 39, 87, 0.5); --container-bg: rgba(4, 7, 15, 0.4);
+        }
+        body.marines-theme {
+            --bg-color: #1a0b0b; --text-color: #ff5252; --accent-color: #ff5252; 
+            --border-color: #6a0d0d; --input-bg: rgba(64, 13, 13, 0.5); --container-bg: rgba(10, 3, 3, 0.4);
+        }
+        body.airforce-theme {
+            --bg-color: #1d1d1f; --text-color: #d1d1d6; --accent-color: #d1d1d6; 
+            --border-color: #424245; --input-bg: rgba(50, 50, 56, 0.5); --container-bg: rgba(11, 11, 12, 0.4);
+        }
+        body.intelligence-theme {
+            --bg-color: #000000; --text-color: #ffffff; --accent-color: #ffffff;
+            --border-color: #555555; --input-bg: rgba(40, 40, 40, 0.5); --container-bg: rgba(10, 10, 10, 0.4);
+        }
+        body.plain-theme {
+            font-family: Arial, Helvetica, sans-serif;
+            --bg-color: #ffffff; --text-color: #000000; --accent-color: #005fcc;
+            --border-color: #cccccc; --input-bg: #f9f9f9; --danger-color: #dc3545;
+            --container-bg: rgba(248,248,248,0.8);
+            text-shadow: none; animation: none;
+        }
+        body.plain-theme .logo { filter: none; }
+        body.plain-theme h1::after { animation: none; content: ''; }
+        body.plain-theme button:hover { text-shadow: none; }
+        body.plain-theme::before { background: none; }
+
+        body {
+            font-family: 'Courier New', Courier, monospace; margin: 0; background-color: var(--bg-color); color: var(--text-color);
+            text-shadow: 0 0 4px var(--accent-color); animation: flicker 0.15s infinite; overflow-y: scroll;
+        }
+        body::before {
+            content: " "; display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(0deg, var(--scanline-color) 1px, transparent 1px);
+            background-size: 100% 2px; z-index: 100; pointer-events: none;
+        }
+
+        .container { position: relative; max-width: 1400px; margin: 10px auto; padding: 10px; border: 1px solid var(--border-color); background: var(--container-bg); }
+        .header { display: flex; align-items: center; border-bottom: 1px solid var(--accent-color); padding-bottom: 5px; margin-bottom: 15px; }
+        .logo { max-width: 80px; margin-right: 15px; filter: grayscale(100%) brightness(200%) contrast(150%); }
+
+        h1 { font-size: 22px; text-transform: uppercase; }
+        h1::after { content: '_'; animation: blink 1s step-end infinite; }
+        h2 { font-size: 16px; margin-top: 10px; margin-bottom: 10px; text-transform: uppercase; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; }
+        h3.sub-skill-header { font-size: 14px; text-transform: uppercase; border: none; margin: 0 0 5px 0; padding: 0;}
+
+        .main-menu, .loader-menu { text-align: center; padding: 30px; border: 1px solid var(--border-color); margin: 20px; background: var(--input-bg); }
+        button, .button {
+            background: transparent; color: var(--accent-color); border: 1px solid var(--accent-color);
+            padding: 8px 15px; font-size: 14px; cursor: pointer; margin: 5px;
+            font-family: 'Courier New', Courier, monospace; text-transform: uppercase;
+        }
+        body.plain-theme button { font-family: Arial, Helvetica, sans-serif; }
+        button:hover, .button:hover { background: var(--accent-color); color: var(--bg-color); text-shadow: none; }
+
+        .hidden { display: none !important; }
+
+        #character-sheet-container { padding: 10px; border: 1px solid var(--border-color); }
+        .form-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 10px; align-items: start;}
+        .col-1, .col-2 { display: flex; flex-direction: column; gap: 10px; }
+        .col-1 .form-section:last-child { flex-grow: 1; }
+        .form-section { background: var(--input-bg); padding: 10px; border: 1px solid var(--border-color); }
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+        
+        label { font-weight: bold; display: block; margin-bottom: 4px; color: var(--accent-color); font-size: 14px; }
+        input, select, textarea {
+            width: 100%; padding: 6px; box-sizing: border-box; background-color: var(--input-bg); color: var(--text-color);
+            border: 1px solid var(--border-color); font-family: 'Courier New', Courier, monospace;
+        }
+        body.plain-theme input, body.plain-theme select, body.plain-theme textarea { font-family: Arial, Helvetica, sans-serif; text-shadow: none; }
+        textarea { resize: vertical; min-height: 50px; }
+
+        .styled-checkbox { display: flex; align-items: center; cursor: pointer; user-select: none; }
+        .styled-checkbox input[type="checkbox"] { display: none; }
+        .styled-checkbox .checkbox-visual { width: 14px; height: 14px; border: 1px solid var(--accent-color); display: inline-block; position: relative; flex-shrink: 0; }
+        .styled-checkbox input[type="checkbox"]:checked + .checkbox-visual::after { content: 'X'; position: absolute; top: -2px; left: 2px; color: var(--accent-color); }
+
+        .stat-item { padding: 8px; border: 1px solid var(--border-color); }
+        .stat-header { display: flex; align-items: center; gap: 8px; }
+        .stat-header button { width: 22px; height: 22px; font-size: 14px; line-height: 14px; padding: 0; }
+        .stat-desc { font-size: 0.9em; color: #8fbc8f; margin-top: 3px; }
+        body.plain-theme .stat-desc { color: #555; text-shadow: none; }
+
+        .derived-attr-input { display: flex; align-items: center; gap: 4px; }
+        .derived-attr-input input { width: 50px; text-align: center; }
+
+        .bond-item { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+        .remove-btn { font-size: 14px; color: var(--danger-color); cursor: pointer; background: none; border: none; padding: 0 4px; }
+        
+        .san-loss-container { display: flex; flex-direction: column; gap: 5px; }
+        .san-loss-group { display: flex; align-items: center; justify-content: space-between; }
+        .san-loss-label { display: flex; align-items: center; gap: 10px; flex-basis: 150px; }
+        .san-loss-group div { display: flex; gap: 10px; }
+        .adapted-status { color: var(--danger-color); font-weight: bold;}
+        body:not(.plain-theme) .adapted-status { text-shadow: 0 0 5px var(--danger-color); }
+
+        #bp-warning { padding: 10px; margin-top: 10px; border: 1px solid var(--danger-color); background-color: var(--danger-bg); color: var(--danger-color); }
+        body:not(.plain-theme) #bp-warning { text-shadow: 0 0 5px var(--danger-color); }
+        #bp-warning button { border-color: var(--danger-color); color: var(--danger-color); }
+
+        #weapons-table td { padding: 4px; }
+        .input-group { display: flex; align-items: center; }
+        .input-group-addon { padding: 6px; background: var(--border-color); border: 1px solid var(--border-color); border-left: none; }
+        
+        #saved-sheets-list li { background: var(--input-bg); padding: 8px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; }
+        
+        .sub-skill-group { padding: 8px; border: 1px solid var(--border-color); }
+        .sub-skill-item { display: flex; align-items: center; margin-bottom: 5px; gap: 8px; }
+        .skill-item-simple { display: flex; align-items: center; gap: 8px; }
+        
+        .skill-label-input { display: flex; align-items: center; gap: 8px; width: 100%;}
+        .skill-label-input label { flex-shrink: 0; flex-basis: 120px; }
+        .skill-label-input input { flex-grow: 1; }
+        .sub-skill-item .skill-label-input label { flex-basis: 100px; white-space: nowrap; }
+
+        .sub-skill-header-flex { display: flex; justify-content: space-between; align-items: center; }
+        .sub-skill-header-flex button { padding: 2px 8px; font-size: 12px; margin: 0; }
+        
+        .settings-container { position: absolute; top: 10px; right: 10px; }
+        #settings-menu { display: none; position: absolute; top: 100%; right: 0; background: var(--bg-color); border: 1px solid var(--border-color); padding: 5px; z-index: 101; }
+        #settings-menu button { display: block; width: 100%; text-align: left; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- All HTML content will be injected by JavaScript -->
+    </div>
+
+<script>
+    // --- INJECT ALL HTML ---
+    document.querySelector('.container').innerHTML = `
+        <header class="header"> <img src="https://images.squarespace-cdn.com/content/v1/629e0596d168b365d297c6c4/cea70b06-895e-401c-9669-04fa59cfc5e6/socom-logo.png" alt="SOCOM Logo" class="logo"> <h1>S.O.C.O.M. // AGENT ROSTER</h1> </header>
+        <div class="settings-container"> <button id="settings-btn">⚙</button> <div id="settings-menu"> <button onclick="changeTheme('default')">Army (Green)</button> <button onclick="changeTheme('navy')">Navy (Blue)</button> <button onclick="changeTheme('marines')">Marines (Red)</button> <button onclick="changeTheme('airforce')">Air Force (Gray)</button> <button onclick="changeTheme('intelligence')">CIA/NSA (B&W)</button> <button onclick="changeTheme('officer')">Command (Gold)</button> <button onclick="changeTheme('plain')">Plain Mode</button> </div> </div>
+        <main id="main-view"> <div class="main-menu"> <h2>SYSTEM ACCESS</h2> <button onclick="resetForm(); showView('character-sheet'); ">> CREATE NEW AGENT FILE</button> <button onclick="showView('loader')">> LOAD AGENT FILE</button> </div> </main>
+        <main id="loader-view" class="hidden"> <div class="loader-menu"> <h2>LOAD AGENT</h2> <input type="file" id="json-file-input" accept=".json" onchange="loadCharacterFromFile(event)" class="button"> <h3>LOCAL SAVES</h3> <ul id="saved-sheets-list"></ul> <button onclick="showView('main')">> RETURN</button> </div> </main>
+        <main id="character-sheet-view" class="hidden"> <div id="character-sheet-container"> <button onclick="saveCharacter()">SAVE</button> <button onclick="exportToJson()">EXPORT TO .JSON</button> <button onclick="showView('main')">RETURN TO MENU</button> <form id="sheet-form" onsubmit="return false;"></form> </div> </main>
+    `;
+
+    document.getElementById('sheet-form').innerHTML = `
+        <input type="hidden" id="character-id">
+        <section class="form-section"> <h2>IDENTIFICATION</h2> <div class="grid-container" style="grid-template-columns: 1fr 1fr 1fr"> <div><label for="full-name">FULL NAME</label><input type="text" id="full-name"></div> <div><label for="branch">BRANCH</label><select id="branch" onchange="updateRanks()"></select></div> <div><label for="rank">RANK/GRADE</label><select id="rank" onchange="applyAutoTheme()"></select></div> <div><label for="team">TEAM</label><select id="team"><option>SOCOM 1</option><option>SOCOM 2</option><option>SOCOM 3</option><option>SOCOM 4</option><option>SOCOM 5</option><option>SOCOM 6</option></select></div> <div><label for="sex">SEX</label><select id="sex"><option>M</option><option>F</option><option>NA</option></select></div> <div><label for="dob">D.O.B.</label><input type="date" id="dob"></div> <div><label for="nationality">NATIONALITY</label><input type="text" id="nationality"></div> <div><label for="employer">EMPLOYER</label><input type="text" id="employer"></div> <div><label for="education">EDUCATION</label><input type="text" id="education"></div> </div> </section>
+        <div class="form-grid"> <div class="col-1"> <section class="form-section"> <h2>CORE ATTRIBUTES (<span id="stat-points-remaining">25</span> PTS)</h2> <div id="stats-container" style="display: flex; flex-direction: column; gap: 8px;"></div> </section> <section class="form-section"> <h2>DERIVED ATTRIBUTES</h2> <div class="grid-container" style="grid-template-columns: 1fr 1fr;"> <div><label>HIT POINTS (HP)</label><div class="derived-attr-input"><input type="number" id="hp-current" min="0"> / <span id="hp-max">0</span></div></div> <div><label>WILLPOWER (WP)</label><div class="derived-attr-input"><input type="number" id="wp-current" min="0"> / <span id="wp-max">0</span></div></div> <div><label>SANITY (SAN)</label><div class="derived-attr-input"><input type="number" id="san-current" min="0" oninput="checkBreakingPoint()"> / <span id="san-max">0</span></div></div> <div><label>BREAKING PT</label><input type="text" id="bp" readonly></div> </div> <div id="bp-warning" class="hidden"> SAN is at or below Breaking Point! Agent must acquire a new disorder. <button type="button" onclick="acknowledgeBreakingPoint()">ACK & RESET BP</button> </div> </section> <section class="form-section"> <div class="bonds-header" style="display: flex; justify-content: space-between; align-items: center;"> <h2>BONDS (<span id="bond-cha-note"></span>)</h2> <button type="button" onclick="addBond()">+ ADD</button> </div> <div id="bonds-container"></div> </section> <section class="form-section"> <h2 style="text-align: center; border:none; margin-bottom: 5px;">PSYCH PROFILE</h2> <div class="san-loss-container"> <div class="san-loss-group"> <div class="san-loss-label"> <label>VIOLENCE</label><span id="violence-adapted" class="adapted-status hidden">ADAPTED</span> </div> <div> <label class="styled-checkbox"><input type="checkbox" id="violence1" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="violence2" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="violence3" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> </div> </div> <div class="san-loss-group"> <div class="san-loss-label"> <label>HELPLESSNESS</label><span id="helplessness-adapted" class="adapted-status hidden">ADAPTED</span> </div> <div> <label class="styled-checkbox"><input type="checkbox" id="helplessness1" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="helplessness2" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="helplessness3" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> </div> </div> </div> </section> </div> <div class="col-2"> <section class="form-section" style="flex-grow: 1; display: flex; flex-direction: column;"> <h2>SKILLS</h2> <div id="skills-container" style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1;"></div> </section> </div> </div>
+        <section class="form-section"> <h2>WEAPONS & EQUIPMENT</h2> <label for="gear">ARMOR AND GEAR</label> <textarea id="gear"></textarea> <label for="notes-field" style="margin-top:10px;">NOTES</label> <textarea id="notes-field"></textarea> <h3 style="margin-top: 15px;">WEAPONS</h3> <table id="weapons-table" style="width:100%; border-collapse: collapse;"> <thead> <tr><th>NAME</th><th>SKILL%</th><th>RANGE</th><th>DMG</th><th>AP</th><th>LETHALITY</th><th>AMMO</th><th></th></tr> </thead> <tbody id="weapons-body"></tbody> </table> <button type="button" onclick="addWeapon()">+ ADD WEAPON</button> </section>
+    `;
+
+    // --- CONFIG ---
+    const MAX_STAT_POINTS = 25, MIN_STAT_VALUE = 8, MAX_STAT_VALUE = 18;
+    const branches = { "NSA": "intelligence", "CIA": "intelligence", "Army": "army", "Navy": "navy", "Marines": "marines", "Air Force": "airforce" };
+    const ranks = { intelligence: [ {name: "Case Officer", grade: "GS-11"}, {name: "Supervisory CO", grade: "GS-14"}, {name: "Chief of Station", grade: "SIS-2"} ], army: [ {name: "Sergeant", grade: "E-5"}, {name: "Staff Sergeant", grade: "E-6"}, {name: "Sergeant First Class", grade: "E-7"}, {name: "Master Sergeant", grade: "E-8"}, {name: "Second Lieutenant", grade: "O-1"}, {name: "First Lieutenant", grade: "O-2"}, {name: "Captain", grade: "O-3"} ], marines: [ {name: "Sergeant", grade: "E-5"}, {name: "Staff Sergeant", grade: "E-6"}, {name: "Gunnery Sergeant", grade: "E-7"}, {name: "Master Sergeant", grade: "E-8"}, {name: "Second Lieutenant", grade: "O-1"}, {name: "First Lieutenant", grade: "O-2"}, {name: "Captain", grade: "O-3"} ], navy: [ {name: "Petty Officer 2nd Class", grade: "E-5"}, {name: "Petty Officer 1st Class", grade: "E-6"}, {name: "Chief Petty Officer", grade: "E-7"}, {name: "Senior Chief Petty Officer", grade: "E-8"}, {name: "Ensign", grade: "O-1"}, {name: "Lieutenant (JG)", grade: "O-2"}, {name: "Lieutenant", grade: "O-3"} ], airforce: [ {name: "Staff Sergeant", grade: "E-5"}, {name: "Technical Sergeant", grade: "E-6"}, {name: "Master Sergeant", grade: "E-7"}, {name: "Senior Master Sergeant", grade: "E-8"}, {name: "Second Lieutenant", grade: "O-1"}, {name: "First Lieutenant", grade: "O-2"}, {name: "Captain", grade: "O-3"} ] };
+    const stats = ["STR", "DEX", "CON", "INT", "POW", "CHA"];
+    const simpleSkills = [ "Accounting", "Alertness", "Artillery", "Athletics", "Criminology", "Disguise", "Dodge", "Drive", "Firearms", "First Aid", "Forensics", "Heavy Machinery", "Heavy Weapons", "Human Studies", "HUMINT", "Leadership", "Medicine", "Melee Weapons", "Navigate", "Paranormal", "Persuade", "Pharmacy", "Psychotherapy", "Ride", "Search", "SIGINT", "Stealth", "Support Int.", "Surgery", "Survival", "Swim", "Tech Procedures", "Unarmed Combat" ].sort();
+    const baseSkillValues = { 'Accounting': 10, 'Alertness': 20, 'Athletics': 30, 'Disguise': 10, 'Dodge': 30, 'Drive': 20, 'Firearms': 20, 'First Aid': 10, 'Heavy Machinery': 10, 'Human Studies': 10, 'Melee Weapons': 30, 'Navigate': 10, 'Paranormal': 10, 'Persuade': 20, 'Psychotherapy': 10, 'Ride': 10, 'Search': 20, 'Survival': 10, 'Swim': 20, 'Tech Procedures': 10, 'Unarmed Combat': 40 };
+    const statDescriptions = { STR: { 3: "Frail", 6: "Below Average", 9: "Average", 12: "Strong", 15: "Powerful", 18: "Peak Human" }, DEX: { 3: "Clumsy", 6: "Slow", 9: "Average", 12: "Agile", 15: "Nimble", 18: "Lightning Reflexes" }, CON: { 3: "Sickly", 6: "Frail", 9: "Average", 12: "Hardy", 15: "Tough", 18: "Superhuman Endurance" }, INT: { 3: "Dim", 6: "Slow Learner", 9: "Average", 12: "Sharp", 15: "Brilliant", 18: "Genius" }, POW: { 3: "Weak-willed", 6: "Hesitant", 9: "Average", 12: "Determined", 15: "Indomitable", 18: "Unyielding Will" }, CHA: { 3: "Unlikable", 6: "Awkward", 9: "Average", 12: "Likable", 15: "Charismatic", 18: "Compelling Presence" } };
+    
+    // --- INITIALIZATION ---
+    window.onload = () => { populateBranches(); populateStats(); populateSkills(); loadSavedSheets(); applySavedTheme(); document.getElementById('settings-btn').addEventListener('click', () => { document.getElementById('settings-menu').style.display = document.getElementById('settings-menu').style.display === 'block' ? 'none' : 'block'; }); };
+    
+    function resetForm() { document.getElementById('sheet-form').reset(); document.getElementById('bonds-container').innerHTML = ''; document.getElementById('weapons-body').innerHTML = ''; populateSkills(); populateStats(); addBond(); addBond(); addBond(); updateAllCalculations(); checkAdaptedStatus(); }
+    
+    function populateBranches() { document.getElementById('branch').innerHTML = Object.keys(branches).map(b => `<option value="${b}">${b.toUpperCase()}</option>`).join(''); }
+    function populateStats() { document.getElementById('stats-container').innerHTML = stats.map(stat => `<div class="stat-item"><div class="stat-header"><label>${stat}</label><button type="button" onclick="changeStat('${stat}', -1)">-</button><input type="number" id="${stat}" value="${MIN_STAT_VALUE}" readonly><button type="button" onclick="changeStat('${stat}', 1)">+</button><span id="${stat}x5">x5: 0</span></div><div id="${stat}-desc" class="stat-desc"></div></div>`).join(''); }
+    function populateSkills() { const container = document.getElementById('skills-container'); let html = '<div class="grid-container" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); grid-auto-rows: min-content; align-items: start;">'; html += simpleSkills.map(skill => { const baseValue = baseSkillValues[skill] || 0; const skillId = `skill-${skill.replace(/\s+/g, '-')}`; return `<div class="skill-item-simple"><label class="styled-checkbox"><input type="checkbox" id="check-${skillId}"><span class="checkbox-visual"></span></label><div class="skill-label-input"><label for="${skillId}">${skill.toUpperCase()}</label><input type="number" id="${skillId}" min="0" max="100" value="${baseValue}"></div></div>`; }).join(''); html += '</div>'; html += '<div class="grid-container" style="grid-template-columns: 1fr 1fr; align-items: stretch; margin-top: 10px;">'; html += `<div><div class="sub-skill-group"> <h3 class="sub-skill-header">Military Science</h3> <div class="sub-skill-item"><label class="styled-checkbox"><input type="checkbox" id="check-skill-milsci-land"><span class="checkbox-visual"></span></label><div class="skill-label-input"><label>Land</label><input type="number" id="skill-milsci-land" value="0" min="0" max="100"></div></div> <div class="sub-skill-item"><label class="styled-checkbox"><input type="checkbox" id="check-skill-milsci-sea"><span class="checkbox-visual"></span></label><div class="skill-label-input"><label>Sea</label><input type="number" id="skill-milsci-sea" value="0" min="0" max="100"></div></div> <div class="sub-skill-item"><label class="styled-checkbox"><input type="checkbox" id="check-skill-milsci-air"><span class="checkbox-visual"></span></label><div class="skill-label-input"><label>Air</label><input type="number" id="skill-milsci-air" value="0" min="0" max="100"></div></div> </div><div class="sub-skill-group" style="margin-top: 10px;"> <h3 class="sub-skill-header">Pilot</h3> <div class="sub-skill-item"><label class="styled-checkbox"><input type="checkbox" id="check-skill-pilot-airplane"><span class="checkbox-visual"></span></label><div class="skill-label-input"><label>Airplane</label><input type="number" id="skill-pilot-airplane" value="0" min="0" max="100"></div></div> <div class="sub-skill-item"><label class="styled-checkbox"><input type="checkbox" id="check-skill-pilot-helicopter"><span class="checkbox-visual"></span></label><div class="skill-label-input"><label>Helicopter</label><input type="number" id="skill-pilot-helicopter" value="0" min="0" max="100"></div></div> <div class="sub-skill-item"><label class="styled-checkbox"><input type="checkbox" id="check-skill-pilot-boat"><span class="checkbox-visual"></span></label><div class="skill-label-input"><label>Boat</label><input type="number" id="skill-pilot-boat" value="0" min="0" max="100"></div></div> <div class="sub-skill-item"><label class="styled-checkbox"><input type="checkbox" id="check-skill-pilot-rc"><span class="checkbox-visual"></span></label><div class="skill-label-input"><label>RC/Drone</label><input type="number" id="skill-pilot-rc" value="0" min="0" max="100"></div></div> </div></div>`; html += `<div class="sub-skill-group"> <h3 class="sub-skill-header">Science</h3> <div class="sub-skill-item"><label class="styled-checkbox"><input type="checkbox" id="check-skill-science-biology"><span class="checkbox-visual"></span></label><div class="skill-label-input"><label>Biology</label><input type="number" id="skill-science-biology" value="0" min="0" max="100"></div></div> <div class="sub-skill-item"><label class="styled-checkbox"><input type="checkbox" id="check-skill-science-chemistry"><span class="checkbox-visual"></span></label><div class="skill-label-input"><label>Chemistry</label><input type="number" id="skill-science-chemistry" value="0" min="0" max="100"></div></div> <div class="sub-skill-item"><label class="styled-checkbox"><input type="checkbox" id="check-skill-science-mathematics"><span class="checkbox-visual"></span></label><div class="skill-label-input"><label>Mathematics</label><input type="number" id="skill-science-mathematics" value="0" min="0" max="100"></div></div> <div class="sub-skill-item"><label class="styled-checkbox"><input type="checkbox" id="check-skill-science-physics"><span class="checkbox-visual"></span></label><div class="skill-label-input"><label>Physics</label><input type="number" id="skill-science-physics" value="0" min="0" max="100"></div></div> </div>`; html += '</div>'; html += '<div class="grid-container" style="grid-template-columns: 1fr 1fr; margin-top: 10px;">'; html += `<div class="sub-skill-group"> <div class="sub-skill-header-flex"><h3 class="sub-skill-header">Craft</h3><button type="button" onclick="addCraftSkill()">+ ADD</button></div> <div id="craft-skills-container"></div> </div>`; html += `<div class="sub-skill-group"> <div class="sub-skill-header-flex"><h3 class="sub-skill-header">Foreign Language</h3><button type="button" onclick="addLanguageSkill()">+ ADD</button></div> <div id="language-skills-container"></div> </div>`; html += '</div>'; container.innerHTML = html; }
+
+    // --- THEME MANAGEMENT ---
+    function changeTheme(theme) { localStorage.setItem('socom_theme', theme); applyCurrentTheme(theme); }
+    function applyCurrentTheme(theme) { document.body.className = ''; if (theme !== 'default') document.body.classList.add(theme + '-theme'); }
+    function applySavedTheme() { const savedTheme = localStorage.getItem('socom_theme'); if (savedTheme) applyCurrentTheme(savedTheme); else applyAutoTheme(); }
+    function applyAutoTheme() {
+        const savedTheme = localStorage.getItem('socom_theme');
+        if (savedTheme && savedTheme !== 'default' && savedTheme !== 'army') { applyCurrentTheme(savedTheme); return; } 
+
+        document.body.className = ''; 
+        const rankSelect = document.getElementById('rank');
+        const grade = rankSelect.options[rankSelect.selectedIndex]?.dataset.grade;
+        const officerGrades = ['O-1','O-2','O-3','GS-14','SIS-2'];
+        if (grade && officerGrades.includes(grade)) { document.body.classList.add('officer-theme'); return; }
+
+        const branchType = branches[document.getElementById('branch').value];
+        if (branchType && branchType !== 'army') { document.body.classList.add(branchType + '-theme'); }
+    }
+
+    // --- VIEW MANAGEMENT & UI/CALCS ---
+    function showView(viewId) { document.querySelectorAll('main').forEach(el => el.classList.add('hidden')); const viewEl = document.getElementById(`${viewId}-view`); if(viewEl){ viewEl.classList.remove('hidden'); if(viewId === 'loader') loadSavedSheets();} }
+    function updateRanks() { const rankType = branches[document.getElementById('branch').value] || 'intelligence'; document.getElementById('rank').innerHTML = ranks[rankType].map(r => `<option value="${r.name}" data-grade="${r.grade}">${r.name} (${r.grade})</option>`).join(''); applyAutoTheme(); }
+    function changeStat(stat, delta) { const input = document.getElementById(stat); let pointsSpent = stats.reduce((acc, s) => acc + (parseInt(document.getElementById(s).value) - MIN_STAT_VALUE), 0); let currentValue = parseInt(input.value); if (delta > 0 && pointsSpent < MAX_STAT_POINTS && currentValue < MAX_STAT_VALUE) { input.value = currentValue + 1; } else if (delta < 0 && currentValue > MIN_STAT_VALUE) { input.value = currentValue - 1; } updateAllCalculations(); }
+    function updateAllCalculations() { let pointsSpent = 0; stats.forEach(stat => { const value = parseInt(document.getElementById(stat).value); pointsSpent += (value - MIN_STAT_VALUE); document.getElementById(`${stat}x5`).textContent = `x5: ${value * 5}`; document.getElementById(`${stat}-desc`).textContent = getStatDescription(stat, value); }); document.getElementById('stat-points-remaining').textContent = MAX_STAT_POINTS - pointsSpent; updateDerivedAttributes(); updateBondScores(); }
+    function updateDerivedAttributes() { const str = parseInt(document.getElementById('STR').value), con = parseInt(document.getElementById('CON').value), pow = parseInt(document.getElementById('POW').value); const hpMax = Math.ceil((str + con) / 2), wpMax = pow, sanMax = pow * 5; ['hp', 'wp', 'san'].forEach(attr => { const current = document.getElementById(`${attr}-current`); const maxEl = document.getElementById(`${attr}-max`); const maxVal = eval(`${attr}Max`); maxEl.textContent = maxVal; current.max = maxVal; current.value = maxVal; }); document.getElementById('bp').value = Math.max(0, parseInt(document.getElementById('san-max').textContent) - pow); checkBreakingPoint(); }
+    function checkBreakingPoint() { const sanCurrent = parseInt(document.getElementById('san-current').value), bp = parseInt(document.getElementById('bp').value); document.getElementById('bp-warning').classList.toggle('hidden', sanCurrent > bp); }
+    function acknowledgeBreakingPoint() { document.getElementById('bp').value = Math.max(0, parseInt(document.getElementById('san-current').value) - parseInt(document.getElementById('POW').value)); document.getElementById('bp-warning').classList.add('hidden'); }
+    function getStatDescription(stat, val) { const tiers = statDescriptions[stat]; let desc = tiers[val] || ''; for (const key in tiers) { if (val >= key) desc = tiers[key]; } return `// ${desc}`; }
+    
+    // --- INTERACTIVE SECTIONS ---
+    function checkAdaptedStatus() { const violenceCount = document.querySelectorAll('#violence1:checked, #violence2:checked, #violence3:checked').length; document.getElementById('violence-adapted').classList.toggle('hidden', violenceCount < 3); const helplessnessCount = document.querySelectorAll('#helplessness1:checked, #helplessness2:checked, #helplessness3:checked').length; document.getElementById('helplessness-adapted').classList.toggle('hidden', helplessnessCount < 3); }
+    function addCraftSkill(data = {}){ const container = document.getElementById('craft-skills-container'); const item = document.createElement('div'); item.className = 'sub-skill-item'; const craftTypes = ['Gunsmith', 'Locksmith', 'Mechanic', 'Microelectronics', 'Explosives']; let options = craftTypes.map(c => `<option value="${c}" ${c === data.type ? 'selected' : ''}>${c}</option>`).join(''); item.innerHTML = `<label class="styled-checkbox"><input type="checkbox" ${data.checked ? 'checked' : ''}><span class="checkbox-visual"></span></label><div class="skill-label-input"><select>${options}</select><input type="number" min="0" max="100" value="${data.score || 0}"></div><button class="remove-btn" onclick="this.parentElement.remove()">X</button>`; container.appendChild(item); }
+    function addLanguageSkill(data = {}){ const container = document.getElementById('language-skills-container'); const item = document.createElement('div'); item.className = 'sub-skill-item'; item.innerHTML = `<label class="styled-checkbox"><input type="checkbox" ${data.checked ? 'checked' : ''}><span class="checkbox-visual"></span></label><div class="skill-label-input"><input type="text" placeholder="Language" value="${data.lang || ''}"><input type="number" min="0" max="100" value="${data.score || 0}"></div><button class="remove-btn" onclick="this.parentElement.remove()">X</button>`; container.appendChild(item); }
+    function addWeapon(data = {}) { const newRow = document.getElementById('weapons-body').insertRow(); newRow.innerHTML = `<td><input type="text" value="${data.name || ''}"></td><td><input type="number" min="0" max="100" value="${data.skill || ''}"></td><td><div class="input-group"><input type="number" min="0" value="${data.range || ''}"><span class="input-group-addon">m</span></div></td><td><input type="text" value="${data.dmg || ''}"></td><td><input type="text" value="${data.ap || ''}"></td><td><div class="input-group"><input type="number" min="0" max="100" value="${data.lethality || ''}"><span class="input-group-addon">%</span></div></td><td><div class="derived-attr-input"><input type="number" min="0" value="${data.ammoC || ''}"> / <input type="number" min="0" value="${data.ammoM || ''}"></div></td><td><button type="button" class="remove-btn" onclick="this.closest('tr').remove()">X</button></td>`; }
+    function addBond(data = {}) { const container = document.getElementById('bonds-container'); const item = document.createElement('div'); item.className = 'bond-item'; item.innerHTML = `<label class="styled-checkbox"><input type="checkbox" ${data.checked ? 'checked' : ''}><span class="checkbox-visual"></span></label><input type="text" placeholder="Bond Name" value="${data.name || ''}"><select class="bond-score"></select><button class="remove-btn" onclick="this.parentElement.remove()">X</button>`; container.appendChild(item); updateBondScores(); if(data.score) item.querySelector('.bond-score').value = data.score; }
+    function updateBondScores() { const cha = parseInt(document.getElementById('CHA').value) || 0; document.getElementById('bond-cha-note').textContent = `MAX SCORE: ${cha}`; document.querySelectorAll('.bond-score').forEach(select => { const currentScore = select.value; let options = ''; for (let i = 0; i <= cha; i++) { options += `<option value="${i}">${i}</option>`; } select.innerHTML = options; select.value = Math.min(currentScore, cha); }); }
+    
+    // --- DATA MANAGEMENT ---
+    function getCompleteFormData() { const data = { id: document.getElementById('character-id').value || `sheet_${Date.now()}` }; document.querySelectorAll('#sheet-form [id]').forEach(el => { if (el.id) data[el.id] = el.type === 'checkbox' ? el.checked : el.value; }); data.crafts = Array.from(document.querySelectorAll('#craft-skills-container .sub-skill-item')).map(item => ({checked: item.querySelector('input[type=checkbox]').checked, type: item.querySelector('select').value, score: item.querySelector('input[type=number]').value})); data.languages = Array.from(document.querySelectorAll('#language-skills-container .sub-skill-item')).map(item => ({checked: item.querySelector('input[type=checkbox]').checked, lang: item.querySelector('input[type=text]').value, score: item.querySelector('input[type=number]').value})); data.weapons = Array.from(document.querySelectorAll('#weapons-body tr')).map(row => { const i = row.querySelectorAll('input'); return { name: i[0].value, skill: i[1].value, range: i[2].value, dmg: i[3].value, ap: i[4].value, lethality: i[5].value, ammoC: i[6].value, ammoM: i[7].value }; }); data.bonds = Array.from(document.querySelectorAll('.bond-item')).map(item => ({ checked: item.querySelector('input[type="checkbox"]').checked, name: item.querySelector('input[type="text"]').value, score: item.querySelector('select').value })); return data; }
+    function populateCompleteForm(data) { resetForm(); Object.keys(data).forEach(key => { if (!['weapons', 'bonds', 'crafts', 'languages'].includes(key)) { const el = document.getElementById(key); if (el) { el[el.type === 'checkbox' ? 'checked' : 'value'] = data[key]; } } }); document.getElementById('bonds-container').innerHTML = ''; if (data.crafts) data.crafts.forEach(c => addCraftSkill(c)); if (data.languages) data.languages.forEach(l => addLanguageSkill(l)); if (data.weapons) data.weapons.forEach(w => addWeapon(w)); if (data.bonds && data.bonds.length > 0) data.bonds.forEach(b => addBond(b)); else { addBond(); addBond(); addBond(); } updateAllCalculations(); checkAdaptedStatus(); applyAutoTheme(); }
+    function saveCharacter() { const data = getCompleteFormData(); const name = data['full-name'] || 'UNNAMED_AGENT'; const sheetName = prompt("Save file as:", name); if (sheetName) { localStorage.setItem(data.id, JSON.stringify({ name: sheetName, ...data })); alert(`Agent file '${sheetName}' saved locally.`); loadSavedSheets(); } }
+    function loadSavedSheets() { const list = document.getElementById('saved-sheets-list'); list.innerHTML = ''; for (let i = 0; i < localStorage.length; i++) { const key = localStorage.key(i); if (key.startsWith('sheet_')) { const data = JSON.parse(localStorage.getItem(key)); const li = document.createElement('li'); li.innerHTML = `<span>${data.name}</span><div><button onclick="renameSheet('${key}')">RENAME</button><button onclick="loadSheet('${key}')">LOAD</button><button class="remove-btn" onclick="deleteSheet('${key}')">DELETE</button></div>`; list.appendChild(li); } } }
+    function loadSheet(key) { populateCompleteForm(JSON.parse(localStorage.getItem(key))); showView('character-sheet'); }
+    function deleteSheet(key) { if(confirm("DELETE FILE?")){ localStorage.removeItem(key); loadSavedSheets(); }}
+    function renameSheet(key) { const data = JSON.parse(localStorage.getItem(key)); const newName = prompt("New filename:", data.name); if (newName) { data.name = newName; localStorage.setItem(key, JSON.stringify(data)); loadSavedSheets(); } }
+    function loadCharacterFromFile(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = e => { populateCompleteForm(JSON.parse(e.target.result)); showView('character-sheet'); }; reader.readAsText(file); }
+    function exportToJson(){ const data = getCompleteFormData(); const jsonString = JSON.stringify(data, null, 2); const blob = new Blob([jsonString], {type: "application/json"}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${(data['full-name'] || 'agent').replace(/\s+/g, '_')}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
+</script>
+
+</body>
+</html>
