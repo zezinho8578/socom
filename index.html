@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>S.O.C.O.M.</title>
- <link rel="icon" type="image/png" href="https://www.socom.mil/SOF-ATL/PublishingImages/eSOF-Logo.png">
+    <link rel="icon" type="image/png" href="https://www.socom.mil/SOF-ATL/PublishingImages/eSOF-Logo.png">
+    <!-- ADDED a library to handle screenshotting -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
         @keyframes flicker { 0%, 100% { opacity: 0.95; } 50% { opacity: 1; } }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
@@ -74,6 +76,7 @@
         }
         body.plain-theme button { font-family: Arial, Helvetica, sans-serif; }
         button:hover, .button:hover { background: var(--accent-color); color: var(--bg-color); text-shadow: none; }
+        button:disabled { cursor: not-allowed; opacity: 0.5; }
 
         .hidden { display: none !important; }
 
@@ -156,7 +159,7 @@
         <div class="settings-container"> <button id="settings-btn">⚙</button> <div id="settings-menu"> <button onclick="changeTheme('default')">Army (Green)</button> <button onclick="changeTheme('navy')">Navy (Blue)</button> <button onclick="changeTheme('marines')">Marines (Red)</button> <button onclick="changeTheme('airforce')">Air Force (Gray)</button> <button onclick="changeTheme('intelligence')">CIA/NSA (B&W)</button> <button onclick="changeTheme('officer')">Command (Gold)</button> <button onclick="changeTheme('plain')">Plain Mode</button> </div> </div>
         <main id="main-view"> <div class="main-menu"> <h2>SYSTEM ACCESS</h2> <button onclick="resetForm(); showView('character-sheet'); ">> CREATE NEW AGENT FILE</button> <button onclick="showView('loader')">> LOAD AGENT FILE</button> </div> </main>
         <main id="loader-view" class="hidden"> <div class="loader-menu"> <h2>LOAD AGENT</h2> <input type="file" id="json-file-input" accept=".json" onchange="loadCharacterFromFile(event)" class="button"> <h3>LOCAL SAVES</h3> <ul id="saved-sheets-list"></ul> <button onclick="showView('main')">> RETURN</button> </div> </main>
-        <main id="character-sheet-view" class="hidden"> <div id="character-sheet-container"> <button onclick="saveCharacter()">SAVE</button> <button onclick="exportToJson()">EXPORT TO .JSON</button> <button onclick="showView('main')">RETURN TO MENU</button> <form id="sheet-form" onsubmit="return false;"></form> </div> </main>
+        <main id="character-sheet-view" class="hidden"> <div id="character-sheet-container"> <button onclick="saveCharacter()">SAVE</button><button onclick="screenshotPage(event)">SCREENSHOT</button><button onclick="exportToJson()">EXPORT TO .JSON</button> <button onclick="showView('main')">RETURN TO MENU</button> <form id="sheet-form" onsubmit="return false;"></form> </div> </main>
     `;
 
     document.getElementById('sheet-form').innerHTML = `
@@ -230,6 +233,41 @@
     function renameSheet(key) { const data = JSON.parse(localStorage.getItem(key)); const newName = prompt("New filename:", data.name); if (newName) { data.name = newName; localStorage.setItem(key, JSON.stringify(data)); loadSavedSheets(); } }
     function loadCharacterFromFile(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = e => { populateCompleteForm(JSON.parse(e.target.result)); showView('character-sheet'); }; reader.readAsText(file); }
     function exportToJson(){ const data = getCompleteFormData(); const jsonString = JSON.stringify(data, null, 2); const blob = new Blob([jsonString], {type: "application/json"}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${(data['full-name'] || 'agent').replace(/\s+/g, '_')}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
+    
+    // --- ADDED a new function for screenshotting ---
+    function screenshotPage(event) {
+        const btn = event.currentTarget;
+        const originalText = btn.textContent;
+        btn.textContent = '...CAPTURING...';
+        btn.disabled = true;
+
+        // Use html2canvas to capture the main container of the page
+        html2canvas(document.querySelector('.container'), {
+            useCORS: true, // Allows loading the external SOCOM logo image
+            allowTaint: true,
+            scrollX: 0,
+            scrollY: -window.scrollY // Ensures capture starts from the top
+        }).then(canvas => {
+            // Create a temporary link element
+            const a = document.createElement('a');
+            // Get the image data from the canvas
+            a.href = canvas.toDataURL('image/png', 1.0);
+            // Set the filename for the download
+            const agentName = document.getElementById('full-name').value || 'UNNAMED_AGENT';
+            a.download = `${agentName.replace(/\s+/g, '_')}_Sheet.png`;
+            // Programmatically click the link to trigger the download
+            a.click();
+            // Clean up the temporary link
+            a.remove();
+        }).catch(err => {
+            console.error('Screenshot failed:', err);
+            alert('Could not capture screenshot. See console for details.');
+        }).finally(() => {
+            // Restore the button to its original state
+            btn.textContent = originalText;
+            btn.disabled = false;
+        });
+    }
 </script>
 
 </body>
