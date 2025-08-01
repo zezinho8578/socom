@@ -200,14 +200,19 @@
         <header class="header"> <img src="https://images.squarespace-cdn.com/content/v1/629e0596d168b365d297c6c4/cea70b06-895e-401c-9669-04fa59cfc5e6/socom-logo.png" alt="SOCOM Logo" class="logo"> <h1>S.O.C.O.M. // AGENT ROSTER</h1> </header>
         <div class="settings-container"> <button id="settings-btn">⚙</button> <div id="settings-menu"> <button onclick="changeTheme('default')">Army (Green)</button> <button onclick="changeTheme('navy')">Navy (Blue)</button> <button onclick="changeTheme('marines')">Marines (Red)</button> <button onclick="changeTheme('airforce')">Air Force (Gray)</button> <button onclick="changeTheme('intelligence')">CIA/NSA (B&W)</button> <button onclick="changeTheme('officer')">Command (Gold)</button> <button onclick="changeTheme('plain')">Plain Mode</button><button id="admin-login-btn" onclick="toggleAdminMode()">Admin Login</button> </div> </div>
         
-        <!-- // --- MODIFICATION 1 of 3: Added the history feed HTML inside main-menu --- // -->
         <main id="main-view">
             <div class="main-menu">
                 <h2>SYSTEM ACCESS</h2>
+                
+                <!-- // --- MODIFIED HTML for History Feed --- // -->
                 <div id="daily-briefing" style="margin-bottom: 20px; border: 1px solid var(--border-color); padding: 10px; text-align: left; font-size: 0.9em;">
-                    <h3 style="border: none; margin: 0 0 5px 0;">THIS DAY IN HISTORY // SYSTEM DATE</h3>
-                    <p id="history-content" style="margin: 0; line-height: 1.4;">...LOADING HISTORICAL DATA...</p>
+                    <h3 id="history-title" style="border: none; margin: 0 0 10px 0;">INTEL BRIEFING // SYSTEM DATE</h3>
+                    <div style="display: flex; align-items: flex-start; gap: 15px;">
+                        <p id="history-content" style="margin: 0; line-height: 1.4; flex: 1;">...LOADING HISTORICAL DATA...</p>
+                        <img id="history-image" src="" alt="Historical event" style="width: 130px; height: auto; border: 1px solid var(--border-color); object-fit: cover; display: none;">
+                    </div>
                 </div>
+
                 <button onclick="resetForm(); showView('character-sheet'); ">> CREATE NEW AGENT FILE</button>
                 <button onclick="showView('loader')">> LOAD AGENT FILE</button>
                 <button onclick="showView('rules')">> RULES</button>
@@ -220,39 +225,17 @@
         <main id="rules-view" class="hidden"> 
             <div class="content-menu"> 
                 <h2 style="text-align: center;">RULES OF ENGAGEMENT</h2>
-                
-                <h2>Be Civil, Be Respectful.</h2>
-                <p>SOCOM is intended to be a dark and intense game, but we're all here to have fun. Horror is in-character and respect is out-of-character. Don't make it personal and don't take things to the heart.</p>
-                
-                <h2>About PvP.</h2>
-                <p>Tension between characters happens - distrust, paranoia, and conflicting agendas are part of the setting. But player consent is key before betrayal, sabotage, or character-on-character violence. NEMESIS will not tolerate out-of-character grudges; keep the drama in the game.</p>
-                
-                <h2>Communication and Versimilitude.</h2>
-                <p>If you're unsure about something, ask - NEMESIS will always answer. Work with the other players to build suspense and tension and keep the setting immersive. Paranoia is more fun with friends.</p>
-                
-                <h2>Death (and Worse) is Part of the Game.</h2>
-                <p>Your character is not a hero, and they are not safe. SOCOM is about failure, creeping dread, and moral collapse with the occasional success. Expect your character to die, disappear, go insane, or worse. When that happens, we'll work together to bring in a new agent.</p>
-                
-                <h2>No Metagaming, No Powergaming</h2>
-                <p>Metagaming (using OOC knowledge IC) ruins the experience - act on what your character knows, not what you do. Powergaming (forcing actions on others or breaking realism) doesn't fit this setting. Be prepared for failures and bad choices.</p>
-                
-                <h2>Trust NEMESIS, but Question Everything</h2>
-                <p>NEMESIS is not your enemy, but will make your character suffer. If something seems off in the story, that's probably intentional. Keep your eyes open. Assume you're being lied to. And remember that no one is coming to save you.</p>
-                
+                <h2>Be Civil, Be Respectful.</h2> <p>SOCOM is intended to be a dark and intense game, but we're all here to have fun. Horror is in-character and respect is out-of-character. Don't make it personal and don't take things to the heart.</p>
+                <h2>About PvP.</h2> <p>Tension between characters happens - distrust, paranoia, and conflicting agendas are part of the setting. But player consent is key before betrayal, sabotage, or character-on-character violence. NEMESIS will not tolerate out-of-character grudges; keep the drama in the game.</p>
+                <h2>Communication and Versimilitude.</h2> <p>If you're unsure about something, ask - NEMESIS will always answer. Work with the other players to build suspense and tension and keep the setting immersive. Paranoia is more fun with friends.</p>
+                <h2>Death (and Worse) is Part of the Game.</h2> <p>Your character is not a hero, and they are not safe. SOCOM is about failure, creeping dread, and moral collapse with the occasional success. Expect your character to die, disappear, go insane, or worse. When that happens, we'll work together to bring in a new agent.</p>
+                <h2>No Metagaming, No Powergaming</h2> <p>Metagaming (using OOC knowledge IC) ruins the experience - act on what your character knows, not what you do. Powergaming (forcing actions on others or breaking realism) doesn't fit this setting. Be prepared for failures and bad choices.</p>
+                <h2>Trust NEMESIS, but Question Everything</h2> <p>NEMESIS is not your enemy, but will make your character suffer. If something seems off in the story, that's probably intentional. Keep your eyes open. Assume you're being lied to. And remember that no one is coming to save you.</p>
                 <h2 style="text-align: center; font-size: 1.1em;">CONTENT WARNINGS</h2>
                 <p>SOCOM Operations will often contain multiple of the contents detailed below:</p>
-                <ul>
-                    <li>Violence, Gore and Death</li>
-                    <li>Torture and Enhanced Interrogation</li>
-                    <li>Psychological Horror and Trauma</li>
-                    <li>Body Horror</li>
-                    <li>Substance Abuse</li>
-                </ul>
+                <ul> <li>Violence, Gore and Death</li> <li>Torture and Enhanced Interrogation</li> <li>Psychological Horror and Trauma</li> <li>Body Horror</li> <li>Substance Abuse</li> </ul>
                 <p>No explicit sexual content is included in SOCOM, although it can be implied/mentioned.</p>
-
-                <div style="text-align: center; margin-top: 30px;">
-                    <button onclick="showView('main')">> RETURN TO MENU</button> 
-                </div>
+                <div style="text-align: center; margin-top: 30px;"> <button onclick="showView('main')">> RETURN TO MENU</button> </div>
             </div> 
         </main>
         <main id="about-view" class="hidden"> 
@@ -261,20 +244,9 @@
                 <p>SOCOM is a serialized, operation-based TTRPG using a slightly modified <a href="https://www.deltagreen.com" target="_blank" rel="noopener noreferrer" class="themed-link">Delta Green</a> system set from the 1990s through the 2010s, with most missions unfolding in a post-9/11 world. As America wages covert wars across the globe and at home, a clandestine task force known as N.E.M.E.S.I.S., comprised of elite operatives from the CIA, NSA, and the U.S. military, carries out black ops in the name of national security.</p>
                 <p>Players assume the roles of N.E.M.E.S.I.S. agents: psyops, field tacticians, analysts, and infiltrators tasked with counterterrorism, espionage, information warfare, and the moral rot that comes with them.</p>
                 <p style="margin-top: 25px;"><em>Inspired by Metal Gear Solid, Call of Duty, Splinter Cell and The Hunt for Red October.</em></p>
-                
-                <p style="font-size: 1.2em; text-align: center; font-style: italic; margin-top: 40px; margin-bottom: 20px;">
-                    <a href="https://discord.gg/g8DgxusP9u" target="_blank" rel="noopener noreferrer" class="themed-link">/De Opresso Liber/</a>
-                </p>
-                
-                <div style="text-align: center; margin-bottom: 40px;">
-                    <a href="https://www.socom.mil/" target="_blank" rel="noopener noreferrer">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/SpecialForces_Badge.svg/1200px-SpecialForces_Badge.svg.png" alt="Green Berets Logo" class="logo" style="height: 70px; margin-right: 0;">
-                    </a>
-                </div>
-                
-                <div style="text-align: center;">
-                    <button onclick="showView('main')">> RETURN TO MENU</button> 
-                </div>
+                <p style="font-size: 1.2em; text-align: center; font-style: italic; margin-top: 40px; margin-bottom: 20px;"> <a href="https://discord.gg/g8DgxusP9u" target="_blank" rel="noopener noreferrer" class="themed-link">/De Opresso Liber/</a> </p>
+                <div style="text-align: center; margin-bottom: 40px;"> <a href="https://www.socom.mil/" target="_blank" rel="noopener noreferrer"> <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/SpecialForces_Badge.svg/1200px-SpecialForces_Badge.svg.png" alt="Green Berets Logo" class="logo" style="height: 70px; margin-right: 0;"> </a> </div>
+                <div style="text-align: center;"> <button onclick="showView('main')">> RETURN TO MENU</button> </div>
             </div>
         </main>
     `;
@@ -303,11 +275,11 @@
     };
 
     // --- DAILY HISTORY FEED ---
-    // --- MODIFICATION 2 of 3: Added the history loading function --- //
+    // --- MODIFIED JAVASCRIPT for History Feed --- //
     function loadDailyHistory() {
-        const briefingContainer = document.getElementById('daily-briefing');
         const contentEl = document.getElementById('history-content');
-        const titleEl = briefingContainer.querySelector('h3');
+        const titleEl = document.getElementById('history-title');
+        const imageEl = document.getElementById('history-image');
 
         const today = new Date();
         const month = today.getMonth() + 1; // JS months are 0-11
@@ -315,7 +287,7 @@
 
         // Update title with today's date
         const dateString = `${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}-${today.getFullYear()}`;
-        titleEl.textContent = `THIS DAY IN HISTORY // ${dateString}`;
+        titleEl.textContent = `INTEL BRIEFING // ${dateString}`;
 
         fetch('history.json')
             .then(response => {
@@ -328,19 +300,28 @@
                 const todayEvent = data.find(item => item.month === month && item.day === day);
                 if (todayEvent) {
                     contentEl.textContent = todayEvent.event;
+                    // Check for an image URL and display it
+                    if (todayEvent.image_url) {
+                        imageEl.src = todayEvent.image_url;
+                        imageEl.alt = todayEvent.image_alt || "Historical event";
+                        imageEl.style.display = 'block';
+                    } else {
+                        imageEl.style.display = 'none'; // Hide if no image for the event
+                    }
                 } else {
                     contentEl.textContent = 'No significant military events recorded for this date.';
+                    imageEl.style.display = 'none'; // Hide if no event
                 }
             })
             .catch(error => {
                 console.error('Error fetching historical data:', error);
                 contentEl.textContent = 'Failed to load historical data. Ensure history.json is in the same directory.';
+                imageEl.style.display = 'none'; // Hide on error
             });
     }
 
     // --- INITIALIZATION ---
     window.onload = () => {
-        // --- MODIFICATION 3 of 3: Added loadDailyHistory() to the onload event --- //
         populateBranches(); populateStats(); populateSkills(); loadSavedSheets(); applySavedTheme(); setupTooltips(); loadDailyHistory();
         document.getElementById('settings-btn').addEventListener('click', () => { document.getElementById('settings-menu').style.display = document.getElementById('settings-menu').style.display === 'block' ? 'none' : 'block'; });
         document.getElementById('lock-branch-rank-checkbox').addEventListener('change', updateBranchRankLockState);
