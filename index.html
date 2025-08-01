@@ -1,3 +1,5 @@
+--- START OF FILE SOCOM 106.html ---
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -193,6 +195,40 @@
         body.plain-theme .preset-item small { color: #555; }
         .preset-item button { flex-shrink: 0; }
 
+        /* Armor-specific styles */
+        .armor-controls {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        #armor-btn {
+            width: 34px;
+            height: 34px;
+            font-size: 16px;
+            line-height: 16px;
+            padding: 0;
+            flex-shrink: 0;
+        }
+        #armor-points {
+            width: 50px;
+            text-align: center;
+        }
+        #armor-btn.armor-active {
+            color: #0AF;
+            border-color: #0AF;
+            text-shadow: 0 0 3px #0AF, 0 0 8px #0AF;
+            box-shadow: 0 0 5px #0AF;
+            background: rgba(0, 170, 255, 0.1);
+        }
+        #armor-points.armor-active {
+            color: #0AF;
+            border-color: #0AF;
+            text-shadow: 0 0 3px #0AF;
+            background: rgba(0, 170, 255, 0.1);
+        }
+        #armor-preset-list .preset-item {
+             cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -218,6 +254,26 @@
             <hr style="border-color: var(--border-color); margin: 15px 0;">
             <ul id="weapon-preset-list" class="preset-list">
                 <!-- Preset items will be injected here by JS -->
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Armor Modal -->
+    <div id="armor-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>SELECT ARMOR</h2>
+                <button onclick="closeArmorModal()">CLOSE</button>
+            </div>
+            <div class="modal-controls">
+                <label class="styled-checkbox">
+                    <input type="checkbox" id="helmet-checkbox">
+                    <span class="checkbox-visual"></span> ADD HELMET (+1 AP)
+                </label>
+            </div>
+            <hr style="border-color: var(--border-color); margin: 15px 0;">
+            <ul id="armor-preset-list" class="preset-list">
+                <!-- Armor presets will be injected here by JS -->
             </ul>
         </div>
     </div>
@@ -288,7 +344,7 @@
     document.getElementById('sheet-form').innerHTML = `
         <input type="hidden" id="character-id">
         <section class="form-section"> <h2>IDENTIFICATION</h2> <div class="grid-container" style="grid-template-columns: 1fr 1fr 1fr"> <div><label for="full-name">FULL NAME</label><input type="text" id="full-name"></div> <div><label for="branch">BRANCH</label><select id="branch" onchange="updateRanks()"></select></div> <div><label for="rank">RANK/GRADE</label><select id="rank" onchange="applyAutoTheme()"></select></div> <div><label for="team">TEAM</label><select id="team"><option>SOCOM 1</option><option>SOCOM 2</option><option>SOCOM 3</option><option>SOCOM 4</option><option>SOCOM 5</option><option>SOCOM 6</option></select></div> <div><label for="sex">SEX</label><select id="sex"><option>M</option><option>F</option><option>NA</option></select></div> <div><label for="dob">D.O.B.</label><input type="date" id="dob"></div> <div><label for="nationality">NATIONALITY</label><input type="text" id="nationality"></div> <div><label for="employer">EMPLOYER</label><input type="text" id="employer"></div> <div><label for="education">EDUCATION</label><input type="text" id="education"></div> </div> </section>
-        <div class="form-grid"> <div class="col-1"> <section class="form-section"> <div style="display: flex; justify-content: space-between; align-items: center;"><h2>CORE ATTRIBUTES (<span id="stat-points-remaining">25</span> PTS)</h2><button type="button" id="toggle-stats-lock-btn" onclick="toggleStatsLock()" class="hidden">FORCE STATS</button></div> <div id="stats-container" style="display: flex; flex-direction: column; gap: 8px;"></div> </section> <section class="form-section"> <h2>DERIVED ATTRIBUTES</h2> <div class="grid-container" style="grid-template-columns: 1fr 1fr;"> <div><label>HIT POINTS (HP)</label><div class="derived-attr-input"><input type="number" id="hp-current" min="0"> / <input type="number" id="hp-max" value="0" readonly></div></div> <div><label>WILLPOWER (WP)</label><div class="derived-attr-input"><input type="number" id="wp-current" min="0"> / <input type="number" id="wp-max" value="0" readonly></div></div> <div><label>SANITY (SAN)</label><div class="derived-attr-input"><input type="number" id="san-current" min="0" oninput="checkBreakingPoint()"> / <input type="number" id="san-max" value="0" readonly></div></div> <div><label>BREAKING PT</label><input type="number" id="bp" readonly></div> </div> <div id="bp-warning" class="hidden"> SAN is at or below Breaking Point! Agent must acquire a new disorder. <button type="button" onclick="acknowledgeBreakingPoint()">ACK & RESET BP</button> </div> </section> <section class="form-section"> <div class="bonds-header" style="display: flex; justify-content: space-between; align-items: center;"> <h2>BONDS (<span id="bond-cha-note"></span>)</h2> <button type="button" onclick="addBond()">+ ADD</button> </div> <div id="bonds-container"></div> </section> <section class="form-section"> <h2 style="text-align: center; border:none; margin-bottom: 5px;">PSYCH PROFILE</h2> <div class="san-loss-container"> <div class="san-loss-group"> <div class="san-loss-label"> <label>VIOLENCE</label><span id="violence-adapted" class="adapted-status hidden">ADAPTED</span> </div> <div> <label class="styled-checkbox"><input type="checkbox" id="violence1" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="violence2" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="violence3" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> </div> </div> <div class="san-loss-group"> <div class="san-loss-label"> <label>HELPLESSNESS</label><span id="helplessness-adapted" class="adapted-status hidden">ADAPTED</span> </div> <div> <label class="styled-checkbox"><input type="checkbox" id="helplessness1" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="helplessness2" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="helplessness3" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> </div> </div> </div> </section> </div> <div class="col-2"> <section class="form-section" style="flex-grow: 1; display: flex; flex-direction: column;"> <h2>SKILLS</h2> <div id="skills-container" style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1;"></div> </section> </div> </div>
+        <div class="form-grid"> <div class="col-1"> <section class="form-section"> <div style="display: flex; justify-content: space-between; align-items: center;"><h2>CORE ATTRIBUTES (<span id="stat-points-remaining">25</span> PTS)</h2><button type="button" id="toggle-stats-lock-btn" onclick="toggleStatsLock()" class="hidden">FORCE STATS</button></div> <div id="stats-container" style="display: flex; flex-direction: column; gap: 8px;"></div> </section> <section class="form-section"> <h2>DERIVED ATTRIBUTES</h2> <div class="grid-container" style="grid-template-columns: 1fr 1fr 1fr;"> <div><label>HIT POINTS (HP)</label><div class="derived-attr-input"><input type="number" id="hp-current" min="0"> / <input type="number" id="hp-max" value="0" readonly></div></div> <div><label>ARMOR (AP)</label><div class="derived-attr-input armor-controls"><button type="button" id="armor-btn" onclick="toggleArmor()">△</button><input type="number" id="armor-points" class="hidden" min="0" oninput="validateArmorPoints(event)"></div></div> <div><label>WILLPOWER (WP)</label><div class="derived-attr-input"><input type="number" id="wp-current" min="0"> / <input type="number" id="wp-max" value="0" readonly></div></div> <div><label>SANITY (SAN)</label><div class="derived-attr-input"><input type="number" id="san-current" min="0" oninput="checkBreakingPoint()"> / <input type="number" id="san-max" value="0" readonly></div></div> <div><label>BREAKING PT</label><input type="number" id="bp" readonly></div> </div> <div id="bp-warning" class="hidden"> SAN is at or below Breaking Point! Agent must acquire a new disorder. <button type="button" onclick="acknowledgeBreakingPoint()">ACK & RESET BP</button> </div> </section> <section class="form-section"> <div class="bonds-header" style="display: flex; justify-content: space-between; align-items: center;"> <h2>BONDS (<span id="bond-cha-note"></span>)</h2> <button type="button" onclick="addBond()">+ ADD</button> </div> <div id="bonds-container"></div> </section> <section class="form-section"> <h2 style="text-align: center; border:none; margin-bottom: 5px;">PSYCH PROFILE</h2> <div class="san-loss-container"> <div class="san-loss-group"> <div class="san-loss-label"> <label>VIOLENCE</label><span id="violence-adapted" class="adapted-status hidden">ADAPTED</span> </div> <div> <label class="styled-checkbox"><input type="checkbox" id="violence1" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="violence2" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="violence3" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> </div> </div> <div class="san-loss-group"> <div class="san-loss-label"> <label>HELPLESSNESS</label><span id="helplessness-adapted" class="adapted-status hidden">ADAPTED</span> </div> <div> <label class="styled-checkbox"><input type="checkbox" id="helplessness1" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="helplessness2" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="helplessness3" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> </div> </div> </div> </section> </div> <div class="col-2"> <section class="form-section" style="flex-grow: 1; display: flex; flex-direction: column;"> <h2>SKILLS</h2> <div id="skills-container" style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1;"></div> </section> </div> </div>
         <section class="form-section"> <h2>WEAPONS & EQUIPMENT</h2> <label for="gear">ARMOR AND GEAR</label> <textarea id="gear"></textarea> <label for="notes-field" style="margin-top:10px;">NOTES</label> <textarea id="notes-field"></textarea> <h3 style="margin-top: 15px;">WEAPONS</h3> <table id="weapons-table" style="width:100%; border-collapse: collapse;"> <thead> <tr><th>NAME</th><th>SKILL%</th><th>RANGE</th><th>DMG</th><th>AP</th><th>LETHALITY</th><th>AMMO</th><th></th></tr> </thead> <tbody id="weapons-body"></tbody> </table> <button type="button" onclick="openWeaponModal()">+ ADD WEAPON</button> </section>
     `;
 
@@ -296,6 +352,8 @@
     const ADMIN_PASSWORD_HASH = 'dmFsa3lyaWU=';
     let isAdmin = false;
     let statsUnlocked = false;
+    let isArmorActive = false;
+    let currentArmorPoints = 0;
     const MAX_STAT_POINTS = 25, MIN_STAT_VALUE = 8, MAX_STAT_VALUE = 18;
     const branches = { "NSA": "intelligence", "CIA": "intelligence", "Army": "army", "Navy": "navy", "Marines": "marines", "Air Force": "airforce" };
     const ranks = { intelligence: [ {name: "Case Officer", grade: "GS-11"}, {name: "Supervisory CO", grade: "GS-14", adminOnly: true}, {name: "Chief of Station", grade: "SIS-2", adminOnly: true} ], army: [ {name: "Sergeant", grade: "E-5"}, {name: "Staff Sergeant", grade: "E-6"}, {name: "Sergeant First Class", grade: "E-7"}, {name: "Master Sergeant", grade: "E-8", adminOnly: true}, {name: "Second Lieutenant", grade: "O-1", adminOnly: true}, {name: "First Lieutenant", grade: "O-2", adminOnly: true}, {name: "Captain", grade: "O-3", adminOnly: true} ], marines: [ {name: "Sergeant", grade: "E-5"}, {name: "Staff Sergeant", grade: "E-6"}, {name: "Gunnery Sergeant", grade: "E-7"}, {name: "Master Sergeant", grade: "E-8", adminOnly: true}, {name: "Second Lieutenant", grade: "O-1", adminOnly: true}, {name: "First Lieutenant", grade: "O-2", adminOnly: true}, {name: "Captain", grade: "O-3", adminOnly: true} ], navy: [ {name: "Petty Officer 2nd Class", grade: "E-5"}, {name: "Petty Officer 1st Class", grade: "E-6"}, {name: "Chief Petty Officer", grade: "E-7"}, {name: "Senior Chief Petty Officer", grade: "E-8", adminOnly: true}, {name: "Ensign", grade: "O-1", adminOnly: true}, {name: "Lieutenant (JG)", grade: "O-2", adminOnly: true}, {name: "Lieutenant", grade: "O-3", adminOnly: true} ], airforce: [ {name: "Staff Sergeant", grade: "E-5"}, {name: "Technical Sergeant", grade: "E-6"}, {name: "Master Sergeant", grade: "E-7"}, {name: "Senior Master Sergeant", grade: "E-8", adminOnly: true}, {name: "Second Lieutenant", grade: "O-1", adminOnly: true}, {name: "First Lieutenant", grade: "O-2", adminOnly: true}, {name: "Captain", grade: "O-3", adminOnly: true} ] };
@@ -370,6 +428,13 @@
             { name: "ANFO Explosive", expense: "Incidental", skillIdentifier: "Science", range: 0, dmg: "", ap: "", lethality: "30", ammoC: 1, ammoM: 1, desc: "A powerful, bulk industrial explosive made from ammonium nitrate and fuel oil. Kill Radius: 20m. RESTRICTED.", examples: "e.g., Fertilizer and fuel oil mixture." }
         ]
     };
+    
+    const armorPresets = [
+        { name: "Kevlar vest", ap: 3, desc: "If worn below outer garments, noticing it requires an Alertness test.", isBombSuit: false },
+        { name: "Reinforced Kevlar vest", ap: 4, desc: "If worn below outer garments, noticing it requires an Alertness test at +20%.", isBombSuit: false },
+        { name: "Tactical body armor", ap: 5, desc: "Cannot be concealed.", isBombSuit: false },
+        { name: "Bomb suit", ap: 10, desc: "Already includes a helmet. Cannot be concealed.", isBombSuit: true }
+    ];
 
     // --- DAILY HISTORY FEED ---
     function loadDailyHistory() {
@@ -411,6 +476,7 @@
         document.getElementById('sheet-form').reset();
         document.getElementById('bonds-container').innerHTML = '';
         document.getElementById('weapons-body').innerHTML = '';
+        deactivateArmor();
         populateSkills(); populateStats(); addBond(); addBond(); addBond(); addDefaultUnarmed(); updateAllCalculations(); checkAdaptedStatus(); setupTooltips();
         document.getElementById('lock-branch-rank-checkbox').checked = false;
         updateBranchRankLockState();
@@ -574,6 +640,90 @@
             </li>
         `).join('');
     }
+    
+    // --- ARMOR MANAGEMENT ---
+    function toggleArmor() {
+        if (isArmorActive) {
+            deactivateArmor();
+        } else {
+            openArmorModal();
+        }
+    }
+    function openArmorModal() {
+        populateArmorPresets();
+        document.getElementById('armor-modal').classList.remove('hidden');
+    }
+    function closeArmorModal() {
+        document.getElementById('armor-modal').classList.add('hidden');
+    }
+    function populateArmorPresets() {
+        const list = document.getElementById('armor-preset-list');
+        const helmetCheckbox = document.getElementById('helmet-checkbox');
+        list.innerHTML = armorPresets.map(preset => `
+            <li class="preset-item" data-is-bomb-suit="${preset.isBombSuit}">
+                <div class="preset-info">
+                    <h4>${preset.name} <span class="expense-tag">(AP: ${preset.ap})</span></h4>
+                    <p>${preset.desc}</p>
+                </div>
+                <button onclick='selectArmor(${preset.ap}, ${preset.isBombSuit})'>SELECT</button>
+            </li>
+        `).join('');
+        document.querySelectorAll('#armor-preset-list .preset-item').forEach(item => {
+            item.addEventListener('mouseover', () => {
+                const isBombSuit = item.getAttribute('data-is-bomb-suit') === 'true';
+                if (isBombSuit) {
+                    helmetCheckbox.checked = false;
+                    helmetCheckbox.disabled = true;
+                } else {
+                    helmetCheckbox.disabled = false;
+                }
+            });
+        });
+    }
+    function selectArmor(baseAP, isBombSuit) {
+        const helmetCheckbox = document.getElementById('helmet-checkbox');
+        let totalAP = baseAP;
+        if (helmetCheckbox.checked && !isBombSuit) {
+            totalAP += 1;
+        }
+        isArmorActive = true;
+        currentArmorPoints = totalAP;
+        const apInput = document.getElementById('armor-points');
+        const armorBtn = document.getElementById('armor-btn');
+        apInput.value = totalAP;
+        apInput.classList.remove('hidden');
+        apInput.classList.add('armor-active');
+        armorBtn.classList.add('armor-active');
+        closeArmorModal();
+    }
+    function deactivateArmor() {
+        isArmorActive = false;
+        currentArmorPoints = 0;
+        const apInput = document.getElementById('armor-points');
+        const armorBtn = document.getElementById('armor-btn');
+        const helmetCheckbox = document.getElementById('helmet-checkbox');
+        apInput.value = 0;
+        apInput.classList.add('hidden');
+        apInput.classList.remove('armor-active');
+        armorBtn.classList.remove('armor-active');
+        helmetCheckbox.checked = false;
+        helmetCheckbox.disabled = false;
+    }
+    function validateArmorPoints(event) {
+        const input = event.target;
+        let value = parseInt(input.value, 10);
+        if (isNaN(value)) {
+            value = currentArmorPoints; // Keep current value if input is invalid
+        }
+        if (value > currentArmorPoints) {
+            input.value = currentArmorPoints;
+        } else {
+            currentArmorPoints = value;
+        }
+        if (currentArmorPoints <= 0) {
+            deactivateArmor();
+        }
+    }
 
     // --- ADMIN & LOCKING FUNCTIONS ---
     function toggleAdminMode() {
@@ -606,11 +756,11 @@
     function updateBranchRankLockState() { const isLocked = document.getElementById('lock-branch-rank-checkbox').checked; document.getElementById('branch').disabled = isLocked && !isAdmin; document.getElementById('rank').disabled = isLocked && !isAdmin; }
 
     // --- DATA MANAGEMENT ---
-    function getCompleteFormData() { const data = { id: document.getElementById('character-id').value || `sheet_${Date.now()}` }; data.branchRankLocked = document.getElementById('lock-branch-rank-checkbox').checked; document.querySelectorAll('#sheet-form [id]').forEach(el => { if (el.id) data[el.id] = el.type === 'checkbox' ? el.checked : el.value; }); data.crafts = Array.from(document.querySelectorAll('#craft-skills-container .sub-skill-item')).map(item => ({checked: item.querySelector('input[type=checkbox]').checked, type: item.querySelector('select').value, score: item.querySelector('input[type=number]').value})); data.languages = Array.from(document.querySelectorAll('#language-skills-container .sub-skill-item')).map(item => ({checked: item.querySelector('input[type=checkbox]').checked, lang: item.querySelector('input[type=text]').value, score: item.querySelector('input[type=number]').value})); data.weapons = Array.from(document.querySelectorAll('#weapons-body tr')).map(row => { const i = row.querySelectorAll('input'); return { name: i[0].value, skill: i[1].value, range: i[2].value, dmg: i[3].value, ap: i[4].value, lethality: i[5].value, ammoC: i[6].value, ammoM: i[7].value }; }); data.bonds = Array.from(document.querySelectorAll('.bond-item')).map(item => ({ checked: item.querySelector('input[type="checkbox"]').checked, name: item.querySelector('input[type="text"]').value, score: item.querySelector('select').value })); return data; }
+    function getCompleteFormData() { const data = { id: document.getElementById('character-id').value || `sheet_${Date.now()}` }; data.branchRankLocked = document.getElementById('lock-branch-rank-checkbox').checked; document.querySelectorAll('#sheet-form [id]').forEach(el => { if (el.id) data[el.id] = el.type === 'checkbox' ? el.checked : el.value; }); data.crafts = Array.from(document.querySelectorAll('#craft-skills-container .sub-skill-item')).map(item => ({checked: item.querySelector('input[type=checkbox]').checked, type: item.querySelector('select').value, score: item.querySelector('input[type=number]').value})); data.languages = Array.from(document.querySelectorAll('#language-skills-container .sub-skill-item')).map(item => ({checked: item.querySelector('input[type=checkbox]').checked, lang: item.querySelector('input[type=text]').value, score: item.querySelector('input[type=number]').value})); data.weapons = Array.from(document.querySelectorAll('#weapons-body tr')).map(row => { const i = row.querySelectorAll('input'); return { name: i[0].value, skill: i[1].value, range: i[2].value, dmg: i[3].value, ap: i[4].value, lethality: i[5].value, ammoC: i[6].value, ammoM: i[7].value }; }); data.bonds = Array.from(document.querySelectorAll('.bond-item')).map(item => ({ checked: item.querySelector('input[type="checkbox"]').checked, name: item.querySelector('input[type="text"]').value, score: item.querySelector('select').value })); data.isArmorActive = isArmorActive; data.currentArmorPoints = currentArmorPoints; return data; }
     function populateCompleteForm(data) {
         resetForm(); 
         document.getElementById('weapons-body').innerHTML = ''; // Clear default unarmed before loading
-        Object.keys(data).forEach(key => { if (!['weapons', 'bonds', 'crafts', 'languages', 'branchRankLocked'].includes(key)) { const el = document.getElementById(key); if (el) { el[el.type === 'checkbox' ? 'checked' : 'value'] = data[key]; } } });
+        Object.keys(data).forEach(key => { if (!['weapons', 'bonds', 'crafts', 'languages', 'branchRankLocked', 'isArmorActive', 'currentArmorPoints'].includes(key)) { const el = document.getElementById(key); if (el) { el[el.type === 'checkbox' ? 'checked' : 'value'] = data[key]; } } });
         document.getElementById('bonds-container').innerHTML = ''; 
         if (data.crafts) data.crafts.forEach(c => addCraftSkill(c)); if (data.languages) data.languages.forEach(l => addLanguageSkill(l));
         if (data.weapons && data.weapons.length > 0) { data.weapons.forEach(w => addWeapon(w)); } else { addDefaultUnarmed(); }
@@ -620,6 +770,11 @@
         updateRanks(); 
         if (data.rank) document.getElementById('rank').value = data.rank; 
         updateAllCalculations(); checkAdaptedStatus(); applyAutoTheme(); updateBranchRankLockState();
+        if (data.isArmorActive) {
+            isArmorActive = true; currentArmorPoints = data.currentArmorPoints || 0;
+            const apInput = document.getElementById('armor-points'); const armorBtn = document.getElementById('armor-btn');
+            if (currentArmorPoints > 0) { apInput.value = currentArmorPoints; apInput.classList.remove('hidden'); apInput.classList.add('armor-active'); armorBtn.classList.add('armor-active'); } else { deactivateArmor(); }
+        } else { deactivateArmor(); }
     }
     function saveCharacter() { const data = getCompleteFormData(); const name = data['full-name'] || 'UNNAMED_AGENT'; const sheetName = prompt("Save file as:", name); if (sheetName) { localStorage.setItem(data.id, JSON.stringify({ name: sheetName, ...data })); alert(`Agent file '${sheetName}' saved locally.`); loadSavedSheets(); } }
     function loadSavedSheets() { const list = document.getElementById('saved-sheets-list'); list.innerHTML = ''; for (let i = 0; i < localStorage.length; i++) { const key = localStorage.key(i); if (key.startsWith('sheet_')) { const data = JSON.parse(localStorage.getItem(key)); const li = document.createElement('li'); li.innerHTML = `<span>${data.name}</span><div><button onclick="renameSheet('${key}')">RENAME</button><button onclick="loadSheet('${key}')">LOAD</button><button class="remove-btn" onclick="deleteSheet('${key}')">DELETE</button></div>`; list.appendChild(li); } } }
