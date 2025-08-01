@@ -523,12 +523,12 @@
                 }
 
                 if (bonus > 0) {
-                    let damageString = baseDamage;
-                    // If there's a negative modifier in the base damage, remove it before adding the bonus.
-                    if (damageString.includes('-')) {
-                        damageString = damageString.substring(0, damageString.indexOf('-')).trim();
+                    // Check if base damage already has a modifier (like 1D4-1)
+                    if (baseDamage.includes('+') || baseDamage.includes('-')) {
+                        damageInput.value = `${baseDamage} +${bonus}`; // Append to existing modifiers
+                    } else {
+                        damageInput.value = `${baseDamage}+${bonus}`;
                     }
-                    damageInput.value = `${damageString}+${bonus}`;
                 } else {
                     damageInput.value = baseDamage; // Revert to base damage if skill is 50 or below
                 }
@@ -597,7 +597,7 @@
                 document.getElementById('admin-login-btn').textContent = 'Admin Logout';
                 document.getElementById('toggle-stats-lock-btn').classList.remove('hidden');
                 document.getElementById('lock-branch-rank-container').classList.remove('hidden');
-                derivedInputs.forEach(id => document.getElementById(id).readOnly = false;
+                derivedInputs.forEach(id => document.getElementById(id).readOnly = false);
                 alert('Admin mode activated. Privileges granted.');
             } else if (pass) { alert('Access Denied.'); }
         }
