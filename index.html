@@ -206,10 +206,10 @@
                 
                 <!-- // --- MODIFIED HTML for History Feed --- // -->
                 <div id="daily-briefing" style="margin-bottom: 20px; border: 1px solid var(--border-color); padding: 10px; text-align: left; font-size: 0.9em;">
-                    <h3 id="history-title" style="border: none; margin: 0 0 10px 0;">INTEL BRIEFING // SYSTEM DATE</h3>
+                    <h3 id="history-title" style="border: none; margin: 0 0 10px 0;">THIS DAY IN HISTORY // SYSTEM DATE</h3>
                     <div style="display: flex; align-items: flex-start; gap: 15px;">
                         <p id="history-content" style="margin: 0; line-height: 1.4; flex: 1;">...LOADING HISTORICAL DATA...</p>
-                        <img id="history-image" src="" alt="Historical event" style="width: 130px; height: auto; border: 1px solid var(--border-color); object-fit: cover; display: none;">
+                        <img id="history-image" src="" alt="Historical event" style="width: 220px; max-height: 160px; height: auto; border: 1px solid var(--border-color); object-fit: cover; display: none;">
                     </div>
                 </div>
 
@@ -287,7 +287,7 @@
 
         // Update title with today's date
         const dateString = `${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}-${today.getFullYear()}`;
-        titleEl.textContent = `INTEL BRIEFING // ${dateString}`;
+        titleEl.textContent = `THIS DAY IN HISTORY // ${dateString}`;
 
         fetch('history.json')
             .then(response => {
