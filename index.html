@@ -315,7 +315,7 @@
 
         // Update title with today's date
         const dateString = `${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}-${today.getFullYear()}`;
-        titleEl.textContent = `INTEL BRIEFING // ${dateString}`;
+        titleEl.textContent = `THIS DAY IN HISTORY // ${dateString}`;
 
         fetch('history.json')
             .then(response => {
