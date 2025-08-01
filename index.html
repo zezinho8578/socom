@@ -68,7 +68,7 @@
         h1 { font-size: 22px; text-transform: uppercase; }
         h1::after { content: '_'; animation: blink 1s step-end infinite; }
         h2 { font-size: 16px; margin-top: 10px; margin-bottom: 10px; text-transform: uppercase; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; }
-        h3.sub-skill-header { font-size: 14px; text-transform: uppercase; border: none; margin: 0 0 5px 0; padding: 0;}
+        h3, h3.sub-skill-header { font-size: 14px; text-transform: uppercase; border: none; margin: 0 0 5px 0; padding: 0;}
 
         .main-menu, .loader-menu, .content-menu { text-align: center; padding: 30px; border: 1px solid var(--border-color); margin: 20px; background: var(--input-bg); }
         .content-menu { text-align: left; }
@@ -199,7 +199,22 @@
     document.querySelector('.container').innerHTML = `
         <header class="header"> <img src="https://images.squarespace-cdn.com/content/v1/629e0596d168b365d297c6c4/cea70b06-895e-401c-9669-04fa59cfc5e6/socom-logo.png" alt="SOCOM Logo" class="logo"> <h1>S.O.C.O.M. // AGENT ROSTER</h1> </header>
         <div class="settings-container"> <button id="settings-btn">⚙</button> <div id="settings-menu"> <button onclick="changeTheme('default')">Army (Green)</button> <button onclick="changeTheme('navy')">Navy (Blue)</button> <button onclick="changeTheme('marines')">Marines (Red)</button> <button onclick="changeTheme('airforce')">Air Force (Gray)</button> <button onclick="changeTheme('intelligence')">CIA/NSA (B&W)</button> <button onclick="changeTheme('officer')">Command (Gold)</button> <button onclick="changeTheme('plain')">Plain Mode</button><button id="admin-login-btn" onclick="toggleAdminMode()">Admin Login</button> </div> </div>
-        <main id="main-view"> <div class="main-menu"> <h2>SYSTEM ACCESS</h2> <button onclick="resetForm(); showView('character-sheet'); ">> CREATE NEW AGENT FILE</button> <button onclick="showView('loader')">> LOAD AGENT FILE</button><button onclick="showView('rules')">> RULES</button><button onclick="showView('about')">> ABOUT SOCOM</button></div> </main>
+        
+        <!-- // --- MODIFICATION 1 of 3: Added the history feed HTML inside main-menu --- // -->
+        <main id="main-view">
+            <div class="main-menu">
+                <h2>SYSTEM ACCESS</h2>
+                <div id="daily-briefing" style="margin-bottom: 20px; border: 1px solid var(--border-color); padding: 10px; text-align: left; font-size: 0.9em;">
+                    <h3 style="border: none; margin: 0 0 5px 0;">INTEL BRIEFING // SYSTEM DATE</h3>
+                    <p id="history-content" style="margin: 0; line-height: 1.4;">...LOADING HISTORICAL DATA...</p>
+                </div>
+                <button onclick="resetForm(); showView('character-sheet'); ">> CREATE NEW AGENT FILE</button>
+                <button onclick="showView('loader')">> LOAD AGENT FILE</button>
+                <button onclick="showView('rules')">> RULES</button>
+                <button onclick="showView('about')">> ABOUT SOCOM</button>
+            </div>
+        </main>
+        
         <main id="loader-view" class="hidden"> <div class="loader-menu"> <h2>LOAD AGENT</h2> <input type="file" id="json-file-input" accept=".json" onchange="loadCharacterFromFile(event)" class="button"> <h3>LOCAL SAVES</h3> <ul id="saved-sheets-list"></ul> <button onclick="showView('main')">> RETURN</button> </div> </main>
         <main id="character-sheet-view" class="hidden"> <div id="character-sheet-container"> <button onclick="saveCharacter()">SAVE</button><button onclick="screenshotPage(event)">SCREENSHOT</button><button onclick="exportToJson()">EXPORT TO .JSON</button><label id="lock-branch-rank-container" class="styled-checkbox hidden" style="margin-left: 15px;"><input type="checkbox" id="lock-branch-rank-checkbox"><span class="checkbox-visual"></span> LOCK BRANCH/RANK</label> <button onclick="showView('main')">RETURN TO MENU</button> <form id="sheet-form" onsubmit="return false;"></form> </div> </main>
         <main id="rules-view" class="hidden"> 
@@ -287,9 +302,46 @@
         'Accounting': 'The study of finance and business. Use it to sift through financial records for anomalies, such as a hidden bank account or money laundering.', 'Alertness': 'Alertness detects danger. Use it to hear a safety being switched off, to understand the mumbling on the other side of a wall, to spot the bulge of a pistol hidden under a jacket, or to catch someone who is trying to escape notice using Stealth.', 'Artillery': 'Safe and accurate use of mortars, missiles, howitzers, tank cannons, and other heavy gunnery. Use it to destroy troops or a hard target in battle.', 'Athletics': 'Represents long practice doing things like running, jumping, climbing, and throwing. Use Athletics to outrun someone, jump a gap, climb in a crisis, land safely in a fall, hit a target with a thrown knife, or catch something without warning.', 'Craft': 'Making and repairing sophisticated tools and structures. A job that most people could figure out does not require the Craft skill, only an INT or DEX test.', 'Criminology': 'Knowledge of criminal and conspiratorial behavior. Use it to identify and predict criminal behavior, deduce relationships between members of a conspiracy, analyze criminal activity, examine witness statements, or know whom to talk to in the criminal underground.', 'Disguise': 'Alter your Agent’s appearance, voice, posture, body language, and mannerisms to avoid recognition without drawing attention.', 'Dodge': 'Evading danger through instinct and reflexes. Use Dodge to avoid an attack. Against firearms and explosives, Dodge is only useful to get to cover.', 'Drive': 'Handling an automobile or a motorcycle safely in a crisis. Every Agent can drive a car in normal conditions. Use this skill to keep a vehicle safe in a high-speed pursuit or on dangerous terrain.', 'Firearms': 'Safe and accurate shooting with weaponry in combat. Use it to hit a target despite the adrenaline, panic, and shock of violence interfering with hand-eye coordination.', 'First Aid': 'The initial treatment and stabilization of of injuries. Use it to help a character recover lost Hit Points. By comparison, Surgery corrects a severe wound and Medicine ensures long-term recovery.', 'Forensics': 'Gathering detailed information and evidence using forensic equipment. Use it to record biometric data, determine details about a weapon used, discern crucial clues, clean a scene of incriminating evidence, or collect, analyze, and compare fingerprints and DNA samples.', 'HUMINT': 'Human intelligence. Obtains information about a subject through observation, conversation, or examining patterns of behavior and relationships. Use HUMINT to recognize signs of dishonesty, gauge attitude, cultivate sources, or determine what it would take to get a subject to cooperate.', 'Heavy Machinery': 'Safe operation of a tractor, crane, bulldozer, tank, heavy truck, or other big machine in a crisis.', 'Heavy Weapons': 'Safe and accurate use of man-portable heavy ordnance such as machine guns and rocket launchers. Use Heavy Weapons to suppress enemies, or destroy a vehicle in combat.', 'Human Studies': 'Interdisciplinary skill combining art, archaeology, anthropology, history, and geography. Use this skill to investigate ancient artifacts, study lost civilizations, analyze societal structures, decipher historical texts, or map out the geography of a region.', 'Medicine': 'The study and treatment of injury and illness. Use it to diagnose the cause of an injury, disease, or poisoning, identify abnormalities, determine cause of death, or prescribe proper long-term care.', 'Leadership': 'The ability to inspire, guide, and coordinate people, especially in high-pressure situations. Use this skill to organize complex operations, provide clear commands under stress, motivate allies, and keep the team focused on objectives.', 'Melee Weapons': 'Lethal use of melee weapons in combat. Use it to hurt or kill an opponent with a knife, axe, club, or other weapon.', 'Military Science': 'Knowledge of military culture, techniques, and regulations. Use it to identify threats, find ranges, recognize weaknesses in a fortification, deduce training level of a unit, reconstruct a battle, or deploy forces advantageously. Types are Land, Air, and Sea.', 'Navigate': 'Finding your way quickly with maps, charts and tables, orienteering, instruments, or dead reckoning.', 'Paranormal': 'The understanding and investigation of supernatural phenomena, including occult practices, unexplained events, and unnatural entities. Use this skill to decipher occult rituals, track and identify otherworldly threats, or understand the motives of paranormal entities.', 'Persuade': 'Changing another’s deeply-held decision or desire. Use Persuade to get your way when the subject is stubborn or the deception is flagrant. This skill also allows your Agent to resist persuasion and interrogation.', 'Pharmacy': 'Knowledge of drugs, from their ingredients and creation, to their effects, uses, and misuses. Use it to identify and produce medicines and antidotes—as well as poisons. Misusing Pharmacy is a quick way to kill a patient.', 'Pilot': 'Piloting, navigating, and captaining waterborne or airborne vehicles. Use it to keep a vessel safe in a crisis, such as through a storm or in a dangerous pursuit. Each vessel type is a separate skill.', 'Psychotherapy': 'The diagnosis and treatment of mental illness. Use it to identify a mental disorder, help a patient recover, and treat mental illness in the long term. You cannot use Psychotherapy on yourself.', 'Ride': 'Handling, training, and riding an animal—horses, donkeys, camels, whatever. Use it to keep safe on an animal in a crisis and to keep riding animals safe, calm, and healthy.', 'SIGINT': 'Signals intelligence. It encompasses encryption, communications intelligence, electronic intelligence, computer science, surveillance of radio and digital communications, and the making and breaking of codes.', 'Search': 'Finding things that are concealed or obscured from plain sight. Use Search to find an object that was hidden with the Stealth skill, or is otherwise so well hidden or disguised that it needs an expert.', 'Science': 'The deep study of the processes of the world. Science is used to find a key insight about the way the universe works—or at least, the way it’s supposed to work.', 'Stealth': 'Concealing your presence or activities. Use it to hide a pistol, camouflage a position, conceal a microphone, pick a pocket, move silently, or follow without being seen. An Agent attempting Stealth can be detected only by an opposing Alertness or Search skill.', 'Surgery': 'The treatment of an injury or abnormality by invasive means. By comparison, First Aid keeps a patient alive until surgery is possible and Medicine ensures longterm recovery.', 'Support Int.': 'The ability to coordinate and direct external resources, such as air support, medical evacuations, or artillery fire, while under duress. Use this skill to effectively integrate support assets into operations while managing the pressure of a hostile environment.', 'Survival': 'Knowledge of the natural world. Use it to find tracks and trails, plan an expedition, predict weather, recognize when fauna or flora are unusual, or find food, water, and shelter.', 'Swim': 'Most Agents can swim for leisure. Use the Swim skill in a dangerous crisis: going a long distance in choppy water, keeping a friend from drowning, or similar situations.', 'Tech Procedures': 'The knowledge of laws, bureaucratic processes, and regulations that govern actions in operational contexts, particularly those involving command structures, military protocols, and local legal systems. Use this skill to navigate complex rules of engagement (ROE), make equipment requistions, and navigate the command chain.', 'Unarmed Combat': 'Use Unarmed Combat to hurt or kill an opponent with your Agent’s bare hands (or feet, elbows, teeth, or head).'
     };
 
+    // --- DAILY HISTORY FEED ---
+    // --- MODIFICATION 2 of 3: Added the history loading function --- //
+    function loadDailyHistory() {
+        const briefingContainer = document.getElementById('daily-briefing');
+        const contentEl = document.getElementById('history-content');
+        const titleEl = briefingContainer.querySelector('h3');
+
+        const today = new Date();
+        const month = today.getMonth() + 1; // JS months are 0-11
+        const day = today.getDate();
+
+        // Update title with today's date
+        const dateString = `${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}-${today.getFullYear()}`;
+        titleEl.textContent = `INTEL BRIEFING // ${dateString}`;
+
+        fetch('history.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok. Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const todayEvent = data.find(item => item.month === month && item.day === day);
+                if (todayEvent) {
+                    contentEl.textContent = todayEvent.event;
+                } else {
+                    contentEl.textContent = 'No significant military events recorded for this date.';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching historical data:', error);
+                contentEl.textContent = 'Failed to load historical data. Ensure history.json is in the same directory.';
+            });
+    }
+
     // --- INITIALIZATION ---
     window.onload = () => {
-        populateBranches(); populateStats(); populateSkills(); loadSavedSheets(); applySavedTheme(); setupTooltips();
+        // --- MODIFICATION 3 of 3: Added loadDailyHistory() to the onload event --- //
+        populateBranches(); populateStats(); populateSkills(); loadSavedSheets(); applySavedTheme(); setupTooltips(); loadDailyHistory();
         document.getElementById('settings-btn').addEventListener('click', () => { document.getElementById('settings-menu').style.display = document.getElementById('settings-menu').style.display === 'block' ? 'none' : 'block'; });
         document.getElementById('lock-branch-rank-checkbox').addEventListener('change', updateBranchRankLockState);
     };
@@ -391,7 +443,6 @@
     
     // --- ADMIN & LOCKING FUNCTIONS ---
     function toggleAdminMode() {
-        // *** FIX: Store the current rank value BEFORE changing anything ***
         const rankSelect = document.getElementById('rank');
         const currentRankValue = rankSelect.value;
         
@@ -404,7 +455,7 @@
             document.getElementById('toggle-stats-lock-btn').classList.add('hidden');
             document.getElementById('lock-branch-rank-container').classList.add('hidden');
             derivedInputs.forEach(id => document.getElementById(id).readOnly = true);
-            updateAllCalculations(); // Recalculate derived stats based on core stats
+            updateAllCalculations();
             alert('Admin mode deactivated.');
         } else {
             const pass = prompt('Enter NEMESIS clearance code:');
@@ -420,10 +471,7 @@
         }
 
         updateRanks();
-        // *** FIX: Restore the rank value AFTER updating the options ***
         rankSelect.value = currentRankValue;
-        // If the selected rank was admin-only and we logged out, it will be disabled.
-        // The browser will automatically select the first non-disabled option, which is the desired behavior.
         
         updateBranchRankLockState();
     }
@@ -454,12 +502,12 @@
         
         document.getElementById('lock-branch-rank-checkbox').checked = data.branchRankLocked || false;
 
-        updateRanks(); // Update rank dropdown based on branch
-        if (data.rank) document.getElementById('rank').value = data.rank; // Re-select the saved rank
+        updateRanks(); 
+        if (data.rank) document.getElementById('rank').value = data.rank; 
         updateAllCalculations(); 
         checkAdaptedStatus(); 
         applyAutoTheme();
-        updateBranchRankLockState(); // Apply lock state after everything is loaded
+        updateBranchRankLockState();
     }
     function saveCharacter() { const data = getCompleteFormData(); const name = data['full-name'] || 'UNNAMED_AGENT'; const sheetName = prompt("Save file as:", name); if (sheetName) { localStorage.setItem(data.id, JSON.stringify({ name: sheetName, ...data })); alert(`Agent file '${sheetName}' saved locally.`); loadSavedSheets(); } }
     function loadSavedSheets() { const list = document.getElementById('saved-sheets-list'); list.innerHTML = ''; for (let i = 0; i < localStorage.length; i++) { const key = localStorage.key(i); if (key.startsWith('sheet_')) { const data = JSON.parse(localStorage.getItem(key)); const li = document.createElement('li'); li.innerHTML = `<span>${data.name}</span><div><button onclick="renameSheet('${key}')">RENAME</button><button onclick="loadSheet('${key}')">LOAD</button><button class="remove-btn" onclick="deleteSheet('${key}')">DELETE</button></div>`; list.appendChild(li); } } }
