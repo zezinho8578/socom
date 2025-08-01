@@ -404,7 +404,7 @@
         populateBranches(); populateStats(); populateSkills(); loadSavedSheets(); applySavedTheme(); setupTooltips(); loadDailyHistory(); populateWeaponCategories();
         document.getElementById('settings-btn').addEventListener('click', () => { document.getElementById('settings-menu').style.display = document.getElementById('settings-menu').style.display === 'block' ? 'none' : 'block'; });
         document.getElementById('lock-branch-rank-checkbox').addEventListener('change', updateBranchRankLockState);
-        document.getElementById('skills-container').addEventListener('input', updateAllWeaponSkills);
+        document.getElementById('skills-container').addEventListener('input', updateLinkedWeaponStats);
     };
     
     function resetForm() {
@@ -452,7 +452,7 @@
     function showView(viewId) { document.querySelectorAll('main').forEach(el => el.classList.add('hidden')); const viewEl = document.getElementById(`${viewId}-view`); if(viewEl){ viewEl.classList.remove('hidden'); if(viewId === 'loader') loadSavedSheets();} }
     function updateRanks() { const rankType = branches[document.getElementById('branch').value] || 'intelligence'; const rankOptions = ranks[rankType].map(r => { const isDisabled = r.adminOnly && !isAdmin; const label = `${r.name} (${r.grade})${r.adminOnly ? ' 🔒' : ''}`; return `<option value="${r.name}" data-grade="${r.grade}" ${isDisabled ? 'disabled' : ''}>${label}</option>`; }).join(''); document.getElementById('rank').innerHTML = rankOptions; applyAutoTheme(); }
     function changeStat(stat, delta) { if (statsUnlocked) return; const input = document.getElementById(stat); let pointsSpent = stats.reduce((acc, s) => acc + (parseInt(document.getElementById(s).value) - MIN_STAT_VALUE), 0); let currentValue = parseInt(input.value); if (delta > 0 && pointsSpent < MAX_STAT_POINTS && currentValue < MAX_STAT_VALUE) { input.value = currentValue + 1; } else if (delta < 0 && currentValue > MIN_STAT_VALUE) { input.value = currentValue - 1; } updateAllCalculations(); }
-    function updateAllCalculations() { let pointsSpent = 0; stats.forEach(stat => { const value = parseInt(document.getElementById(stat).value); pointsSpent += (value - MIN_STAT_VALUE); document.getElementById(`${stat}x5`).textContent = `x5: ${value * 5}`; document.getElementById(`${stat}-desc`).textContent = getStatDescription(stat, value); }); document.getElementById('stat-points-remaining').textContent = MAX_STAT_POINTS - pointsSpent; updateDerivedAttributes(); updateBondScores(); updateAllWeaponSkills(); }
+    function updateAllCalculations() { let pointsSpent = 0; stats.forEach(stat => { const value = parseInt(document.getElementById(stat).value); pointsSpent += (value - MIN_STAT_VALUE); document.getElementById(`${stat}x5`).textContent = `x5: ${value * 5}`; document.getElementById(`${stat}-desc`).textContent = getStatDescription(stat, value); }); document.getElementById('stat-points-remaining').textContent = MAX_STAT_POINTS - pointsSpent; updateDerivedAttributes(); updateBondScores(); updateLinkedWeaponStats(); }
     function updateDerivedAttributes() {
         const str = parseInt(document.getElementById('STR').value), con = parseInt(document.getElementById('CON').value), pow = parseInt(document.getElementById('POW').value);
         const hpMaxInput = document.getElementById('hp-max'), wpMaxInput = document.getElementById('wp-max'), sanMaxInput = document.getElementById('san-max'), bpInput = document.getElementById('bp');
@@ -494,15 +494,43 @@
         }
     }
     
-    function updateAllWeaponSkills() {
+    function updateLinkedWeaponStats() {
         const weaponRows = document.querySelectorAll('#weapons-body tr');
         weaponRows.forEach(row => {
             const skillIdentifier = row.dataset.skillIdentifier;
-            if (skillIdentifier) { // Only update weapons that are linked to a skill
-                const newSkillValue = getCalculatedSkill(skillIdentifier);
-                const skillInput = row.cells[1].querySelector('input');
-                if (skillInput) {
-                    skillInput.value = newSkillValue;
+            if (!skillIdentifier) return; // Skip if this weapon isn't linked to a skill
+
+            // --- Part 1: Update the Skill Value ---
+            const newSkillValue = getCalculatedSkill(skillIdentifier);
+            const skillInput = row.cells[1].querySelector('input');
+            if (skillInput) {
+                skillInput.value = newSkillValue;
+            }
+
+            // --- Part 2: Update the Damage Value based on Skill ---
+            const baseDamage = row.dataset.baseDamage;
+            const damageInput = row.cells[3].querySelector('input');
+
+            // Only apply bonus to Unarmed and Melee weapons that have a base damage value
+            if ((skillIdentifier === 'Unarmed Combat' || skillIdentifier === 'Melee Weapons') && baseDamage && damageInput) {
+                let bonus = 0;
+                if (newSkillValue > 90) {
+                    bonus = 3;
+                } else if (newSkillValue > 75) {
+                    bonus = 2;
+                } else if (newSkillValue > 50) {
+                    bonus = 1;
+                }
+
+                if (bonus > 0) {
+                    // Check if base damage already has a modifier (like 1D4-1)
+                    if (baseDamage.includes('+') || baseDamage.includes('-')) {
+                        damageInput.value = `${baseDamage} +${bonus}`; // Append to existing modifiers
+                    } else {
+                        damageInput.value = `${baseDamage}+${bonus}`;
+                    }
+                } else {
+                    damageInput.value = baseDamage; // Revert to base damage if skill is 50 or below
                 }
             }
         });
@@ -522,8 +550,10 @@
         }
 
         newRow.dataset.skillIdentifier = finalData.skillIdentifier || '';
+        newRow.dataset.baseDamage = finalData.dmg || '';
         newRow.innerHTML = `<td><input type="text" value="${finalData.name}"></td><td><input type="number" min="0" max="99" value="${finalData.skill}"></td><td><div class="input-group"><input type="number" min="0" value="${finalData.range}"><span class="input-group-addon">m</span></div></td><td><input type="text" value="${finalData.dmg}"></td><td><input type="text" value="${finalData.ap}"></td><td><div class="input-group"><input type="number" min="0" max="100" value="${finalData.lethality}"><span class="input-group-addon">%</span></div></td><td><div class="derived-attr-input"><input type="number" min="0" value="${finalData.ammoC}"> / <input type="number" min="0" value="${finalData.ammoM}"></div></td><td><button type="button" class="remove-btn" onclick="this.closest('tr').remove()">X</button></td>`;
         if (closeModal) { closeWeaponModal(); }
+        updateLinkedWeaponStats(); // Immediately apply damage bonus if applicable
     }
 
     // --- WEAPON MODAL ---
