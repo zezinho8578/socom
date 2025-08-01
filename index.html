@@ -177,11 +177,6 @@
         option:disabled { color: #666; background: #222; }
         body.plain-theme option:disabled { color: #aaaaaa; background: #eeeeee; }
         body.admin-mode .container { border-color: var(--danger-color); box-shadow: 0 0 10px var(--danger-color); }
-        
-        /* --- ADDED FOR ZOOM --- */
-        body.home-view-active {
-            zoom: 1.25;
-        }
     </style>
 </head>
 <body>
@@ -327,7 +322,6 @@
 
     // --- INITIALIZATION ---
     window.onload = () => {
-        document.body.classList.add('home-view-active'); // Set initial zoom for the home page
         populateBranches(); populateStats(); populateSkills(); loadSavedSheets(); applySavedTheme(); setupTooltips(); loadDailyHistory();
         document.getElementById('settings-btn').addEventListener('click', () => { document.getElementById('settings-menu').style.display = document.getElementById('settings-menu').style.display === 'block' ? 'none' : 'block'; });
         document.getElementById('lock-branch-rank-checkbox').addEventListener('change', updateBranchRankLockState);
@@ -390,21 +384,7 @@
     }
 
     // --- VIEW MANAGEMENT & UI/CALCS ---
-    // --- MODIFIED FOR ZOOM ---
-    function showView(viewId) {
-        if (viewId === 'main') {
-            document.body.classList.add('home-view-active');
-        } else {
-            document.body.classList.remove('home-view-active');
-        }
-        document.querySelectorAll('main').forEach(el => el.classList.add('hidden'));
-        const viewEl = document.getElementById(`${viewId}-view`);
-        if (viewEl) {
-            viewEl.classList.remove('hidden');
-            if (viewId === 'loader') loadSavedSheets();
-        }
-    }
-
+    function showView(viewId) { document.querySelectorAll('main').forEach(el => el.classList.add('hidden')); const viewEl = document.getElementById(`${viewId}-view`); if(viewEl){ viewEl.classList.remove('hidden'); if(viewId === 'loader') loadSavedSheets();} }
     function updateRanks() { const rankType = branches[document.getElementById('branch').value] || 'intelligence'; const rankOptions = ranks[rankType].map(r => { const isDisabled = r.adminOnly && !isAdmin; const label = `${r.name} (${r.grade})${r.adminOnly ? ' 🔒' : ''}`; return `<option value="${r.name}" data-grade="${r.grade}" ${isDisabled ? 'disabled' : ''}>${label}</option>`; }).join(''); document.getElementById('rank').innerHTML = rankOptions; applyAutoTheme(); }
     function changeStat(stat, delta) { if (statsUnlocked) return; const input = document.getElementById(stat); let pointsSpent = stats.reduce((acc, s) => acc + (parseInt(document.getElementById(s).value) - MIN_STAT_VALUE), 0); let currentValue = parseInt(input.value); if (delta > 0 && pointsSpent < MAX_STAT_POINTS && currentValue < MAX_STAT_VALUE) { input.value = currentValue + 1; } else if (delta < 0 && currentValue > MIN_STAT_VALUE) { input.value = currentValue - 1; } updateAllCalculations(); }
     function updateAllCalculations() { let pointsSpent = 0; stats.forEach(stat => { const value = parseInt(document.getElementById(stat).value); pointsSpent += (value - MIN_STAT_VALUE); document.getElementById(`${stat}x5`).textContent = `x5: ${value * 5}`; document.getElementById(`${stat}-desc`).textContent = getStatDescription(stat, value); }); document.getElementById('stat-points-remaining').textContent = MAX_STAT_POINTS - pointsSpent; updateDerivedAttributes(); updateBondScores(); }
