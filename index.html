@@ -523,15 +523,13 @@
                 }
 
                 if (bonus > 0) {
-                    // Check if base damage already has a modifier (like 1D4-1)
-                    if (baseDamage.includes('+') || baseDamage.includes('-')) {
-                        damageInput.value = `${baseDamage} +${bonus}`; // Append to existing modifiers
-                    } else {
-                        damageInput.value = `${baseDamage}+${bonus}`;
-                    }
-                } else {
-                    damageInput.value = baseDamage; // Revert to base damage if skill is 50 or below
-                }
+    // Isolate the dice part (e.g., "1D4") from the base damage string (e.g., "1D4-1")
+    const dicePart = baseDamage.split(/[-+]/)[0].trim();
+    // Append the new bonus
+    damageInput.value = `${dicePart}+${bonus}`;
+} else {
+    damageInput.value = baseDamage; // Revert to base damage if skill is 50 or below
+}
             }
         });
     }
