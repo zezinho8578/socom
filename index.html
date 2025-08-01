@@ -337,7 +337,7 @@
             { name: "Very Heavy Rifle", expense: "Major", skillIdentifier: "Firearms", range: 250, dmg: "", ap: "", lethality: "20", ammoC: 10, ammoM: 10, desc: "High-caliber sniper and anti-materiel rifles for extreme long-range engagements. RESTRICTED.", examples: "e.g., Barrett M82A1, McMillan TAC-50, CheyTac M200" }
         ],
          "Heavy Weapons": [
-            { name: "Hand grenade", expense: "Incidental", skillIdentifier: "Athletics", range: 20, dmg: "", ap: "", lethality: "15", ammoC: 1, ammoM: 1, desc: "Thrown explosive with a timed fuse. Kill Radius: 10m. RESTRICTED.", examples: "e.g., M67 Fragmentation, RGO Impact." },
+            { name: "Hand grenade", expense: "Incidental", skillIdentifier: "Athletics+20", range: 20, dmg: "", ap: "", lethality: "15", ammoC: 1, ammoM: 1, desc: "Thrown explosive with a timed fuse. Kill Radius: 10m. RESTRICTED.", examples: "e.g., M67 Fragmentation, RGO Impact." },
             { name: "Handheld flamethrower", expense: "Unusual", skillIdentifier: "Heavy Weapons", range: 5, dmg: "10% Lethality", ap: "", lethality: "10", ammoC: 20, ammoM: 20, desc: "A portable incendiary device that projects a stream of fire. Kill Radius: 1m.", examples: "e.g., Ion XM42." },
             { name: "Military flamethrower", expense: "Unusual", skillIdentifier: "Heavy Weapons", range: 10, dmg: "10% Lethality", ap: "", lethality: "10", ammoC: 5, ammoM: 5, desc: "A backpack-fed incendiary weapon with greater range and fuel capacity. Kill Radius: 2m. RESTRICTED.", examples: "e.g., AEC M9A1-7." },
             { name: "Light machine gun (LMG)", expense: "Major", skillIdentifier: "Heavy Weapons", range: 200, dmg: "1D12", ap: "3", lethality: "10", ammoC: 100, ammoM: 200, desc: "An automatic rifle designed for sustained suppressive fire at the squad level. Kill Radius: Burst Length. RESTRICTED.", examples: "e.g., FN MINIMI (M249 SAW), Molot RPK." },
@@ -355,11 +355,11 @@
             { name: "CED Pistol", expense: "Standard", skillIdentifier: "Firearms", range: 4, dmg: "Penalty -20%", ap: "", lethality: "", ammoC: 1, ammoM: 1, desc: "A ranged electroshock weapon that fires wired projectiles to immobilize a target from a distance.", examples: "e.g., TASER X26, Axon TASER 7." }
         ],
         "Grenades & Chemical": [
-            { name: "Flash Grenade (Thrown)", expense: "Incidental", skillIdentifier: "Athletics", range: 10, dmg: "Penalty -40%", ap: "", lethality: "", ammoC: 1, ammoM: 1, desc: "Non-lethal explosive device that produces a blinding flash and deafening bang to disorient targets.", examples: "e.g., M84 Stun Grenade." },
+            { name: "Flash Grenade (Thrown)", expense: "Incidental", skillIdentifier: "Athletics+20", range: 10, dmg: "Penalty -40%", ap: "", lethality: "", ammoC: 1, ammoM: 1, desc: "Non-lethal explosive device that produces a blinding flash and deafening bang to disorient targets.", examples: "e.g., M84 Stun Grenade." },
             { name: "Flash Grenade (Launched)", expense: "Incidental", skillIdentifier: "Heavy Weapons", range: 50, dmg: "Penalty -40%", ap: "", lethality: "", ammoC: 1, ammoM: 1, desc: "Grenade launcher variant of the flash grenade for greater range.", examples: "e.g., 40mm Stun/Flash Cartridge." },
             { name: "Pepper Spray Keychain", expense: "Incidental", skillIdentifier: "DEX*5", range: 1, dmg: "Penalty -20%", ap: "", lethality: "", ammoC: 12, ammoM: 12, desc: "A small, concealable canister of oleoresin capsicum for self-defense.", examples: "e.g., SABRE Red, POM." },
             { name: "Pepper Spray Can", expense: "Incidental", skillIdentifier: "DEX*5", range: 3, dmg: "Penalty -20%", ap: "", lethality: "", ammoC: 12, ammoM: 12, desc: "A larger canister of oleoresin capsicum for crowd control or more sustained use.", examples: "e.g., Police-issue OC spray." },
-            { name: "Tear Gas (Thrown)", expense: "Standard", skillIdentifier: "Athletics", range: 10, dmg: "Penalty -40%", ap: "", lethality: "", ammoC: 1, ammoM: 1, desc: "Canister that releases a chemical agent (CS or CN gas) causing severe irritation and temporary blindness.", examples: "e.g., M7A3 CS Grenade." },
+            { name: "Tear Gas (Thrown)", expense: "Standard", skillIdentifier: "Athletics+20", range: 10, dmg: "Penalty -40%", ap: "", lethality: "", ammoC: 1, ammoM: 1, desc: "Canister that releases a chemical agent (CS or CN gas) causing severe irritation and temporary blindness.", examples: "e.g., M7A3 CS Grenade." },
             { name: "Tear Gas (Launched)", expense: "Standard", skillIdentifier: "Heavy Weapons", range: 50, dmg: "Penalty -40%", ap: "", lethality: "", ammoC: 1, ammoM: 1, desc: "Grenade launcher variant of the tear gas canister for area denial at range.", examples: "e.g., 40mm CS Gas Cartridge." }
         ],
         "Demolitions": [
@@ -404,6 +404,7 @@
         populateBranches(); populateStats(); populateSkills(); loadSavedSheets(); applySavedTheme(); setupTooltips(); loadDailyHistory(); populateWeaponCategories();
         document.getElementById('settings-btn').addEventListener('click', () => { document.getElementById('settings-menu').style.display = document.getElementById('settings-menu').style.display === 'block' ? 'none' : 'block'; });
         document.getElementById('lock-branch-rank-checkbox').addEventListener('change', updateBranchRankLockState);
+        document.getElementById('skills-container').addEventListener('input', updateAllWeaponSkills);
     };
     
     function resetForm() {
@@ -451,7 +452,7 @@
     function showView(viewId) { document.querySelectorAll('main').forEach(el => el.classList.add('hidden')); const viewEl = document.getElementById(`${viewId}-view`); if(viewEl){ viewEl.classList.remove('hidden'); if(viewId === 'loader') loadSavedSheets();} }
     function updateRanks() { const rankType = branches[document.getElementById('branch').value] || 'intelligence'; const rankOptions = ranks[rankType].map(r => { const isDisabled = r.adminOnly && !isAdmin; const label = `${r.name} (${r.grade})${r.adminOnly ? ' 🔒' : ''}`; return `<option value="${r.name}" data-grade="${r.grade}" ${isDisabled ? 'disabled' : ''}>${label}</option>`; }).join(''); document.getElementById('rank').innerHTML = rankOptions; applyAutoTheme(); }
     function changeStat(stat, delta) { if (statsUnlocked) return; const input = document.getElementById(stat); let pointsSpent = stats.reduce((acc, s) => acc + (parseInt(document.getElementById(s).value) - MIN_STAT_VALUE), 0); let currentValue = parseInt(input.value); if (delta > 0 && pointsSpent < MAX_STAT_POINTS && currentValue < MAX_STAT_VALUE) { input.value = currentValue + 1; } else if (delta < 0 && currentValue > MIN_STAT_VALUE) { input.value = currentValue - 1; } updateAllCalculations(); }
-    function updateAllCalculations() { let pointsSpent = 0; stats.forEach(stat => { const value = parseInt(document.getElementById(stat).value); pointsSpent += (value - MIN_STAT_VALUE); document.getElementById(`${stat}x5`).textContent = `x5: ${value * 5}`; document.getElementById(`${stat}-desc`).textContent = getStatDescription(stat, value); }); document.getElementById('stat-points-remaining').textContent = MAX_STAT_POINTS - pointsSpent; updateDerivedAttributes(); updateBondScores(); }
+    function updateAllCalculations() { let pointsSpent = 0; stats.forEach(stat => { const value = parseInt(document.getElementById(stat).value); pointsSpent += (value - MIN_STAT_VALUE); document.getElementById(`${stat}x5`).textContent = `x5: ${value * 5}`; document.getElementById(`${stat}-desc`).textContent = getStatDescription(stat, value); }); document.getElementById('stat-points-remaining').textContent = MAX_STAT_POINTS - pointsSpent; updateDerivedAttributes(); updateBondScores(); updateAllWeaponSkills(); }
     function updateDerivedAttributes() {
         const str = parseInt(document.getElementById('STR').value), con = parseInt(document.getElementById('CON').value), pow = parseInt(document.getElementById('POW').value);
         const hpMaxInput = document.getElementById('hp-max'), wpMaxInput = document.getElementById('wp-max'), sanMaxInput = document.getElementById('san-max'), bpInput = document.getElementById('bp');
@@ -484,6 +485,7 @@
             case 'DEX*5': return (get('DEX', 10) * 5);
             case 'Firearms': return get('skill-Firearms', 20);
             case 'Athletics': return get('skill-Athletics', 30);
+            case 'Athletics+20': return Math.min(99, get('skill-Athletics', 30) + 20);
             case 'Heavy Weapons': return get('skill-Heavy-Weapons', 10);
             case 'Science':
                 const scienceSkills = ['skill-science-biology', 'skill-science-chemistry', 'skill-science-mathematics', 'skill-science-physics'];
@@ -491,6 +493,21 @@
             default: return parseInt(skillIdentifier) || 20;
         }
     }
+    
+    function updateAllWeaponSkills() {
+        const weaponRows = document.querySelectorAll('#weapons-body tr');
+        weaponRows.forEach(row => {
+            const skillIdentifier = row.dataset.skillIdentifier;
+            if (skillIdentifier) { // Only update weapons that are linked to a skill
+                const newSkillValue = getCalculatedSkill(skillIdentifier);
+                const skillInput = row.cells[1].querySelector('input');
+                if (skillInput) {
+                    skillInput.value = newSkillValue;
+                }
+            }
+        });
+    }
+
     function addWeapon(preset, closeModal = false) {
         const newRow = document.getElementById('weapons-body').insertRow();
         const defaultData = { name: '', skill: '', range: '', dmg: '', ap: '', lethality: '', ammoC: '', ammoM: '' };
@@ -504,6 +521,7 @@
             finalData = { ...defaultData, ...effectivePreset };
         }
 
+        newRow.dataset.skillIdentifier = finalData.skillIdentifier || '';
         newRow.innerHTML = `<td><input type="text" value="${finalData.name}"></td><td><input type="number" min="0" max="99" value="${finalData.skill}"></td><td><div class="input-group"><input type="number" min="0" value="${finalData.range}"><span class="input-group-addon">m</span></div></td><td><input type="text" value="${finalData.dmg}"></td><td><input type="text" value="${finalData.ap}"></td><td><div class="input-group"><input type="number" min="0" max="100" value="${finalData.lethality}"><span class="input-group-addon">%</span></div></td><td><div class="derived-attr-input"><input type="number" min="0" value="${finalData.ammoC}"> / <input type="number" min="0" value="${finalData.ammoM}"></div></td><td><button type="button" class="remove-btn" onclick="this.closest('tr').remove()">X</button></td>`;
         if (closeModal) { closeWeaponModal(); }
     }
