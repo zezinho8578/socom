@@ -71,6 +71,30 @@ function injectHtmlFromTemplates() {
     document.getElementById('sheet-form').appendChild(sheetFormContent);
 }
 
+// --- NEW CODE: Tutorial System Globals ---
+let tutorialState = {
+    isActive: false,
+    currentStep: 0,
+};
+
+const tutorialSteps = [
+    {
+        title: "SYSTEM TUTORIAL INITIATED",
+        text: "This protocol will guide you through the agent creation and file management process. All other system functions will be locked until the tutorial is complete or cancelled. Press BEGIN to proceed.",
+        isIntro: true // Special flag for the very first screen
+    },
+    {
+        title: "CONFIRMATION",
+        text: "You are about to access the agent creation module. This is where all new operative files are generated. Do you wish to continue?",
+        isConfirmation: true, // Special flag for the confirmation step
+        nextStepAction: () => showView('main')
+    },
+    {
+        targetElement: '#main-view .main-menu button:nth-of-type(1)',
+        title: "STEP 1: CREATE AGENT FILE",
+        text: "Your first task is to access the file creation interface. Select the highlighted option to proceed.",
+    }
+];
 
 // --- DAILY HISTORY FEED ---
 function loadDailyHistory(historyData) {
