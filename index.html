@@ -276,6 +276,27 @@
         </div>
     </div>
 
+    <!-- Skill Improvement Modal -->
+    <div id="skill-roll-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div id="skill-roll-prompt">
+                <h2 style="margin-bottom: 20px;">IMPROVE SKILLS?</h2>
+                <p style="margin-bottom: 25px;">This should only be done after completing a session. This action is final. Are you sure you want to roll 1d4 for all checked skills?</p>
+                <button onclick="executeSkillRolls()">CONFIRM</button>
+                <button onclick="closeSkillRollModal()">CANCEL</button>
+            </div>
+            <div id="skill-roll-process" class="hidden">
+                <h3 id="rolling-skill-name" style="margin-bottom: 20px; font-size: 1.2em;"></h3>
+                <div id="dice-animation" style="font-size: 4em; font-weight: bold; margin-bottom: 25px; min-height: 60px;">-</div>
+                <p id="roll-result-text"></p>
+            </div>
+            <div id="skill-roll-conclusion" class="hidden">
+                <h2 style="margin-bottom: 20px;">CONCLUDED</h2>
+                <button onclick="closeSkillRollModal()">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
 <script>
     // --- DISABLE ENTER KEY ---
     window.addEventListener('keydown', function(e) {
@@ -342,7 +363,7 @@
     document.getElementById('sheet-form').innerHTML = `
         <input type="hidden" id="character-id">
         <section class="form-section"> <h2>IDENTIFICATION</h2> <div class="grid-container" style="grid-template-columns: 1fr 1fr 1fr"> <div><label for="full-name">FULL NAME</label><input type="text" id="full-name"></div> <div><label for="branch">BRANCH</label><select id="branch" onchange="updateRanks()"></select></div> <div><label for="rank">RANK/GRADE</label><select id="rank" onchange="applyAutoTheme()"></select></div> <div><label for="team">TEAM</label><select id="team"><option>SOCOM 1</option><option>SOCOM 2</option><option>SOCOM 3</option><option>SOCOM 4</option><option>SOCOM 5</option><option>SOCOM 6</option></select></div> <div><label for="sex">SEX</label><select id="sex"><option>M</option><option>F</option><option>NA</option></select></div> <div><label for="dob">D.O.B.</label><input type="date" id="dob"></div> <div><label for="nationality">NATIONALITY</label><input type="text" id="nationality"></div> <div><label for="employer">EMPLOYER</label><input type="text" id="employer"></div> <div><label for="education">EDUCATION</label><input type="text" id="education"></div> </div> </section>
-        <div class="form-grid"> <div class="col-1"> <section class="form-section"> <div style="display: flex; justify-content: space-between; align-items: center;"><h2>CORE ATTRIBUTES (<span id="stat-points-remaining">25</span> PTS)</h2><button type="button" id="toggle-stats-lock-btn" onclick="toggleStatsLock()" class="hidden">FORCE STATS</button></div> <div id="stats-container" style="display: flex; flex-direction: column; gap: 8px;"></div> </section> <section class="form-section"> <h2>DERIVED ATTRIBUTES</h2> <div class="grid-container" style="grid-template-columns: 1fr 1fr 1fr;"> <div><label>HIT POINTS (HP)</label><div class="derived-attr-input"><input type="number" id="hp-current" min="0"> / <input type="number" id="hp-max" value="0" readonly></div></div> <div><label>ARMOR (AP)</label><div class="derived-attr-input armor-controls"><button type="button" id="armor-btn" onclick="toggleArmor()">△</button><input type="number" id="armor-points" class="hidden" min="0" oninput="validateArmorPoints(event)"></div></div> <div><label>WILLPOWER (WP)</label><div class="derived-attr-input"><input type="number" id="wp-current" min="0"> / <input type="number" id="wp-max" value="0" readonly></div></div> <div><label>SANITY (SAN)</label><div class="derived-attr-input"><input type="number" id="san-current" min="0" oninput="checkBreakingPoint()"> / <input type="number" id="san-max" value="0" readonly></div></div> <div><label>BREAKING PT</label><input type="number" id="bp" readonly></div> </div> <div id="bp-warning" class="hidden"> SAN is at or below Breaking Point! Agent must acquire a new disorder. <button type="button" onclick="acknowledgeBreakingPoint()">ACK & RESET BP</button> </div> </section> <section class="form-section"> <div class="bonds-header" style="display: flex; justify-content: space-between; align-items: center;"> <h2>BONDS (<span id="bond-cha-note"></span>)</h2> <button type="button" onclick="addBond()">+ ADD</button> </div> <div id="bonds-container"></div> </section> <section class="form-section"> <h2 style="text-align: center; border:none; margin-bottom: 5px;">PSYCH PROFILE</h2> <div class="san-loss-container"> <div class="san-loss-group"> <div class="san-loss-label"> <label>VIOLENCE</label><span id="violence-adapted" class="adapted-status hidden">ADAPTED</span> </div> <div> <label class="styled-checkbox"><input type="checkbox" id="violence1" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="violence2" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="violence3" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> </div> </div> <div class="san-loss-group"> <div class="san-loss-label"> <label>HELPLESSNESS</label><span id="helplessness-adapted" class="adapted-status hidden">ADAPTED</span> </div> <div> <label class="styled-checkbox"><input type="checkbox" id="helplessness1" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="helplessness2" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="helplessness3" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> </div> </div> </div> </section> </div> <div class="col-2"> <section class="form-section" style="flex-grow: 1; display: flex; flex-direction: column;"> <h2>SKILLS</h2> <div id="skills-container" style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1;"></div> </section> </div> </div>
+        <div class="form-grid"> <div class="col-1"> <section class="form-section"> <div style="display: flex; justify-content: space-between; align-items: center;"><h2>CORE ATTRIBUTES (<span id="stat-points-remaining">25</span> PTS)</h2><button type="button" id="toggle-stats-lock-btn" onclick="toggleStatsLock()" class="hidden">FORCE STATS</button></div> <div id="stats-container" style="display: flex; flex-direction: column; gap: 8px;"></div> </section> <section class="form-section"> <h2>DERIVED ATTRIBUTES</h2> <div class="grid-container" style="grid-template-columns: 1fr 1fr 1fr;"> <div><label>HIT POINTS (HP)</label><div class="derived-attr-input"><input type="number" id="hp-current" min="0"> / <input type="number" id="hp-max" value="0" readonly></div></div> <div><label>ARMOR (AP)</label><div class="derived-attr-input armor-controls"><button type="button" id="armor-btn" onclick="toggleArmor()">△</button><input type="number" id="armor-points" class="hidden" min="0" oninput="validateArmorPoints(event)"></div></div> <div><label>WILLPOWER (WP)</label><div class="derived-attr-input"><input type="number" id="wp-current" min="0"> / <input type="number" id="wp-max" value="0" readonly></div></div> <div><label>SANITY (SAN)</label><div class="derived-attr-input"><input type="number" id="san-current" min="0" oninput="checkBreakingPoint()"> / <input type="number" id="san-max" value="0" readonly></div></div> <div><label>BREAKING PT</label><input type="number" id="bp" readonly></div> </div> <div id="bp-warning" class="hidden"> SAN is at or below Breaking Point! Agent must acquire a new disorder. <button type="button" onclick="acknowledgeBreakingPoint()">ACK & RESET BP</button> </div> </section> <section class="form-section"> <div class="bonds-header" style="display: flex; justify-content: space-between; align-items: center;"> <h2>BONDS (<span id="bond-cha-note"></span>)</h2> <button type="button" onclick="addBond()">+ ADD</button> </div> <div id="bonds-container"></div> </section> <section class="form-section"> <h2 style="text-align: center; border:none; margin-bottom: 5px;">PSYCH PROFILE</h2> <div class="san-loss-container"> <div class="san-loss-group"> <div class="san-loss-label"> <label>VIOLENCE</label><span id="violence-adapted" class="adapted-status hidden">ADAPTED</span> </div> <div> <label class="styled-checkbox"><input type="checkbox" id="violence1" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="violence2" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="violence3" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> </div> </div> <div class="san-loss-group"> <div class="san-loss-label"> <label>HELPLESSNESS</label><span id="helplessness-adapted" class="adapted-status hidden">ADAPTED</span> </div> <div> <label class="styled-checkbox"><input type="checkbox" id="helplessness1" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="helplessness2" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="helplessness3" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> </div> </div> </div> </section> </div> <div class="col-2"> <section class="form-section" style="flex-grow: 1; display: flex; flex-direction: column;"> <div style="display: flex; justify-content: space-between; align-items: center;"><h2 style="border-bottom: none;">SKILLS</h2><button type="button" id="roll-skills-btn" class="hidden" onclick="startSkillImprovement()">Roll 1d4s</button></div> <div id="skills-container" style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1;"></div> </section> </div> </div>
         <section class="form-section"> <h2>WEAPONS & EQUIPMENT</h2> <label for="gear">ARMOR AND GEAR</label> <textarea id="gear"></textarea> <label for="notes-field" style="margin-top:10px;">NOTES</label> <textarea id="notes-field"></textarea> <h3 style="margin-top: 15px;">WEAPONS</h3> <table id="weapons-table" style="width:100%; border-collapse: collapse;"> <thead> <tr><th>NAME</th><th>SKILL%</th><th>RANGE</th><th>DMG</th><th>AP</th><th>LETHALITY</th><th>AMMO</th><th></th></tr> </thead> <tbody id="weapons-body"></tbody> </table> <button type="button" onclick="openWeaponModal()">+ ADD WEAPON</button> </section>
     `;
 
@@ -468,6 +489,7 @@
         document.getElementById('settings-btn').addEventListener('click', () => { document.getElementById('settings-menu').style.display = document.getElementById('settings-menu').style.display === 'block' ? 'none' : 'block'; });
         document.getElementById('lock-branch-rank-checkbox').addEventListener('change', updateBranchRankLockState);
         document.getElementById('skills-container').addEventListener('input', updateLinkedWeaponStats);
+        document.getElementById('skills-container').addEventListener('change', (event) => { if (event.target.type === 'checkbox') { updateRollSkillsButtonVisibility(); } });
     };
     
     function resetForm() {
@@ -478,6 +500,7 @@
         populateSkills(); populateStats(); addBond(); addBond(); addBond(); addDefaultUnarmed(); updateAllCalculations(); checkAdaptedStatus(); setupTooltips();
         document.getElementById('lock-branch-rank-checkbox').checked = false;
         updateBranchRankLockState();
+        updateRollSkillsButtonVisibility();
     }
     
     function populateBranches() { document.getElementById('branch').innerHTML = Object.keys(branches).map(b => `<option value="${b}">${b.toUpperCase()}</option>`).join(''); }
@@ -530,6 +553,100 @@
     function acknowledgeBreakingPoint() { document.getElementById('bp').value = Math.max(0, parseInt(document.getElementById('san-current').value) - parseInt(document.getElementById('POW').value)); document.getElementById('bp-warning').classList.add('hidden'); }
     function getStatDescription(stat, val) { const tiers = statDescriptions[stat]; let desc = tiers[val] || ''; for (const key in tiers) { if (val >= key) desc = tiers[key]; } return `// ${desc}`; }
     
+    // --- SKILL IMPROVEMENT ---
+    function updateRollSkillsButtonVisibility() {
+        const checkedSkills = document.querySelectorAll('#skills-container input[type="checkbox"]:checked');
+        document.getElementById('roll-skills-btn').classList.toggle('hidden', checkedSkills.length === 0);
+    }
+
+    function startSkillImprovement() {
+        document.getElementById('skill-roll-modal').classList.remove('hidden');
+        document.getElementById('skill-roll-prompt').classList.remove('hidden');
+        document.getElementById('skill-roll-process').classList.add('hidden');
+        document.getElementById('skill-roll-conclusion').classList.add('hidden');
+    }
+
+    function closeSkillRollModal() {
+        document.getElementById('skill-roll-modal').classList.add('hidden');
+    }
+
+    async function executeSkillRolls() {
+        const checkedBoxes = Array.from(document.querySelectorAll('#skills-container input[type="checkbox"]:checked'));
+        const skillsToRoll = [];
+
+        for (const box of checkedBoxes) {
+            const skillItem = box.closest('.skill-item-simple, .sub-skill-item');
+            if (!skillItem) continue;
+
+            const scoreInput = skillItem.querySelector('input[type="number"]');
+            let skillName = "Unknown Skill";
+
+            // Determine the skill's name for display
+            if (skillItem.classList.contains('skill-item-simple')) {
+                skillName = skillItem.querySelector('.skill-label-input label').textContent.trim();
+            } else {
+                const craftSelect = skillItem.querySelector('select[data-skill="Craft"]');
+                const langInput = skillItem.querySelector('input[placeholder="Language"]');
+                if (craftSelect) {
+                    skillName = `Craft: ${craftSelect.value}`;
+                } else if (langInput) {
+                    skillName = `Language: ${langInput.value || '(Unnamed)'}`;
+                } else {
+                    const group = skillItem.closest('.sub-skill-group');
+                    const header = group.querySelector('.sub-skill-header');
+                    const subTypeName = skillItem.querySelector('.skill-label-input label').textContent.trim();
+                    const headerName = header.textContent.trim();
+                    skillName = `${headerName}: ${subTypeName}`;
+                }
+            }
+            
+            const currentScore = parseInt(scoreInput.value, 10);
+            if (currentScore >= 99) {
+                alert(`ERROR: Skill "${skillName}" is already at its maximum value (99). Cannot improve further.`);
+                closeSkillRollModal();
+                return;
+            }
+            
+            skillsToRoll.push({ name: skillName, checkbox: box, input: scoreInput, currentScore: currentScore });
+        }
+
+        if (skillsToRoll.length === 0) {
+            closeSkillRollModal();
+            return;
+        }
+        
+        document.getElementById('skill-roll-prompt').classList.add('hidden');
+        document.getElementById('skill-roll-process').classList.remove('hidden');
+
+        const skillNameEl = document.getElementById('rolling-skill-name');
+        const diceEl = document.getElementById('dice-animation');
+        const resultEl = document.getElementById('roll-result-text');
+
+        for (const skill of skillsToRoll) {
+            skillNameEl.textContent = `ROLLING: ${skill.name.toUpperCase()}`;
+            resultEl.textContent = '';
+            
+            const animationInterval = setInterval(() => { diceEl.textContent = Math.floor(Math.random() * 4) + 1; }, 100);
+            await new Promise(resolve => setTimeout(resolve, 4000));
+            clearInterval(animationInterval);
+
+            const roll = Math.floor(Math.random() * 4) + 1;
+            diceEl.textContent = roll;
+            
+            const newScore = Math.min(99, skill.currentScore + roll);
+            skill.input.value = newScore;
+            
+            resultEl.textContent = `Result: +${roll}. New Score: ${newScore}.`;
+            skill.checkbox.checked = false;
+            await new Promise(resolve => setTimeout(resolve, 2500));
+        }
+
+        document.getElementById('skill-roll-process').classList.add('hidden');
+        document.getElementById('skill-roll-conclusion').classList.remove('hidden');
+        updateRollSkillsButtonVisibility();
+    }
+
+
     // --- INTERACTIVE SECTIONS ---
     function checkAdaptedStatus() { const violenceCount = document.querySelectorAll('#violence1:checked, #violence2:checked, #violence3:checked').length; document.getElementById('violence-adapted').classList.toggle('hidden', violenceCount < 3); const helplessnessCount = document.querySelectorAll('#helplessness1:checked, #helplessness2:checked, #helplessness3:checked').length; document.getElementById('helplessness-adapted').classList.toggle('hidden', helplessnessCount < 3); }
     function addCraftSkill(data = {}){ const container = document.getElementById('craft-skills-container'); const item = document.createElement('div'); item.className = 'sub-skill-item'; const craftTypes = ['Gunsmith', 'Locksmith', 'Mechanic', 'Microelectronics', 'Explosives']; let options = craftTypes.map(c => `<option value="${c}" ${c === data.type ? 'selected' : ''}>${c}</option>`).join(''); item.innerHTML = `<label class="styled-checkbox"><input type="checkbox" ${data.checked ? 'checked' : ''}><span class="checkbox-visual"></span></label><div class="skill-label-input"><select data-skill="Craft">${options}</select><input type="number" min="0" max="100" value="${data.score || 0}"></div><button class="remove-btn" onclick="this.parentElement.remove()">X</button>`; container.appendChild(item); setupTooltips(); }
@@ -773,6 +890,7 @@
             const apInput = document.getElementById('armor-points'); const armorBtn = document.getElementById('armor-btn');
             if (currentArmorPoints > 0) { apInput.value = currentArmorPoints; apInput.classList.remove('hidden'); apInput.classList.add('armor-active'); armorBtn.classList.add('armor-active'); } else { deactivateArmor(); }
         } else { deactivateArmor(); }
+        updateRollSkillsButtonVisibility();
     }
     function saveCharacter() { const data = getCompleteFormData(); const name = data['full-name'] || 'UNNAMED_AGENT'; const sheetName = prompt("Save file as:", name); if (sheetName) { localStorage.setItem(data.id, JSON.stringify({ name: sheetName, ...data })); alert(`Agent file '${sheetName}' saved locally.`); loadSavedSheets(); } }
     function loadSavedSheets() { const list = document.getElementById('saved-sheets-list'); list.innerHTML = ''; for (let i = 0; i < localStorage.length; i++) { const key = localStorage.key(i); if (key.startsWith('sheet_')) { const data = JSON.parse(localStorage.getItem(key)); const li = document.createElement('li'); li.innerHTML = `<span>${data.name}</span><div><button onclick="renameSheet('${key}')">RENAME</button><button onclick="loadSheet('${key}')">LOAD</button><button class="remove-btn" onclick="deleteSheet('${key}')">DELETE</button></div>`; list.appendChild(li); } } }
