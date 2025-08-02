@@ -256,3 +256,12 @@ body.plain-theme .preset-item small { color: #555; }
     color: var(--accent-color);
     text-shadow: 0 0 5px var(--accent-color);
 }
+
+/* --- NEW STYLE: Disabled Tutorial Button --- */
+#tutorial-prompt button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: transparent;
+    color: var(--accent-color);
+}
+Use code with c
