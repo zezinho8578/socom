@@ -87,12 +87,27 @@ const tutorialSteps = [
         title: "CONFIRMATION",
         text: "You are about to access the agent creation module. This is where all new operative files are generated. Do you wish to continue?",
         isConfirmation: true, // Special flag for the confirmation step
-        nextStepAction: () => showView('main')
+        nextStepAction: () => {
+            resetForm(); // Ensure a clean slate
+            showView('main'); // Go to the main menu
+        }
     },
     {
         targetElement: '#main-view .main-menu button:nth-of-type(1)',
+        actionTarget: '#main-view .main-menu button:nth-of-type(1)', // The element to click
+        waitForAction: true, // This step requires a click to advance
         title: "STEP 1: CREATE AGENT FILE",
         text: "Your first task is to access the file creation interface. Select the highlighted option to proceed.",
+        nextStepAction: () => showView('character-sheet') // Action to take after the click
+    },
+    {
+        targetElement: '#character-sheet-view .form-section:first-of-type .grid-container > div:first-of-type',
+        title: "STEP 2: IDENTIFICATION",
+        text: "Enter your agent's full name. The system requires a minimum of 5 characters for a valid file.",
+        validation: {
+            inputElement: '#full-name',
+            minLength: 5
+        }
     }
 ];
 
@@ -592,12 +607,38 @@ function showTutorialStep(stepIndex) {
             stepsNav.querySelector('button:nth-of-type(2)').innerText = 'CONTINUE';
         }
 
+} else {
+    // Handle a standard step with a spotlight
+    initialNav.classList.add('hidden');
+    stepsNav.classList.remove('hidden');
+    
+    const nextBtn = stepsNav.querySelector('button:nth-of-type(2)');
+    nextBtn.innerText = 'NEXT';
+
+    // Lock NEXT button if action is required
+    if (step.waitForAction || step.validation) {
+        nextBtn.disabled = true;
     } else {
-        // Handle a standard step with a spotlight
-        initialNav.classList.add('hidden');
-        stepsNav.classList.remove('hidden');
-        stepsNav.querySelector('button:nth-of-type(1)').classList.remove('hidden'); // Show "BACK" button
-        stepsNav.querySelector('button:nth-of-type(2)').innerText = 'NEXT';
+        nextBtn.disabled = false;
+    }
+
+    // Add validation listener if required
+    if (step.validation) {
+        const input = document.querySelector(step.validation.inputElement);
+        if (input) {
+            input.oninput = () => {
+                if (input.value.length >= step.validation.minLength) {
+                    nextBtn.disabled = false;
+                } else {
+                    nextBtn.disabled = true;
+                }
+            };
+        }
+    } else {
+        // Clean up previous listeners
+        const anyInput = document.querySelector('#full-name');
+        if(anyInput) anyInput.oninput = null;
+    }
 
 
         const target = document.querySelector(step.targetElement);
@@ -634,5 +675,28 @@ function showTutorialStep(stepIndex) {
          backBtn.classList.add('hidden');
     } else {
          backBtn.classList.remove('hidden');
+    }
+}
+
+// --- NEW CODE: Tutorial Action Handler ---
+
+function handleTutorialAction(event) {
+    if (!tutorialState.isActive) return;
+
+    const step = tutorialSteps[tutorialState.currentStep];
+    if (!step || !step.waitForAction) return;
+
+    // Check if the clicked element matches the expected action target
+    if (event.target.matches(step.actionTarget)) {
+        event.preventDefault(); // Prevent default link behavior if any
+        event.stopPropagation(); // Stop the event from bubbling further
+        
+        // Execute the action associated with this step (e.g., changing view)
+        if (step.nextStepAction) {
+            step.nextStepAction();
+        }
+
+        // Advance to the next tutorial step automatically
+        advanceTutorial();
     }
 }
