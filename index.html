@@ -98,7 +98,6 @@
                 <button onclick="showView('loader')">> LOAD AGENT FILE</button>
                 <button onclick="showView('rules')">> RULES</button>
                 <button onclick="showView('about')">> ABOUT SOCOM</button>
-                <button onclick="startTutorial()">> TUTORIAL</button>
             </div>
         </main>
         
@@ -139,25 +138,6 @@
         <div class="form-grid"> <div class="col-1"> <section class="form-section"> <div style="display: flex; justify-content: space-between; align-items: center;"><h2>CORE ATTRIBUTES (<span id="stat-points-remaining">25</span> PTS)</h2><button type="button" id="toggle-stats-lock-btn" onclick="toggleStatsLock()" class="hidden">FORCE STATS</button></div> <div id="stats-container" style="display: flex; flex-direction: column; gap: 8px;"></div> </section> <section class="form-section"> <h2>DERIVED ATTRIBUTES</h2> <div class="grid-container" style="grid-template-columns: 1fr 1fr 1fr;"> <div><label>HIT POINTS (HP)</label><div class="derived-attr-input"><input type="number" id="hp-current" min="0"> / <input type="number" id="hp-max" value="0" readonly></div></div> <div><label>ARMOR (AP)</label><div class="derived-attr-input armor-controls"><button type="button" id="armor-btn" onclick="toggleArmor()">△</button><input type="number" id="armor-points" class="hidden" min="0" oninput="validateArmorPoints(event)"></div></div> <div><label>WILLPOWER (WP)</label><div class="derived-attr-input"><input type="number" id="wp-current" min="0"> / <input type="number" id="wp-max" value="0" readonly></div></div> <div><label>SANITY (SAN)</label><div class="derived-attr-input"><input type="number" id="san-current" min="0" oninput="checkBreakingPoint()"> / <input type="number" id="san-max" value="0" readonly></div></div> <div><label>BREAKING PT</label><input type="number" id="bp" readonly></div> </div> <div id="bp-warning" class="hidden"> SAN is at or below Breaking Point! Agent must acquire a new disorder. <button type="button" onclick="acknowledgeBreakingPoint()">ACK & RESET BP</button> </div> </section> <section class="form-section"> <div class="bonds-header" style="display: flex; justify-content: space-between; align-items: center;"> <h2>BONDS (<span id="bond-cha-note"></span>)</h2> <button type="button" onclick="addBond()">+ ADD</button> </div> <div id="bonds-container"></div> </section> <section class="form-section"> <h2 style="text-align: center; border:none; margin-bottom: 5px;">PSYCH PROFILE</h2> <div class="san-loss-container"> <div class="san-loss-group"> <div class="san-loss-label"> <label>VIOLENCE</label><span id="violence-adapted" class="adapted-status hidden">ADAPTED</span> </div> <div> <label class="styled-checkbox"><input type="checkbox" id="violence1" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="violence2" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="violence3" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> </div> </div> <div class="san-loss-group"> <div class="san-loss-label"> <label>HELPLESSNESS</label><span id="helplessness-adapted" class="adapted-status hidden">ADAPTED</span> </div> <div> <label class="styled-checkbox"><input type="checkbox" id="helplessness1" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="helplessness2" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="helplessness3" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> </div> </div> </div> </section> </div> <div class="col-2"> <section class="form-section" style="flex-grow: 1; display: flex; flex-direction: column;"> <div style="display: flex; justify-content: space-between; align-items: center;"><h2 style="border-bottom: none;">SKILLS</h2><button type="button" id="roll-skills-btn" class="hidden" onclick="startSkillImprovement()">Roll 1d4s</button></div> <div id="skills-container" style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1;"></div> </section> </div> </div>
         <section class="form-section"> <h2>WEAPONS & EQUIPMENT</h2> <label for="gear">ARMOR AND GEAR</label> <textarea id="gear"></textarea> <label for="notes-field" style="margin-top:10px;">NOTES</label> <textarea id="notes-field"></textarea> <h3 style="margin-top: 15px;">WEAPONS</h3> <table id="weapons-table" style="width:100%; border-collapse: collapse;"> <thead> <tr><th>NAME</th><th>SKILL%</th><th>RANGE</th><th>DMG</th><th>AP</th><th>LETHALITY</th><th>AMMO</th><th></th></tr> </thead> <tbody id="weapons-body"></tbody> </table> <button type="button" onclick="openWeaponModal()">+ ADD WEAPON</button> </section>
     </template>
-
-    <!-- Tutorial Modal -->
-<div id="tutorial-overlay" class="hidden">
-    <div id="tutorial-spotlight"></div>
-    <div id="tutorial-prompt">
-        <h3 id="tutorial-title"></h3>
-        <p id="tutorial-text"></p>
-        <div id="tutorial-nav-initial">
-            <button onclick="advanceTutorial()">BEGIN</button>
-            <button onclick="cancelTutorial()">CANCEL</button>
-        </div>
-        <div id="tutorial-nav-steps" class="hidden">
-            <button onclick="regressTutorial()">BACK</button>
-            <button onclick="advanceTutorial()">NEXT</button>
-            <button onclick="cancelTutorial()">CANCEL</button>
-        </div>
-    </div>
-</div>
-<!-- Tutorial Modal -->
     
 </body>
 </html>
