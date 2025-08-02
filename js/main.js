@@ -502,3 +502,137 @@ function screenshotPage(event) {
         }).catch(err => { console.error('Screenshot failed:', err); alert('Could not capture screenshot. See console for details.');
         }).finally(() => { btn.textContent = originalText; btn.disabled = false; });
 }
+
+// --- NEW CODE: TUTORIAL SYSTEM ---
+
+function startTutorial() {
+    tutorialState.isActive = true;
+    tutorialState.currentStep = 0;
+    document.getElementById('tutorial-overlay').classList.remove('hidden');
+    showTutorialStep(0);
+}
+
+function cancelTutorial() {
+    tutorialState.isActive = false;
+    document.getElementById('tutorial-overlay').classList.add('hidden');
+    // Ensure spotlight is cleared
+    const spotlight = document.getElementById('tutorial-spotlight');
+    spotlight.style.width = '0px';
+    spotlight.style.height = '0px';
+    spotlight.style.opacity = '0';
+}
+
+function advanceTutorial() {
+    const currentStepData = tutorialSteps[tutorialState.currentStep];
+    if (currentStepData.nextStepAction) {
+        currentStepData.nextStepAction();
+    }
+
+    if (tutorialState.currentStep < tutorialSteps.length - 1) {
+        tutorialState.currentStep++;
+        showTutorialStep(tutorialState.currentStep);
+    } else {
+        alert("Tutorial Concluded. You are now free to proceed.");
+        cancelTutorial();
+    }
+}
+
+function regressTutorial() {
+    if (tutorialState.currentStep > 0) {
+        // If we go back from step 2, we need to show the confirmation screen again
+        // This kind of specific logic will be built out as we add more steps
+        const comingFromStepData = tutorialSteps[tutorialState.currentStep];
+        if (comingFromStepData.targetElement && comingFromStepData.targetElement.includes('CREATE NEW AGENT')) {
+             // Do nothing special for now, just go back.
+        }
+
+        tutorialState.currentStep--;
+        showTutorialStep(tutorialState.currentStep);
+    }
+}
+
+
+function showTutorialStep(stepIndex) {
+    const step = tutorialSteps[stepIndex];
+    if (!step) {
+        console.error("NEMESIS: Invalid tutorial step index.", stepIndex);
+        cancelTutorial();
+        return;
+    }
+
+    const overlay = document.getElementById('tutorial-overlay');
+    const prompt = document.getElementById('tutorial-prompt');
+    const spotlight = document.getElementById('tutorial-spotlight');
+    const titleEl = document.getElementById('tutorial-title');
+    const textEl = document.getElementById('tutorial-text');
+    const initialNav = document.getElementById('tutorial-nav-initial');
+    const stepsNav = document.getElementById('tutorial-nav-steps');
+
+    // Reset prompt position for calculation
+    prompt.style.top = '';
+    prompt.style.bottom = '';
+    prompt.style.left = '50%';
+    prompt.style.transform = 'translateX(-50%)';
+
+    titleEl.innerText = step.title;
+    textEl.innerText = step.text;
+
+    if (step.isIntro || step.isConfirmation) {
+        // Handle introductory/confirmation screens with no spotlight
+        spotlight.style.opacity = '0';
+        spotlight.style.width = '0';
+        prompt.style.top = '50%';
+        prompt.style.transform = 'translate(-50%, -50%)';
+        
+        // Show the correct buttons
+        initialNav.classList.toggle('hidden', !step.isIntro);
+        stepsNav.classList.toggle('hidden', step.isIntro);
+        if (step.isConfirmation) {
+            stepsNav.querySelector('button:nth-of-type(1)').classList.add('hidden'); // Hide "BACK" button
+            stepsNav.querySelector('button:nth-of-type(2)').innerText = 'CONTINUE';
+        }
+
+    } else {
+        // Handle a standard step with a spotlight
+        initialNav.classList.add('hidden');
+        stepsNav.classList.remove('hidden');
+        stepsNav.querySelector('button:nth-of-type(1)').classList.remove('hidden'); // Show "BACK" button
+        stepsNav.querySelector('button:nth-of-type(2)').innerText = 'NEXT';
+
+
+        const target = document.querySelector(step.targetElement);
+        if (!target) {
+            console.error("NEMESIS: Tutorial target not found:", step.targetElement);
+            cancelTutorial();
+            return;
+        }
+
+        const rect = target.getBoundingClientRect();
+        const padding = 5; // As requested
+
+        spotlight.style.opacity = '1';
+        spotlight.style.left = `${rect.left - padding}px`;
+        spotlight.style.top = `${rect.top - padding}px`;
+        spotlight.style.width = `${rect.width + (padding * 2)}px`;
+        spotlight.style.height = `${rect.height + (padding * 2)}px`;
+
+        // Position the prompt box
+        const promptHeight = prompt.offsetHeight;
+        if (rect.top > (window.innerHeight / 2)) {
+            // Target is in the bottom half, place prompt above
+            prompt.style.top = `${rect.top - padding - promptHeight - 20}px`;
+        } else {
+            // Target is in the top half, place prompt below
+            prompt.style.top = `${rect.bottom + padding + 20}px`;
+        }
+    }
+    
+    // Logic for hiding/showing Back button
+    const backBtn = stepsNav.querySelector('button:nth-of-type(1)');
+    // We hide back button on the first *real* step (index 2)
+    if(stepIndex <= 1 || step.isConfirmation) {
+         backBtn.classList.add('hidden');
+    } else {
+         backBtn.classList.remove('hidden');
+    }
+}
