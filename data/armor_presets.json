@@ -1,0 +1,6 @@
+[
+    { "name": "Kevlar vest", "ap": 3, "desc": "If worn below outer garments, noticing it requires an Alertness test.", "isBombSuit": false },
+    { "name": "Reinforced Kevlar vest", "ap": 4, "desc": "If worn below outer garments, noticing it requires an Alertness test at +20%.", "isBombSuit": false },
+    { "name": "Tactical body armor", "ap": 5, "desc": "Cannot be concealed.", "isBombSuit": false },
+    { "name": "Bomb suit", "ap": 10, "desc": "Already includes a helmet. Cannot be concealed.", "isBombSuit": true }
+]
