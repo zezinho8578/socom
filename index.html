@@ -388,7 +388,7 @@
     // --- INITIALIZATION ---
     window.onload = () => {
         loadContentPanels();
-        makeDraggable(); // Initialize tutorial box dragging
+        initializeTutorial(); // Initialize tutorial box dragging
         populateBranches(); populateStats(); populateSkills(); loadSavedSheets(); applySavedTheme(); setupTooltips(); loadDailyHistory(); populateWeaponCategories();
         document.getElementById('settings-btn').addEventListener('click', () => { document.getElementById('settings-menu').style.display = document.getElementById('settings-menu').style.display === 'block' ? 'none' : 'block'; });
         document.getElementById('lock-branch-rank-checkbox').addEventListener('change', updateBranchRankLockState);
