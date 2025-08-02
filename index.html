@@ -227,6 +227,62 @@
         #armor-preset-list .preset-item {
              cursor: pointer;
         }
+
+        /* --- TUTORIAL STYLES --- */
+        #tutorial-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+        }
+        .tutorial-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(2px);
+        }
+        .tutorial-highlight {
+            position: relative;
+            z-index: 1001;
+            box-shadow: 0 0 15px 5px var(--accent-color), 0 0 3px 2px var(--accent-color) inset;
+            border-radius: 3px;
+            transition: box-shadow 0.3s ease-in-out;
+        }
+        .tutorial-prompt {
+            position: absolute;
+            z-index: 1002;
+            background: var(--input-bg);
+            border: 1px solid var(--accent-color);
+            padding: 20px;
+            width: 400px;
+            max-width: 90vw;
+            box-shadow: 0 0 20px 5px rgba(0,0,0,0.5);
+        }
+        .tutorial-prompt h3 {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-top: 0;
+            font-size: 1.1em;
+            color: var(--accent-color);
+        }
+        .tutorial-prompt p {
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .tutorial-prompt-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .tutorial-prompt-nav .step-counter {
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
     </style>
 </head>
 <body>
@@ -325,7 +381,7 @@
                 <button onclick="resetForm(); showView('character-sheet'); ">> CREATE NEW AGENT FILE</button>
                 <button onclick="showView('loader')">> LOAD AGENT FILE</button>
                 <button onclick="showView('rules')">> RULES</button>
-                <button onclick="showTutorial()">> TUTORIAL</button>
+                <button onclick="beginTutorial()">> TUTORIAL</button>
                 <button onclick="showView('about')">> ABOUT SOCOM</button>
             </div>
         </main>
@@ -361,14 +417,31 @@
         </main>
         <main id="tutorial-view" class="hidden">
             <div id="tutorial-content-container">
-                <!-- Content will be loaded from tutorial.html -->
+                 <!-- TUTORIAL MODULE INJECTED HERE -->
+                 <div id="tutorial-container" class="hidden">
+                    <div class="tutorial-overlay"></div>
+                    <div id="tutorial-prompt" class="tutorial-prompt">
+                        <h3 id="tutorial-title"></h3>
+                        <p id="tutorial-text"></p>
+                        <div id="tutorial-nav" class="tutorial-prompt-nav"></div>
+                    </div>
+                    <audio id="tutorial-audio" loop>
+                        <source src="https://github.com/diantha-bot/hosting/raw/main/splintercell_training.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                </div>
+                <div id="tutorial-entry-point" class="content-menu" style="text-align: center;">
+                    <h2>AGENT INDUCTION</h2>
+                    <p style="text-align:center;">Begin NEMESIS Protocol Training?</p>
+                    <button id="begin-tutorial-btn">BEGIN</button>
+                </div>
             </div>
         </main>
     `;
 
     document.getElementById('sheet-form').innerHTML = `
         <input type="hidden" id="character-id">
-        <section class="form-section"> <h2>IDENTIFICATION</h2> <div class="grid-container" style="grid-template-columns: 1fr 1fr 1fr"> <div><label for="full-name">FULL NAME</label><input type="text" id="full-name"></div> <div><label for="branch">BRANCH</label><select id="branch" onchange="updateRanks()"></select></div> <div><label for="rank">RANK/GRADE</label><select id="rank" onchange="applyAutoTheme()"></select></div> <div><label for="team">TEAM</label><select id="team"><option>SOCOM 1</option><option>SOCOM 2</option><option>SOCOM 3</option><option>SOCOM 4</option><option>SOCOM 5</option><option>SOCOM 6</option></select></div> <div><label for="sex">SEX</label><select id="sex"><option>M</option><option>F</option><option>NA</option></select></div> <div><label for="dob">D.O.B.</label><input type="date" id="dob"></div> <div><label for="nationality">NATIONALITY</label><input type="text" id="nationality"></div> <div><label for="employer">EMPLOYER</label><input type="text" id="employer"></div> <div><label for="education">EDUCATION</label><input type="text" id="education"></div> </div> </section>
+        <section class="form-section"> <h2>IDENTIFICATION</h2> <div class="grid-container" style="grid-template-columns: 1fr 1fr 1fr"> <div><label for="full-name">FULL NAME</label><input type="text" id="full-name"></div> <div><label for="branch">BRANCH</label><select id="branch" onchange="updateRanks()"></select></div> <div><label for="rank">RANK/GRADE</label><select id="rank" onchange="applyAutoTheme()"></select></div> <div><label for="team">TEAM</label><select id="team"><option>SOCOM 1</option><option>SOCOM 2</option><option>SOCOM 3</option><option>SOCOM 4</option><option>SOCOM 5</option><option>SOCOM 6</option></select></div> <div><label for="sex">SEX</label><select id="sex"><option>M</option><option>F</option><option>NA</option></select></div> <div><label for="dob">D.O.B.</label><input type="text" id="dob" placeholder="YYYY-MM-DD"></div> <div><label for="nationality">NATIONALITY</label><input type="text" id="nationality"></div> <div><label for="employer">EMPLOYER</label><input type="text" id="employer"></div> <div><label for="education">EDUCATION</label><input type="text" id="education"></div> </div> </section>
         <div class="form-grid"> <div class="col-1"> <section class="form-section"> <div style="display: flex; justify-content: space-between; align-items: center;"><h2>CORE ATTRIBUTES (<span id="stat-points-remaining">25</span> PTS)</h2><button type="button" id="toggle-stats-lock-btn" onclick="toggleStatsLock()" class="hidden">FORCE STATS</button></div> <div id="stats-container" style="display: flex; flex-direction: column; gap: 8px;"></div> </section> <section class="form-section"> <h2>DERIVED ATTRIBUTES</h2> <div class="grid-container" style="grid-template-columns: 1fr 1fr 1fr;"> <div><label>HIT POINTS (HP)</label><div class="derived-attr-input"><input type="number" id="hp-current" min="0"> / <input type="number" id="hp-max" value="0" readonly></div></div> <div><label>ARMOR (AP)</label><div class="derived-attr-input armor-controls"><button type="button" id="armor-btn" onclick="toggleArmor()">△</button><input type="number" id="armor-points" class="hidden" min="0" oninput="validateArmorPoints(event)"></div></div> <div><label>WILLPOWER (WP)</label><div class="derived-attr-input"><input type="number" id="wp-current" min="0"> / <input type="number" id="wp-max" value="0" readonly></div></div> <div><label>SANITY (SAN)</label><div class="derived-attr-input"><input type="number" id="san-current" min="0" oninput="checkBreakingPoint()"> / <input type="number" id="san-max" value="0" readonly></div></div> <div><label>BREAKING PT</label><input type="number" id="bp" readonly></div> </div> <div id="bp-warning" class="hidden"> SAN is at or below Breaking Point! Agent must acquire a new disorder. <button type="button" onclick="acknowledgeBreakingPoint()">ACK & RESET BP</button> </div> </section> <section class="form-section"> <div class="bonds-header" style="display: flex; justify-content: space-between; align-items: center;"> <h2>BONDS (<span id="bond-cha-note"></span>)</h2> <button type="button" onclick="addBond()">+ ADD</button> </div> <div id="bonds-container"></div> </section> <section class="form-section"> <h2 style="text-align: center; border:none; margin-bottom: 5px;">PSYCH PROFILE</h2> <div class="san-loss-container"> <div class="san-loss-group"> <div class="san-loss-label"> <label>VIOLENCE</label><span id="violence-adapted" class="adapted-status hidden">ADAPTED</span> </div> <div> <label class="styled-checkbox"><input type="checkbox" id="violence1" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="violence2" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="violence3" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> </div> </div> <div class="san-loss-group"> <div class="san-loss-label"> <label>HELPLESSNESS</label><span id="helplessness-adapted" class="adapted-status hidden">ADAPTED</span> </div> <div> <label class="styled-checkbox"><input type="checkbox" id="helplessness1" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="helplessness2" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="helplessness3" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> </div> </div> </div> </section> </div> <div class="col-2"> <section class="form-section" style="flex-grow: 1; display: flex; flex-direction: column;"> <div style="display: flex; justify-content: space-between; align-items: center;"><h2 style="border-bottom: none;">SKILLS</h2><button type="button" id="roll-skills-btn" class="hidden" onclick="startSkillImprovement()">Roll 1d4s</button></div> <div id="skills-container" style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1;"></div> </section> </div> </div>
         <section class="form-section"> <h2>WEAPONS & EQUIPMENT</h2> <label for="gear">ARMOR AND GEAR</label> <textarea id="gear"></textarea> <label for="notes-field" style="margin-top:10px;">NOTES</label> <textarea id="notes-field"></textarea> <h3 style="margin-top: 15px;">WEAPONS</h3> <table id="weapons-table" style="width:100%; border-collapse: collapse;"> <thead> <tr><th>NAME</th><th>SKILL%</th><th>RANGE</th><th>DMG</th><th>AP</th><th>LETHALITY</th><th>AMMO</th><th></th></tr> </thead> <tbody id="weapons-body"></tbody> </table> <button type="button" onclick="openWeaponModal()">+ ADD WEAPON</button> </section>
     `;
@@ -496,6 +569,7 @@
         document.getElementById('lock-branch-rank-checkbox').addEventListener('change', updateBranchRankLockState);
         document.getElementById('skills-container').addEventListener('input', updateLinkedWeaponStats);
         document.getElementById('skills-container').addEventListener('change', (event) => { if (event.target.type === 'checkbox') { updateRollSkillsButtonVisibility(); } });
+        document.getElementById('begin-tutorial-btn').addEventListener('click', startTutorial);
     };
     
     function resetForm() {
@@ -542,28 +616,10 @@
     }
 
     // --- VIEW MANAGEMENT & UI/CALCS ---
-    function showTutorial() {
+    function beginTutorial() {
         showView('tutorial');
-        fetch('tutorial.html')
-            .then(response => {
-                if (!response.ok) { throw new Error('Network response was not ok.'); }
-                return response.text();
-            })
-            .then(html => {
-                document.getElementById('tutorial-content-container').innerHTML = html;
-            })
-            .catch(error => {
-                console.error('Failed to load tutorial.html:', error);
-                document.getElementById('tutorial-content-container').innerHTML = `
-                    <div class="content-menu">
-                        <h2 style="text-align: center; color: var(--danger-color);">LOAD FAILED</h2>
-                        <p>Could not load tutorial.html. Ensure the file is present in the application's root directory.</p>
-                        <div style="text-align: center; margin-top: 30px;">
-                            <button onclick="showView('main')">> RETURN TO MENU</button>
-                        </div>
-                    </div>`;
-            });
     }
+    
     function showView(viewId) { document.querySelectorAll('main').forEach(el => el.classList.add('hidden')); const viewEl = document.getElementById(`${viewId}-view`); if(viewEl){ viewEl.classList.remove('hidden'); if(viewId === 'loader') loadSavedSheets();} }
     function updateRanks() { const rankType = branches[document.getElementById('branch').value] || 'intelligence'; const rankOptions = ranks[rankType].map(r => { const isDisabled = r.adminOnly && !isAdmin; const label = `${r.name} (${r.grade})${r.adminOnly ? ' 🔒' : ''}`; return `<option value="${r.name}" data-grade="${r.grade}" ${isDisabled ? 'disabled' : ''}>${label}</option>`; }).join(''); document.getElementById('rank').innerHTML = rankOptions; applyAutoTheme(); }
     function changeStat(stat, delta) { if (statsUnlocked) return; const input = document.getElementById(stat); let pointsSpent = stats.reduce((acc, s) => acc + (parseInt(document.getElementById(s).value) - MIN_STAT_VALUE), 0); let currentValue = parseInt(input.value); if (delta > 0 && pointsSpent < MAX_STAT_POINTS && currentValue < MAX_STAT_VALUE) { input.value = currentValue + 1; } else if (delta < 0 && currentValue > MIN_STAT_VALUE) { input.value = currentValue - 1; } updateAllCalculations(); }
@@ -732,13 +788,11 @@
                 }
 
                 if (bonus > 0) {
-    // Isolate the dice part (e.g., "1D4") from the base damage string (e.g., "1D4-1")
-    const dicePart = baseDamage.split(/[-+]/)[0].trim();
-    // Append the new bonus
-    damageInput.value = `${dicePart}+${bonus}`;
-} else {
-    damageInput.value = baseDamage; // Revert to base damage if skill is 50 or below
-}
+                    const dicePart = baseDamage.split(/[-+]/)[0].trim();
+                    damageInput.value = `${dicePart}+${bonus}`;
+                } else {
+                    damageInput.value = baseDamage; 
+                }
             }
         });
     }
@@ -940,6 +994,282 @@
                 a.click(); a.remove();
             }).catch(err => { console.error('Screenshot failed:', err); alert('Could not capture screenshot. See console for details.');
             }).finally(() => { btn.textContent = originalText; btn.disabled = false; });
+    }
+
+    // --- TUTORIAL MODULE ---
+    let currentTutorialStep = -1;
+    let highlightedElement = null;
+    let skillValueBeforeRoll = 0;
+
+    const tutorialSteps = [
+        {
+            title: "SYSTEM INDUCTION",
+            text: "This tutorial will guide you through creating and editing your agent dossier. This process is critical for operational readiness. You may cancel at any time. Click 'Continue' to proceed.",
+            target: "#tutorial-prompt",
+            isPromptOnly: true,
+        },
+        {
+            title: "ACCESSING THE ROSTER",
+            text: "All new agent files are initiated from the main system menu. Your first step is to access the creation interface. Click the highlighted button.",
+            target: '#main-view button[onclick*="character-sheet"]',
+            before: () => showView('main')
+        },
+        {
+            title: "IDENTIFICATION: NAME",
+            text: "An agent's identity is their first line of defense and their last link to the world. Enter your full name here. This is a non-negotiable field.",
+            target: "#full-name",
+            before: () => { resetForm(); showView('character-sheet'); }
+        },
+        {
+            title: "IDENTIFICATION: BRANCH",
+            text: "Your branch determines your background and initial training. Operatives from the NSA and CIA excel at intelligence and espionage. Military branches (Army, Navy, Marines, Air Force) are specialists in field operations and direct action. Your choice has minor gameplay effects but shapes your story.",
+            target: "#branch"
+        },
+        {
+            title: "SYSTEM INTERFACE THEME",
+            text: "This system allows for cosmetic interface adjustments based on branch affiliation. Access the settings with the gear icon in the top right corner to change your theme at any time. This has no impact on gameplay.",
+            target: "#settings-btn"
+        },
+        {
+            title: "IDENTIFICATION: RANK/GRADE",
+            text: "All new agents begin at a probationary rank (E-5 for enlisted, GS-11 for officers). Higher ranks are earned through exemplary performance in the field and are locked until authorized by NEMESIS. Select your starting rank.",
+            target: "#rank"
+        },
+        {
+            title: "IDENTIFICATION: TEAM",
+            text: "You will be assigned to a SOCOM team. For this simulation, select either Team 1 or Team 2.",
+            target: "#team"
+        },
+        {
+            title: "IDENTIFICATION: BIOGRAPHICS",
+            text: "Complete the remaining biographical data: Sex, Date of Birth, and Nationality. Your 'Employer' should reflect your specific background (e.g., 'U.S. Army Rangers', 'CIA SAD'). Education can be detailed later.",
+            target: 'label[for="sex"]'
+        },
+        {
+            title: "CORE ATTRIBUTES",
+            text: "These six statistics define your agent's raw capabilities. You have 25 points to distribute. Each point increases a stat from the base of 8. Hover over a stat's name to see its description. Distribute your points now.",
+            target: "#stats-container"
+        },
+        {
+            title: "DERIVED ATTRIBUTES",
+            text: "These values are calculated from your Core Attributes. Hit Points (HP) measure physical endurance. Willpower (WP) is for resisting psychological stress. Sanity (SAN) represents your mental stability. If your SAN drops to your Breaking Point (BP), you will suffer psychological trauma.",
+            target: 'section:nth-of-type(2) .grid-container'
+        },
+        {
+            title: "BONDS",
+            text: "Bonds are connections to your life outside the program—people and principles that keep you sane. They are your primary defense against Sanity loss. The number of points in your Bonds cannot exceed your Charisma (CHA) score.",
+            target: "#bonds-container"
+        },
+        {
+            title: "PSYCHOLOGICAL PROFILE",
+            text: "Operations will expose you to extreme trauma. These checkboxes track your exposure to Violence and Helplessness. After three exposures of one type, you become 'Adapted,' and the SAN cost for similar events is reduced. This is a permanent change.",
+            target: ".san-loss-container"
+        },
+        {
+            title: "GEAR & NOTES",
+            text: "The final fields are for inventory and mission logs. Use 'Armor and Gear' to list your equipment. The 'Notes' field is for tracking injuries, mission objectives, character backstory, or any other relevant data.",
+            target: 'label[for="gear"]'
+        },
+        {
+            title: "SKILLS",
+            text: "Skills represent trained abilities. For a new agent, you are allotted 300 points to distribute among any skills, and a separate 50 points specifically for Foreign Languages. No skill may exceed 80% during creation. Distribute these points now.",
+            target: "#skills-container"
+        },
+        {
+            title: "SKILL IMPROVEMENT: PART 1",
+            text: "After a mission, you can improve skills you failed. You mark the failed skill by checking the box next to it. For this demonstration, we will mark 'Alertness.'",
+            target: '#check-skill-Alertness-',
+            after: () => {
+                const chk = document.getElementById('check-skill-Alertness-');
+                skillValueBeforeRoll = document.getElementById('skill-Alertness').value;
+                chk.checked = true;
+                updateRollSkillsButtonVisibility();
+            }
+        },
+        {
+            title: "SKILL IMPROVEMENT: PART 2",
+            text: "With a skill checked, the 'Roll 1d4s' button appears. Clicking this initiates a final, irreversible roll to improve all checked skills. Proceed.",
+            target: "#roll-skills-btn",
+            after: () => { startSkillImprovement(); }
+        },
+         {
+            title: "SKILL IMPROVEMENT: PART 3",
+            text: "The system processes the improvement roll. In a real scenario, this would be a permanent increase. For this tutorial, we will now reset the value. Close the confirmation window.",
+            target: "#skill-roll-conclusion",
+             after: () => {
+                setTimeout(() => {
+                    closeSkillRollModal();
+                    document.getElementById('skill-Alertness').value = skillValueBeforeRoll;
+                    document.getElementById('check-skill-Alertness-').checked = false;
+                    updateRollSkillsButtonVisibility();
+                }, 500);
+            }
+        },
+        {
+            title: "WEAPONS & LOADOUT",
+            text: "An agent is only as good as their equipment. To add a weapon to your loadout, you must first access the preset database. Click the '+ ADD WEAPON' button.",
+            target: 'button[onclick="openWeaponModal()"]',
+        },
+        {
+            title: "WEAPON SELECTION",
+            text: "The database is categorized for ease of access. We will equip a standard sidearm. Select the 'Medium Pistol' from the 'Firearms' category.",
+            target: null, // special handling
+            before: () => { openWeaponModal(); },
+            after: () => {
+                setTimeout(() => {
+                    const presetList = document.getElementById('weapon-preset-list');
+                    const mediumPistol = Array.from(presetList.querySelectorAll('.preset-item')).find(item => item.querySelector('h4').textContent.includes('Medium Pistol'));
+                    if(mediumPistol) {
+                        highlightElement(mediumPistol.querySelector('button'));
+                    }
+                }, 200);
+            }
+        },
+        {
+            title: "WEAPON DATA",
+            text: "The weapon is now added to your dossier. Its stats are listed here, including the required skill (Firearms), damage, and ammo capacity. All fields can be manually edited.",
+            target: "#weapons-body tr"
+        },
+        {
+            title: "INDUCTION COMPLETE",
+            text: "You have completed the NEMESIS agent induction protocol. Remember your training. Save your character file after every session, and do not forget to check the boxes for skills you fail in the field. Your life may depend on it. Good luck, agent. //NEMESIS",
+            target: "#tutorial-prompt",
+            isPromptOnly: true,
+        },
+    ];
+    
+    function startTutorial() {
+        document.getElementById('tutorial-entry-point').classList.add('hidden');
+        document.getElementById('tutorial-container').classList.remove('hidden');
+        const audio = document.getElementById('tutorial-audio');
+        audio.volume = 0.3;
+        audio.play().catch(e => console.log("Autoplay blocked. User must interact first."));
+        currentTutorialStep = 0;
+        runTutorialStep(currentTutorialStep);
+    }
+
+    function cancelTutorial() {
+        const audio = document.getElementById('tutorial-audio');
+        audio.pause();
+        audio.currentTime = 0;
+        document.getElementById('tutorial-container').classList.add('hidden');
+        document.getElementById('tutorial-entry-point').classList.remove('hidden');
+        if (highlightedElement) {
+            highlightedElement.classList.remove('tutorial-highlight');
+            highlightedElement = null;
+        }
+        showView('main');
+    }
+
+    function advanceTutorial(dir) {
+        currentTutorialStep += dir;
+        if(currentTutorialStep < 0) currentTutorialStep = 0;
+        if(currentTutorialStep >= tutorialSteps.length) {
+            cancelTutorial();
+            return;
+        }
+        runTutorialStep(currentTutorialStep);
+    }
+    
+    function highlightElement(el) {
+         if (highlightedElement) {
+            highlightedElement.classList.remove('tutorial-highlight');
+        }
+        if (el) {
+            el.classList.add('tutorial-highlight');
+            highlightedElement = el;
+            el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+        }
+    }
+
+    function positionPrompt(targetEl) {
+        const promptEl = document.getElementById('tutorial-prompt');
+        if (!targetEl) { // Center prompt if no target
+            promptEl.style.top = '50%';
+            promptEl.style.left = '50%';
+            promptEl.style.transform = 'translate(-50%, -50%)';
+            return;
+        }
+
+        const targetRect = targetEl.getBoundingClientRect();
+        const promptRect = promptEl.getBoundingClientRect();
+
+        let top = targetRect.bottom + 15;
+        let left = targetRect.left + (targetRect.width / 2) - (promptRect.width / 2);
+        
+        // Adjust if off-screen
+        if (top + promptRect.height > window.innerHeight) {
+            top = targetRect.top - promptRect.height - 15;
+        }
+        if (left < 10) { left = 10; }
+        if (left + promptRect.width > window.innerWidth) {
+            left = window.innerWidth - promptRect.width - 10;
+        }
+
+        promptEl.style.top = `${top}px`;
+        promptEl.style.left = `${left}px`;
+        promptEl.style.transform = 'none';
+    }
+    
+    async function runTutorialStep(stepIndex) {
+        if (highlightedElement) {
+            highlightedElement.classList.remove('tutorial-highlight');
+            highlightedElement = null;
+        }
+
+        const step = tutorialSteps[stepIndex];
+
+        // Run any pre-step logic
+        if (step.before) {
+            step.before();
+            // Give the view time to render before highlighting
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        // Update prompt
+        document.getElementById('tutorial-title').textContent = step.title;
+        document.getElementById('tutorial-text').innerHTML = step.text;
+
+        // Create navigation
+        const navContainer = document.getElementById('tutorial-nav');
+        let navHTML = `<div>`;
+        if (stepIndex > 0) {
+            navHTML += `<button id="tutorial-back-btn"><< BACK</button>`;
+        }
+        navHTML += `<button id="tutorial-cancel-btn">CANCEL</button></div>`;
+        navHTML += `<span class="step-counter">${stepIndex + 1} / ${tutorialSteps.length}</span>`;
+        if (stepIndex < tutorialSteps.length -1) {
+            navHTML += `<button id="tutorial-next-btn">NEXT >></button>`;
+        } else {
+            navHTML += `<button id="tutorial-finish-btn">FINISH</button>`;
+        }
+        navContainer.innerHTML = navHTML;
+
+        // Add event listeners
+        const nextBtn = document.getElementById('tutorial-next-btn');
+        const backBtn = document.getElementById('tutorial-back-btn');
+        const cancelBtn = document.getElementById('tutorial-cancel-btn');
+        const finishBtn = document.getElementById('tutorial-finish-btn');
+        
+        if (nextBtn) nextBtn.onclick = () => advanceTutorial(1);
+        if (backBtn) backBtn.onclick = () => advanceTutorial(-1);
+        if (cancelBtn) cancelBtn.onclick = cancelTutorial;
+        if (finishBtn) finishBtn.onclick = cancelTutorial;
+
+        // Handle highlighting and positioning
+        let targetEl = step.target ? document.querySelector(step.target) : null;
+        
+        if(step.isPromptOnly) {
+            targetEl = document.getElementById('tutorial-prompt');
+        }
+        
+        highlightElement(targetEl);
+        positionPrompt(targetEl);
+
+        // Run any post-step logic
+        if (step.after) {
+            step.after();
+        }
     }
 </script>
 
