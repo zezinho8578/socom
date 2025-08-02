@@ -139,5 +139,24 @@
         <section class="form-section"> <h2>WEAPONS & EQUIPMENT</h2> <label for="gear">ARMOR AND GEAR</label> <textarea id="gear"></textarea> <label for="notes-field" style="margin-top:10px;">NOTES</label> <textarea id="notes-field"></textarea> <h3 style="margin-top: 15px;">WEAPONS</h3> <table id="weapons-table" style="width:100%; border-collapse: collapse;"> <thead> <tr><th>NAME</th><th>SKILL%</th><th>RANGE</th><th>DMG</th><th>AP</th><th>LETHALITY</th><th>AMMO</th><th></th></tr> </thead> <tbody id="weapons-body"></tbody> </table> <button type="button" onclick="openWeaponModal()">+ ADD WEAPON</button> </section>
     </template>
 
+    <!-- Tutorial Modal -->
+<div id="tutorial-overlay" class="hidden">
+    <div id="tutorial-spotlight"></div>
+    <div id="tutorial-prompt">
+        <h3 id="tutorial-title"></h3>
+        <p id="tutorial-text"></p>
+        <div id="tutorial-nav-initial">
+            <button onclick="advanceTutorial()">BEGIN</button>
+            <button onclick="cancelTutorial()">CANCEL</button>
+        </div>
+        <div id="tutorial-nav-steps" class="hidden">
+            <button onclick="regressTutorial()">BACK</button>
+            <button onclick="advanceTutorial()">NEXT</button>
+            <button onclick="cancelTutorial()">CANCEL</button>
+        </div>
+    </div>
+</div>
+<!-- Tutorial Modal -->
+    
 </body>
 </html>
