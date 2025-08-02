@@ -65,7 +65,7 @@
     <!-- Step 0: Initial "Begin" Screen -->
     <div id="tutorial-step-0" class="tutorial-step" style="display: block;">
         <p style="margin-bottom: 25px;">Welcome, Agent. This tutorial will guide you through the N.E.M.E.S.I.S. operative interface.</p>
-        <button onclick="document.getElementById('tutorial-step-0').style.display='none'; document.getElementById('tutorial-step-1').style.display='block';">> BEGIN</button>
+        <button id="tutorial-begin-btn">> BEGIN</button>
     </div>
 
     <!-- Step 1: Confirmation -->
@@ -74,8 +74,8 @@
         <p>This tutorial will demonstrate how to create and manage your agent's digital file using the SOCOM websheet. The process is critical for mission readiness and long-term operational tracking. All data is logged and monitored by N.E.M.E.S.I.S. command.</p>
         <p>Proceed with the training simulation?</p>
         <div id="tutorial-controls">
-            <button onclick="startTutorial()">CONTINUE</button>
-            <button class="remove-btn" style="color: var(--danger-color); border-color: var(--danger-color);" onclick="cancelTutorial()">CANCEL</button>
+            <button id="tutorial-continue-btn">CONTINUE</button>
+            <button id="tutorial-cancel-btn-1" class="remove-btn" style="color: var(--danger-color); border-color: var(--danger-color);">CANCEL</button>
         </div>
     </div>
 
@@ -88,9 +88,9 @@
             <!-- This will be populated by JS -->
         </div>
         <div id="tutorial-controls">
-            <button onclick="prevStep()">BACK</button>
-            <button onclick="nextStep()">NEXT</button>
-            <button class="remove-btn" style="color: var(--danger-color); border-color: var(--danger-color);" onclick="cancelTutorial()">CANCEL</button>
+            <button id="tutorial-prev-btn">BACK</button>
+            <button id="tutorial-next-btn">NEXT</button>
+            <button id="tutorial-cancel-btn-2" class="remove-btn" style="color: var(--danger-color); border-color: var(--danger-color);">CANCEL</button>
         </div>
     </div>
 
@@ -103,42 +103,34 @@
             <li>SAVE your character sheet after every session to prevent data loss.</li>
             <li>CHECK the box next to any skill you FAIL during an operation. This marks it for potential improvement.</li>
         </ul>
-        <button onclick="showView('main')">> RETURN TO MENU</button>
+        <button id="tutorial-return-btn">> RETURN TO MENU</button>
     </div>
     
     <!-- Cancellation Message -->
     <div id="tutorial-cancelled" class="tutorial-step">
         <h2>TUTORIAL CANCELLED</h2>
         <p>You have aborted the training simulation. A record of this action has been logged.</p>
-        <button onclick="showView('main')">> RETURN TO MENU</button>
+        <button id="tutorial-return-btn-2">> RETURN TO MENU</button>
     </div>
 
 </div>
 
 <script>
-    let currentStep = 0;
+    // --- DOM Elements ---
     const audio = document.getElementById('tutorial-audio');
     audio.volume = 0.3;
 
-    // Each object in the array represents a step of the tutorial.
+    // --- State ---
+    let currentStep = 0;
     const tutorialSteps = [
-        { // 0: This is a placeholder for the initial screens. Logic is handled separately.
-            image: '',
-            highlight: {},
-            prompt: ''
-        },
-        { // 1: Initial screens part 2
-            image: '',
-            highlight: {},
-            prompt: ''
-        },
+        {}, {}, // Placeholders for steps 0 and 1
         { // 2: Click "Create New Agent File"
-            image: 'https://i.imgur.com/83nOAtS.png', // Represents main menu
+            image: 'https://i.imgur.com/83nOAtS.png',
             highlight: { top: '65.8%', left: '26.2%', width: '47.6%', height: '8.5%' },
             prompt: '<h3>FILE CREATION</h3>To begin, you must create a new file for your operative. This initializes their digital presence within the N.E.M.E.S.I.S. network. Select "> CREATE NEW AGENT FILE" to proceed.'
         },
         { // 3: Full Name
-            image: 'https://i.imgur.com/K4gX2i3.png', // Represents blank character sheet
+            image: 'https://i.imgur.com/K4gX2i3.png',
             highlight: { top: '7.8%', left: '2.5%', width: '31%', height: '7.2%' },
             prompt: '<h3>IDENTIFICATION</h3>Your agent\'s full name. This is their official designation in all reports. Enter the name and proceed.'
         },
@@ -188,7 +180,7 @@
             prompt: '<h3>SKILLS</h3>You have 300 points to customize your professional skills, and an additional 50 points reserved for Foreign Languages. No skill can exceed 80% during creation. Hover over a skill name to see its description and applications in the field. Choose wisely; your life will depend on it.'
         },
         { // 13: Skill Improvement
-            image: 'https://i.imgur.com/jV7Dct0.png', // Represents skill with checkbox
+            image: 'https://i.imgur.com/jV7Dct0.png',
             highlight: { top: '27.4%', left: '46.1%', width: '25.2%', height: '3.6%' },
             prompt: '<h3>SKILL IMPROVEMENT</h3>During an operation, if you fail a roll for a skill, you must check the box next to it. At the end of the session, the "Roll 1d4s" button will appear. Activating it will roll 1d4 and add the result to every checked skill, representing field experience. For this tutorial, we will check "Alertness" and roll.'
         },
@@ -198,12 +190,13 @@
             prompt: '<h3>WEAPONS & EQUIPMENT</h3>This section is for your gear. You can fill out Armor, Gear, and Notes later. Notes are useful for tracking injuries, mission objectives, or character details. We will now add a standard sidearm. Click the "+ ADD WEAPON" button.'
         },
         { // 15: Add Medium Pistol
-            image: 'https://i.imgur.com/g0nUnRR.png', // Represents weapon modal
+            image: 'https://i.imgur.com/g0nUnRR.png',
             highlight: { top: '42.8%', left: '3.4%', width: '93.2%', height: '12.2%' },
             prompt: '<h3>WEAPON SELECTION</h3>The weapon database contains numerous preset options. Select the "Firearms" category, then find the "Medium Pistol" and click "SELECT." This will add a standard service pistol, like a Glock 19 or Beretta M9, to your sheet with all its relevant stats pre-filled.'
         },
     ];
 
+    // --- Functions ---
     function startTutorial() {
         currentStep = 2; // Start at the first real step
         document.getElementById('tutorial-step-1').style.display = 'none';
@@ -227,22 +220,12 @@
     }
 
     function showStep(index) {
+        if (index < 2 || index >= tutorialSteps.length) return;
         const stepData = tutorialSteps[index];
         const imageMap = document.getElementById('image-map');
         const promptArea = document.getElementById('prompt-area');
-
-        // Build the HTML for the current step's image and highlight
-        let imageHtml = `<div class="image-container">
-            <img src="${stepData.image}" alt="Tutorial Step ${index}">
-            <div class="dim-overlay"></div>
-            <div class="highlight-box" style="top:${stepData.highlight.top}; left:${stepData.highlight.left}; width:${stepData.highlight.width}; height:${stepData.highlight.height};"></div>
-        </div>`;
-        
-        // Build the prompt
-        let promptHtml = `<div class="tutorial-prompt">${stepData.prompt}</div>`;
-
-        imageMap.innerHTML = imageHtml;
-        promptArea.innerHTML = promptHtml;
+        imageMap.innerHTML = `<div class="image-container"><img src="${stepData.image}" alt="Tutorial Step ${index}"><div class="dim-overlay"></div><div class="highlight-box" style="top:${stepData.highlight.top}; left:${stepData.highlight.left}; width:${stepData.highlight.width}; height:${stepData.highlight.height};"></div></div>`;
+        promptArea.innerHTML = `<div class="tutorial-prompt">${stepData.prompt}</div>`;
     }
 
     function nextStep() {
@@ -255,9 +238,30 @@
     }
 
     function prevStep() {
-        if (currentStep > 2) { // Can't go back before step 2
+        if (currentStep > 2) {
             currentStep--;
             showStep(currentStep);
         }
     }
+
+    // --- Event Listeners ---
+    // This ensures the functions are attached after the DOM is ready.
+    document.getElementById('tutorial-begin-btn').addEventListener('click', () => {
+        document.getElementById('tutorial-step-0').style.display = 'none';
+        document.getElementById('tutorial-step-1').style.display = 'block';
+    });
+
+    document.getElementById('tutorial-continue-btn').addEventListener('click', startTutorial);
+    document.getElementById('tutorial-cancel-btn-1').addEventListener('click', cancelTutorial);
+    document.getElementById('tutorial-cancel-btn-2').addEventListener('click', cancelTutorial);
+
+    document.getElementById('tutorial-next-btn').addEventListener('click', nextStep);
+    document.getElementById('tutorial-prev-btn').addEventListener('click', prevStep);
+
+    // The main script's showView() is not accessible here, so we look for it on the window.
+    // If it's not found, it will just fail silently, but in the context of the app, it should exist.
+    const returnToMenu = () => window.showView ? window.showView('main') : alert('Error: Could not return to menu.');
+    document.getElementById('tutorial-return-btn').addEventListener('click', returnToMenu);
+    document.getElementById('tutorial-return-btn-2').addEventListener('click', returnToMenu);
+
 </script>
