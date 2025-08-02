@@ -1,22 +1,17 @@
-// --- TUTORIAL SYSTEM ---
+// --- SOCOM TUTORIAL SYSTEM (REWRITE) ---
 
-let isTutorialActive = false;
 let currentTutorialStep = 0;
-let tutorialSkillPoints = 300;
+let tutorialActive = false;
+let originalTargetOnClick = null; // To store original onclick events
 
-// Draggable prompt box logic
-let isDragging = false;
-let offsetX, offsetY;
-
+// --- Core Tutorial Steps Definition ---
 const tutorialSteps = [
-    // Step 0: Initial Prompt
     {
         title: "TUTORIAL",
         text: "This tutorial will guide you through creating a new agent file. Would you like to begin?",
-        targetElement: null,
         setup: () => {
             showView('main');
-            document.getElementById('tutorial-box').innerHTML = `
+            getEl('tutorial-box').innerHTML = `
                 <h4>TUTORIAL</h4>
                 <p>This tutorial will guide you through creating a new agent file. Would you like to begin?</p>
                 <div class="tutorial-controls">
@@ -25,342 +20,243 @@ const tutorialSteps = [
                 </div>`;
         }
     },
-    // Step 1: Create New Agent
     {
         title: "STEP 1: CREATE FILE",
         text: "Welcome, Recruit. Your first task is to open a new file. Click the highlighted 'CREATE NEW AGENT FILE' button to proceed.",
-        targetElement: 'button[onclick*="character-sheet"]',
-        spotlightPadding: 10,
-        eventListener: (el) => {
-            el.addEventListener('click', advanceTutorial, { once: true });
-        }
+        targetSelector: 'button[onclick*="character-sheet"]',
+        padding: 10
     },
-    // Step 2: Choose Branch
     {
         title: "STEP 2: BRANCH & RANK",
         text: "Every operative has a background. Select a Branch from the dropdown menu. For now, you will be assigned the lowest available rank. Promotion is earned through successful operations.",
-        targetElement: '#branch',
-        spotlightPadding: 20,
-        spotlightGroup: ['#rank'],
-        eventListener: (el) => {
-            el.addEventListener('change', advanceTutorial, { once: true });
-        }
+        targetSelector: '#branch',
+        padding: 20,
+        groupSelectors: ['#rank'],
+        eventType: 'change'
     },
-    // Step 3: Core Attributes
     {
         title: "STEP 3: CORE ATTRIBUTES",
         text: "These are your innate strengths and weaknesses. Distribute all 25 points. A balanced operative is a versatile operative. You must use all points to continue.",
-        targetElement: '#stats-container',
-        spotlightPadding: 20,
-        validation: () => {
-            const pointsRemaining = parseInt(document.getElementById('stat-points-remaining').textContent, 10);
-            return pointsRemaining === 0;
-        }
+        targetSelector: '#stats-container',
+        padding: 20,
+        validation: () => getEl('stat-points-remaining').textContent === '0'
     },
-    // Step 4: Skills
     {
         title: "STEP 4: SKILLS",
-        text: `You have <strong>300</strong> points to distribute among your skills. These represent your training. For this simulation, no single skill can exceed 80. Spend all points to proceed. <br><br>Points Remaining: <span id="tutorial-skill-points-counter">${tutorialSkillPoints}</span>`,
-        targetElement: '#skills-container',
-        spotlightPadding: 40,
+        text: `You have <strong>300</strong> points to distribute among your skills. These represent your training. For this simulation, no single skill can exceed 80. Spend all points to proceed. <br><br>Points Remaining: <span id="tutorial-skill-points-counter">300</span>`,
+        targetSelector: '#skills-container',
+        padding: 40,
         validation: () => {
             let totalSpent = 0;
             const skillInputs = document.querySelectorAll('#skills-container input[type="number"]');
             const baseValues = {};
-            simpleSkills.forEach(skill => {
-                const skillId = `skill-${skill.replace(/\s+/g, '-')}`;
-                baseValues[skillId] = baseSkillValues[skill] || 0;
-            });
+             simpleSkills.forEach(skill => baseValues[`skill-${skill.replace(/\s+/g, '-')}`] = baseSkillValues[skill] || 0);
             ['skill-milsci-land', 'skill-milsci-sea', 'skill-milsci-air', 'skill-pilot-airplane', 'skill-pilot-helicopter', 'skill-pilot-boat', 'skill-pilot-rc', 'skill-science-biology', 'skill-science-chemistry', 'skill-science-mathematics', 'skill-science-physics'].forEach(id => baseValues[id] = 0);
             document.querySelectorAll('#craft-skills-container input[type="number"], #language-skills-container input[type="number"]').forEach(input => baseValues[input.id] = 0);
-
+            
             skillInputs.forEach(input => {
                 let baseValue = baseValues[input.id] || 0;
-                let currentValue = parseInt(input.value, 10);
-                if (isNaN(currentValue)) currentValue = 0;
-
-                if (currentValue > 80) {
-                    input.value = 80;
-                    currentValue = 80;
-                }
-                
+                let currentValue = parseInt(input.value, 10) || 0;
+                if (currentValue > 80) { input.value = 80; currentValue = 80; }
                 totalSpent += (currentValue - baseValue);
             });
             
-            tutorialSkillPoints = 300 - totalSpent;
-            const counter = document.getElementById('tutorial-skill-points-counter');
-            if(counter) counter.textContent = tutorialSkillPoints;
-
-            return tutorialSkillPoints <= 0;
+            const pointsLeft = 300 - totalSpent;
+            getEl('tutorial-skill-points-counter').textContent = pointsLeft;
+            return pointsLeft <= 0;
         }
     },
-    // Step 5: Skill Improvement Roll
     {
         title: "STEP 5: FIELD IMPROVEMENT",
         text: "In the field, you learn under pressure. Check the box next to 'ALERTNESS' to mark it for improvement.",
-        targetElement: '#check-skill-Alertness',
-        spotlightPadding: 10,
-        spotlightGroup: ['label[for="skill-Alertness"]'],
-        eventListener: (el) => {
-             el.addEventListener('change', advanceTutorial, { once: true });
-        }
+        targetSelector: '#check-skill-Alertness',
+        padding: 10,
+        groupSelectors: ['label[for="skill-Alertness"]'],
+        eventType: 'change'
     },
-    // Step 5a: Click Roll Button
     {
         title: "STEP 5: FIELD IMPROVEMENT",
         text: "Good. Now, initiate the improvement roll by clicking the 'ROLL 1D4S' button that has appeared.",
-        targetElement: '#roll-skills-btn',
-        spotlightPadding: 10,
-        setup: () => {
-            const observer = new MutationObserver(() => {
-                if (!document.getElementById('skill-roll-modal').classList.contains('hidden')) {
-                    observer.disconnect();
-                    advanceTutorial();
-                }
-            });
-            observer.observe(document.body, { childList: true, subtree: true });
-        },
-        eventListener: (el) => {
-             el.addEventListener('click', () => {}, { once: true });
-        }
+        targetSelector: '#roll-skills-btn',
+        padding: 10
     },
-    // Step 5b: Confirm Roll
     {
         title: "STEP 5: FIELD IMPROVEMENT",
         text: "Confirm the action. This is final.",
-        targetElement: '#skill-roll-prompt button[onclick*="executeSkillRolls"]',
-        spotlightPadding: 15,
-        spotlightNoRadius: true,
-        setup: () => {
-             const observer = new MutationObserver(() => {
-                if (!document.getElementById('skill-roll-conclusion').classList.contains('hidden')) {
-                    observer.disconnect();
-                    advanceTutorial();
-                }
-            });
-            observer.observe(document.getElementById('skill-roll-modal'), { subtree: true, attributes: true, childList: true });
-        },
-        eventListener: (el) => {
-            el.addEventListener('click', () => {}, { once: true });
-        }
+        targetSelector: '#skill-roll-prompt button[onclick*="executeSkillRolls"]',
+        padding: 15
     },
-    // Step 5c: Close Modal
     {
         title: "STEP 5: FIELD IMPROVEMENT",
         text: "The roll is complete and your skill has increased. Close the report.",
-        targetElement: '#skill-roll-conclusion button',
-        spotlightPadding: 15,
-        spotlightNoRadius: true,
-         setup: () => {
-            const observer = new MutationObserver(() => {
-                if (document.getElementById('skill-roll-modal').classList.contains('hidden')) {
-                    observer.disconnect();
-                    advanceTutorial();
-                }
-            });
-            observer.observe(document.getElementById('skill-roll-modal'), { attributes: true });
-        },
-        eventListener: (el) => {
-             el.addEventListener('click', () => {}, { once: true });
-        }
+        targetSelector: '#skill-roll-conclusion button',
+        padding: 15
     },
-    // Step 6: Add Weapon
     {
         title: "STEP 6: LOADOUT",
         text: "An operative is only as good as their tools. Access the weapons locker by clicking '+ ADD WEAPON'.",
-        targetElement: 'button[onclick*="openWeaponModal"]',
-        spotlightPadding: 30,
-        setup: () => {
-            const observer = new MutationObserver(() => {
-                if (!document.getElementById('weapon-preset-modal').classList.contains('hidden')) {
-                    observer.disconnect();
-                    advanceTutorial();
-                }
-            });
-            observer.observe(document.body, { childList: true, subtree: true });
-        },
-        eventListener: (el) => {
-             el.addEventListener('click', () => {}, { once: true });
-        }
+        targetSelector: 'button[onclick*="openWeaponModal"]',
+        padding: 30
     },
-    // Step 6a: Choose Weapon
     {
         title: "STEP 6: LOADOUT",
         text: "For this simulation, select a standard sidearm. Find the 'Medium Pistol' in the list and click 'SELECT'.",
-        targetElement: null,
+        // This step is special, it has a setup function to find the target
         setup: () => {
-            document.getElementById('weapon-category-select').value = "Firearms";
+            getEl('weapon-category-select').value = "Firearms";
             populateWeaponPresets();
             const weaponButtons = document.querySelectorAll('#weapon-preset-list button');
             weaponButtons.forEach(button => {
-                const presetText = button.getAttribute('onclick');
-                if (presetText && presetText.includes('Medium Pistol')) {
-                    button.addEventListener('click', advanceTutorial, { once: true });
+                if (button.getAttribute('onclick').includes('Medium Pistol')) {
+                    // Temporarily hijack this button to advance the tutorial
+                    button.onclick = () => {
+                        addWeapon(JSON.parse(button.getAttribute('onclick').match(/addWeapon\((.*?),/)[1]), true);
+                        advanceTutorial();
+                    };
                 }
             });
         }
     },
-    // Step 7: Conclusion
     {
         title: "TUTORIAL COMPLETE",
         text: "You have successfully created an agent file. You are ready for your first assignment. Do not disappoint us. Welcome to SOCOM.",
-        targetElement: null,
         setup: () => {
-            document.getElementById('tutorial-box').innerHTML = `
+            getEl('tutorial-box').innerHTML = `
                 <h4>TUTORIAL COMPLETE</h4>
                 <p>You have successfully created an agent file. You are ready for your first assignment. Do not disappoint us. Welcome to SOCOM.</p>
                 <div class="tutorial-controls">
                     <button onclick="endTutorial()">FINISH</button>
                 </div>`;
+            getEl('tutorial-spotlight').style.display = 'none';
         }
     }
 ];
 
+// --- Helper & Utility Functions ---
+const getEl = (id) => document.getElementById(id);
+const queryEl = (selector) => document.querySelector(selector);
+
+// --- Core Tutorial Functions ---
 function startTutorial() {
-    isTutorialActive = true;
+    tutorialActive = true;
     currentTutorialStep = 0;
     resetForm();
-    document.getElementById('tutorial-overlay').classList.remove('hidden');
-    document.getElementById('tutorial-box').classList.remove('hidden');
-    updateTutorialUI();
+    getEl('tutorial-overlay').classList.remove('hidden');
+    getEl('tutorial-box').classList.remove('hidden');
+    updateTutorialStep();
 }
 
 function endTutorial() {
-    isTutorialActive = false;
-    document.getElementById('tutorial-overlay').classList.add('hidden');
-    document.getElementById('tutorial-box').classList.add('hidden');
-    highlightElement(null); // Clear the spotlight
+    tutorialActive = false;
+    getEl('tutorial-overlay').classList.add('hidden');
+    getEl('tutorial-box').classList.add('hidden');
     resetForm();
     showView('main');
 }
 
 function advanceTutorial() {
-    if (!isTutorialActive) return;
+    if (!tutorialActive) return;
     currentTutorialStep++;
     if (currentTutorialStep >= tutorialSteps.length) {
         endTutorial();
     } else {
-        setTimeout(updateTutorialUI, 50);
+        // Use a small delay to ensure the DOM is ready for the next step
+        setTimeout(updateTutorialStep, 100);
     }
 }
 
-function updateTutorialUI() {
+let validationInterval;
+function updateTutorialStep() {
+    clearInterval(validationInterval); // Stop any previous validation checks
     const step = tutorialSteps[currentTutorialStep];
-    const box = document.getElementById('tutorial-box');
 
-    box.innerHTML = `
-        <h4>${step.title}</h4>
-        <p>${step.text}</p>
-        <div class="tutorial-controls">
-            ${!step.validation && !step.eventListener ? '<button onclick="advanceTutorial()">NEXT</button>' : ''}
-            <button onclick="endTutorial()">CANCEL TUTORIAL</button>
-        </div>`;
-
-    if (step.setup) {
-        step.setup();
-    } 
-
-    if (step.targetElement) {
-        const target = document.querySelector(step.targetElement);
-        highlightElement(target, step.spotlightPadding, step.spotlightGroup, step.spotlightNoRadius);
-    } else {
-        highlightElement(null);
+    // Update the tutorial box content
+    if (step.title && step.text) {
+        getEl('tutorial-box').innerHTML = `
+            <h4>${step.title}</h4>
+            <p>${step.text}</p>
+            <div class="tutorial-controls">
+                <button onclick="endTutorial()">CANCEL TUTORIAL</button>
+            </div>`;
     }
 
-    if (step.eventListener) {
-        const target = document.querySelector(step.targetElement);
-        if (target) {
-            step.eventListener(target);
-        }
-    } else if (step.validation) {
-        const interval = setInterval(() => {
-            if (!isTutorialActive || currentTutorialStep !== tutorialSteps.indexOf(step)) {
-                clearInterval(interval);
-                return;
-            }
+    // Run a custom setup function if it exists
+    if (step.setup) {
+        step.setup();
+    }
+
+    const target = step.targetSelector ? queryEl(step.targetSelector) : null;
+    updateSpotlight(target, step.padding, step.groupSelectors);
+
+    if (step.validation) {
+        validationInterval = setInterval(() => {
             if (step.validation()) {
-                clearInterval(interval);
+                clearInterval(validationInterval);
                 advanceTutorial();
             }
         }, 250);
+    } else if (target) {
+        const eventType = step.eventType || 'click';
+        // Hijack the element's default action to advance the tutorial
+        originalTargetOnClick = target.onclick;
+        target.onclick = (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            if (originalTargetOnClick) originalTargetOnClick();
+            target.onclick = originalTargetOnClick; // Restore original behavior
+            advanceTutorial();
+        };
+        // For non-click events like 'change'
+        if (eventType !== 'click') {
+             target.addEventListener(eventType, advanceTutorial, { once: true });
+             target.onclick = null; // clear the click hijack for change events
+        }
     }
 }
 
-
-function highlightElement(element, padding = 10, groupSelectors = [], noRadius = false) {
-    const overlay = document.getElementById('tutorial-overlay');
-    if(!element) {
-        overlay.style.clipPath = '';
+function updateSpotlight(target, padding = 0, groupSelectors = []) {
+    const spotlight = getEl('tutorial-spotlight');
+    if (!target) {
+        spotlight.style.display = 'none';
         return;
-    };
-    
-    const rects = [element.getBoundingClientRect()];
-
-    if(groupSelectors) {
-        groupSelectors.forEach(selector => {
-            const groupEl = document.querySelector(selector);
-            if (groupEl) rects.push(groupEl.getBoundingClientRect());
-        });
     }
+    spotlight.style.display = 'block';
 
-    const combinedRect = rects.reduce((acc, rect) => {
-        if (!rect.width && !rect.height) return acc;
-        const left = Math.min(acc.left, rect.left);
-        const top = Math.min(acc.top, rect.top);
-        const right = Math.max(acc.right, rect.right);
-        const bottom = Math.max(acc.bottom, rect.bottom);
-        return { left, top, right, bottom, width: right - left, height: bottom - top };
-    }, { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity });
-
-    const top = combinedRect.top - padding;
-    const left = combinedRect.left - padding;
-    const width = combinedRect.width + (padding * 2);
-    const height = combinedRect.height + (padding * 2);
-    const Epsilon = 0.01;
-
-    overlay.style.clipPath = `polygon(
-        0% 0%, 0% 100%, 100% 100%, 100% 0%, 0% 0%,
-        ${left + Epsilon}px ${top + Epsilon}px,
-        ${left + Epsilon}px ${top + height - Epsilon}px,
-        ${left + width - Epsilon}px ${top + height - Epsilon}px,
-        ${left + width - Epsilon}px ${top + Epsilon}px,
-        ${left + Epsilon}px ${top + Epsilon}px
-    )`;
+    const rect = target.getBoundingClientRect();
+    spotlight.style.left = `${rect.left - padding}px`;
+    spotlight.style.top = `${rect.top - padding}px`;
+    spotlight.style.width = `${rect.width + (padding * 2)}px`;
+    spotlight.style.height = `${rect.height + (padding * 2)}px`;
 }
 
-function makeDraggable() {
-    const box = document.getElementById('tutorial-box');
+
+// --- Draggability ---
+function initializeTutorial() {
+    const box = getEl('tutorial-box');
+    let isDragging = false;
+    let offsetX, offsetY;
 
     const onMouseDown = (e) => {
-        if(e.target.nodeName === 'BUTTON') return;
+        if (e.target.nodeName === 'BUTTON') return;
         isDragging = true;
         offsetX = e.clientX - box.offsetLeft;
         offsetY = e.clientY - box.offsetTop;
         box.style.cursor = 'grabbing';
         document.body.style.userSelect = 'none';
     };
-
     const onMouseUp = () => {
         isDragging = false;
         box.style.cursor = 'grab';
         document.body.style.userSelect = '';
     };
-
     const onMouseMove = (e) => {
         if (!isDragging) return;
-        let newLeft = e.clientX - offsetX;
-        let newTop = e.clientY - offsetY;
-        
-        const boxRect = box.getBoundingClientRect();
-        if (newLeft < 0) newLeft = 0;
-        if (newTop < 0) newTop = 0;
-        if (newLeft + boxRect.width > window.innerWidth) newLeft = window.innerWidth - boxRect.width;
-        if (newTop + boxRect.height > window.innerHeight) newTop = window.innerHeight - boxRect.height;
-        
-        box.style.left = `${newLeft}px`;
-        box.style.top = `${newTop}px`;
+        let x = e.clientX - offsetX;
+        let y = e.clientY - offsetY;
+        box.style.left = `${x}px`;
+        box.style.top = `${y}px`;
     };
-    
+
     box.addEventListener('mousedown', onMouseDown);
     document.addEventListener('mouseup', onMouseUp);
     document.addEventListener('mousemove', onMouseMove);
