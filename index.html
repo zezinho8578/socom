@@ -511,33 +511,114 @@
             showView('main');
         }
     }
-    function updateRanks() {
-        const branchKey = document.getElementById('branch').value;
-        const rankType = branches[branchKey] || 'intelligence';
-        let availableRanks = ranks[rankType];
-
+    
+    // START: MODIFIED/ADDED FUNCTIONS
+    function toggleAdminMode() {
         if (!isAdmin) {
-            availableRanks = availableRanks.filter(r => !r.adminOnly);
+            const pass = prompt("Enter Admin Password:");
+            if (btoa(pass) === ADMIN_PASSWORD_HASH) {
+                isAdmin = true;
+                alert("ADMIN MODE ACTIVATED.");
+            } else {
+                if (pass !== null && pass !== "") alert("ACCESS DENIED.");
+                return;
+            }
+        } else {
+            isAdmin = false;
+            alert("ADMIN MODE DEACTIVATED.");
         }
+        document.body.classList.toggle('admin-mode', isAdmin);
+        document.getElementById('lock-branch-rank-container').classList.toggle('hidden', !isAdmin);
+        document.getElementById('toggle-stats-lock-btn').classList.toggle('hidden', !isAdmin);
+        updateRanks();
+    }
 
-        const rankOptions = availableRanks.map(r => {
+    function updateBranchRankLockState() {
+        const isLocked = document.getElementById('lock-branch-rank-checkbox').checked;
+        document.getElementById('branch').disabled = isLocked;
+        document.getElementById('rank').disabled = isLocked;
+    }
+
+    function screenshotPage(event) {
+        event.preventDefault();
+        const sheet = document.getElementById('character-sheet-container');
+        const name = document.getElementById('full-name').value || "Unnamed_Agent";
+        alert("Generating screenshot...");
+        html2canvas(sheet, {
+            scale: 2,
+            backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-color'),
+            onclone: (clonedDoc) => {
+                clonedDoc.getElementById('character-sheet-container').style.backgroundColor = getComputedStyle(document.body).getPropertyValue('--bg-color');
+            }
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `${name.replace(/[^\w\s]/gi, '').replace(/ /g, '_')}_SOCOM_Sheet.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            link.remove();
+        }).catch(err => {
+            console.error("Screenshot failed:", err);
+            alert("Screenshot failed. See console for details.");
+        });
+    }
+
+    function toggleStatsLock() {
+        if (!isAdmin) return;
+        statsUnlocked = !statsUnlocked;
+        document.getElementById('toggle-stats-lock-btn').textContent = statsUnlocked ? "LOCK STATS" : "FORCE STATS";
+        stats.forEach(stat => {
+            document.getElementById(stat).readOnly = !statsUnlocked;
+        });
+        if (statsUnlocked) {
+            alert("WARNING: Core attributes are now unlocked. You can manually set any value. This may unbalance the character.");
+        } else {
+            updateAllCalculations();
+        }
+    }
+
+    function updateRanks() {
+        const branchSelect = document.getElementById('branch');
+        const rankSelect = document.getElementById('rank');
+        const isLocked = document.getElementById('lock-branch-rank-checkbox').checked;
+        
+        const currentRankValue = rankSelect.value;
+        
+        const branchKey = branchSelect.value;
+        const rankType = branches[branchKey] || 'intelligence';
+        const allRanksForBranch = ranks[rankType];
+
+        // Issue 1 Fix: Show all ranks, but disable admin-only ones for non-admins.
+        const rankOptions = allRanksForBranch.map(r => {
             const isDisabled = r.adminOnly && !isAdmin;
             const label = `${r.name} (${r.grade})${r.adminOnly ? ' 🔒' : ''}`;
             return `<option value="${r.name}" data-grade="${r.grade}" ${isDisabled ? 'disabled' : ''}>${label}</option>`;
         }).join('');
         
-        document.getElementById('rank').innerHTML = rankOptions;
+        rankSelect.innerHTML = rankOptions;
         
-        // Non-admins must choose the lowest available rank (E-5 equivalent)
-        if(!isAdmin) {
-            const select = document.getElementById('rank');
-            if (select.options.length > 0) {
-                 select.value = select.options[0].value;
+        // Issue 2 Fix: Preserve locked admin rank when exiting admin mode, and handle resets correctly.
+        const optionForCurrentValue = rankSelect.querySelector(`option[value="${currentRankValue}"]`);
+
+        if (isLocked) {
+             // If locked, just force the value back. This handles the case of exiting admin mode with a locked admin rank.
+             if (optionForCurrentValue) {
+                rankSelect.value = currentRankValue;
+             }
+        } else if (!optionForCurrentValue || optionForCurrentValue.disabled) {
+            // If the old selection is now disabled (and not locked), or it doesn't exist anymore (branch change), reset.
+            const firstEnabledRank = allRanksForBranch.find(r => !r.adminOnly);
+            if (firstEnabledRank) {
+                rankSelect.value = firstEnabledRank.name;
             }
+        } else {
+            // Otherwise, the selection is still valid and enabled, so keep it.
+            rankSelect.value = currentRankValue;
         }
-        
+
         applyAutoTheme();
     }
+    // END: MODIFIED/ADDED FUNCTIONS
+
     function changeStat(stat, delta) { if (statsUnlocked) return; const input = document.getElementById(stat); let pointsSpent = stats.reduce((acc, s) => acc + (parseInt(document.getElementById(s).value) - MIN_STAT_VALUE), 0); let currentValue = parseInt(input.value); if (delta > 0 && pointsSpent < MAX_STAT_POINTS && currentValue < MAX_STAT_VALUE) { input.value = currentValue + 1; } else if (delta < 0 && currentValue > MIN_STAT_VALUE) { input.value = currentValue - 1; } updateAllCalculations(); }
     function updateAllCalculations() { let pointsSpent = 0; stats.forEach(stat => { const value = parseInt(document.getElementById(stat).value); pointsSpent += (value - MIN_STAT_VALUE); document.getElementById(`${stat}x5`).textContent = `x5: ${value * 5}`; document.getElementById(`${stat}-desc`).textContent = getStatDescription(stat, value); }); document.getElementById('stat-points-remaining').textContent = MAX_STAT_POINTS - pointsSpent; updateDerivedAttributes(); updateBondSlots(); updateBondScores(); updateLinkedWeaponStats(); }
     function updateDerivedAttributes() {
@@ -686,26 +767,21 @@
         const craftSkills = Array.from(document.querySelectorAll('#craft-skills-container .sub-skill-item')).map(item => ({ type: item.querySelector('select').value, score: item.querySelector('input[type="number"]').value, checked: item.querySelector('input[type="checkbox"]').checked }));
         const languageSkills = Array.from(document.querySelectorAll('#language-skills-container .sub-skill-item')).map(item => ({ lang: item.querySelector('input[type="text"]').value, score: item.querySelector('input[type="number"]').value, checked: item.querySelector('input[type="checkbox"]').checked }));
         const bonds = Array.from(document.querySelectorAll('#bonds-container .bond-item')).map(item => ({ name: item.querySelector('input[type="text"]').value, score: item.querySelector('.bond-score').value }));
-        
-        // START FIX: The indices for reading weapon data were incorrect, causing an error.
         const weapons = Array.from(document.querySelectorAll('#weapons-body tr')).map(row => {
             const i = row.querySelectorAll('input');
-            // The inputs in each row are: [0]Name, [1]Skill, [2]Range, [3]Dmg, [4]AP, [5]Lethality, [6]AmmoC, [7]AmmoM
             return {
                 name: i[0].value,
                 skill: i[1].value,
                 range: i[2].value,
-                dmg: i[3].value,       // Corrected from i[4]
-                ap: i[4].value,        // Corrected from i[5]
-                lethality: i[5].value, // Corrected from i[6]
-                ammoC: i[6].value,     // Corrected from i[8]
-                ammoM: i[7].value,     // Corrected from i[9]
+                dmg: i[3].value,
+                ap: i[4].value,
+                lethality: i[5].value,
+                ammoC: i[6].value,
+                ammoM: i[7].value,
                 skillIdentifier: row.dataset.skillIdentifier,
                 baseDamage: row.dataset.baseDamage
             };
         });
-        // END FIX
-
         return { id: getVal('character-id'), fullName: getVal('full-name'), branch: getVal('branch'), rank: getVal('rank'), team: getVal('team'), sex: getVal('sex'), dob: getVal('dob'), nationality: getVal('nationality'), employer: getVal('employer'), education: getVal('education'), stats: { STR: getNum('STR'), DEX: getNum('DEX'), CON: getNum('CON'), INT: getNum('INT'), POW: getNum('POW'), CHA: getNum('CHA') }, hpCurrent: getNum('hp-current'), wpCurrent: getNum('wp-current'), sanCurrent: getNum('san-current'), isArmorActive: isArmorActive, currentArmorPoints: currentArmorPoints, psych: { violence1: getChecked('violence1'), violence2: getChecked('violence2'), violence3: getChecked('violence3'), helplessness1: getChecked('helplessness1'), helplessness2: getChecked('helplessness2'), helplessness3: getChecked('helplessness3'), }, skillsData, craftSkills, languageSkills, bonds, weapons, gear: getVal('gear'), notes: getVal('notes-field'), isSkillSetupMode: isSkillSetupMode, branchRankLocked: getChecked('lock-branch-rank-checkbox'), };
     }
     function loadCharacter(data) {
