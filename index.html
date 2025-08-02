@@ -325,6 +325,7 @@
                 <button onclick="resetForm(); showView('character-sheet'); ">> CREATE NEW AGENT FILE</button>
                 <button onclick="showView('loader')">> LOAD AGENT FILE</button>
                 <button onclick="showView('rules')">> RULES</button>
+                <button onclick="showTutorial()">> TUTORIAL</button>
                 <button onclick="showView('about')">> ABOUT SOCOM</button>
             </div>
         </main>
@@ -356,6 +357,11 @@
                 <p style="font-size: 1.2em; text-align: center; font-style: italic; margin-top: 40px; margin-bottom: 20px;"> <a href="https://discord.gg/g8DgxusP9u" target="_blank" rel="noopener noreferrer" class="themed-link">/De Opresso Liber/</a> </p>
                 <div style="text-align: center; margin-bottom: 40px;"> <a href="https://www.socom.mil/" target="_blank" rel="noopener noreferrer"> <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/SpecialForces_Badge.svg/1200px-SpecialForces_Badge.svg.png" alt="Green Berets Logo" class="logo" style="height: 70px; margin-right: 0;"> </a> </div>
                 <div style="text-align: center;"> <button onclick="showView('main')">> RETURN TO MENU</button> </div>
+            </div>
+        </main>
+        <main id="tutorial-view" class="hidden">
+            <div id="tutorial-content-container">
+                <!-- Content will be loaded from tutorial.html -->
             </div>
         </main>
     `;
@@ -536,6 +542,28 @@
     }
 
     // --- VIEW MANAGEMENT & UI/CALCS ---
+    function showTutorial() {
+        showView('tutorial');
+        fetch('tutorial.html')
+            .then(response => {
+                if (!response.ok) { throw new Error('Network response was not ok.'); }
+                return response.text();
+            })
+            .then(html => {
+                document.getElementById('tutorial-content-container').innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Failed to load tutorial.html:', error);
+                document.getElementById('tutorial-content-container').innerHTML = `
+                    <div class="content-menu">
+                        <h2 style="text-align: center; color: var(--danger-color);">LOAD FAILED</h2>
+                        <p>Could not load tutorial.html. Ensure the file is present in the application's root directory.</p>
+                        <div style="text-align: center; margin-top: 30px;">
+                            <button onclick="showView('main')">> RETURN TO MENU</button>
+                        </div>
+                    </div>`;
+            });
+    }
     function showView(viewId) { document.querySelectorAll('main').forEach(el => el.classList.add('hidden')); const viewEl = document.getElementById(`${viewId}-view`); if(viewEl){ viewEl.classList.remove('hidden'); if(viewId === 'loader') loadSavedSheets();} }
     function updateRanks() { const rankType = branches[document.getElementById('branch').value] || 'intelligence'; const rankOptions = ranks[rankType].map(r => { const isDisabled = r.adminOnly && !isAdmin; const label = `${r.name} (${r.grade})${r.adminOnly ? ' 🔒' : ''}`; return `<option value="${r.name}" data-grade="${r.grade}" ${isDisabled ? 'disabled' : ''}>${label}</option>`; }).join(''); document.getElementById('rank').innerHTML = rankOptions; applyAutoTheme(); }
     function changeStat(stat, delta) { if (statsUnlocked) return; const input = document.getElementById(stat); let pointsSpent = stats.reduce((acc, s) => acc + (parseInt(document.getElementById(s).value) - MIN_STAT_VALUE), 0); let currentValue = parseInt(input.value); if (delta > 0 && pointsSpent < MAX_STAT_POINTS && currentValue < MAX_STAT_VALUE) { input.value = currentValue + 1; } else if (delta < 0 && currentValue > MIN_STAT_VALUE) { input.value = currentValue - 1; } updateAllCalculations(); }
