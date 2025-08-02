@@ -686,7 +686,26 @@
         const craftSkills = Array.from(document.querySelectorAll('#craft-skills-container .sub-skill-item')).map(item => ({ type: item.querySelector('select').value, score: item.querySelector('input[type="number"]').value, checked: item.querySelector('input[type="checkbox"]').checked }));
         const languageSkills = Array.from(document.querySelectorAll('#language-skills-container .sub-skill-item')).map(item => ({ lang: item.querySelector('input[type="text"]').value, score: item.querySelector('input[type="number"]').value, checked: item.querySelector('input[type="checkbox"]').checked }));
         const bonds = Array.from(document.querySelectorAll('#bonds-container .bond-item')).map(item => ({ name: item.querySelector('input[type="text"]').value, score: item.querySelector('.bond-score').value }));
-        const weapons = Array.from(document.querySelectorAll('#weapons-body tr')).map(row => { const i = row.querySelectorAll('input'); return { name: i[0].value, skill: i[1].value, range: i[2].value, dmg: i[4].value, ap: i[5].value, lethality: i[6].value, ammoC: i[8].value, ammoM: i[9].value, skillIdentifier: row.dataset.skillIdentifier, baseDamage: row.dataset.baseDamage }; });
+        
+        // START FIX: The indices for reading weapon data were incorrect, causing an error.
+        const weapons = Array.from(document.querySelectorAll('#weapons-body tr')).map(row => {
+            const i = row.querySelectorAll('input');
+            // The inputs in each row are: [0]Name, [1]Skill, [2]Range, [3]Dmg, [4]AP, [5]Lethality, [6]AmmoC, [7]AmmoM
+            return {
+                name: i[0].value,
+                skill: i[1].value,
+                range: i[2].value,
+                dmg: i[3].value,       // Corrected from i[4]
+                ap: i[4].value,        // Corrected from i[5]
+                lethality: i[5].value, // Corrected from i[6]
+                ammoC: i[6].value,     // Corrected from i[8]
+                ammoM: i[7].value,     // Corrected from i[9]
+                skillIdentifier: row.dataset.skillIdentifier,
+                baseDamage: row.dataset.baseDamage
+            };
+        });
+        // END FIX
+
         return { id: getVal('character-id'), fullName: getVal('full-name'), branch: getVal('branch'), rank: getVal('rank'), team: getVal('team'), sex: getVal('sex'), dob: getVal('dob'), nationality: getVal('nationality'), employer: getVal('employer'), education: getVal('education'), stats: { STR: getNum('STR'), DEX: getNum('DEX'), CON: getNum('CON'), INT: getNum('INT'), POW: getNum('POW'), CHA: getNum('CHA') }, hpCurrent: getNum('hp-current'), wpCurrent: getNum('wp-current'), sanCurrent: getNum('san-current'), isArmorActive: isArmorActive, currentArmorPoints: currentArmorPoints, psych: { violence1: getChecked('violence1'), violence2: getChecked('violence2'), violence3: getChecked('violence3'), helplessness1: getChecked('helplessness1'), helplessness2: getChecked('helplessness2'), helplessness3: getChecked('helplessness3'), }, skillsData, craftSkills, languageSkills, bonds, weapons, gear: getVal('gear'), notes: getVal('notes-field'), isSkillSetupMode: isSkillSetupMode, branchRankLocked: getChecked('lock-branch-rank-checkbox'), };
     }
     function loadCharacter(data) {
