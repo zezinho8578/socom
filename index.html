@@ -236,6 +236,7 @@
             width: 100%;
             height: 100%;
             z-index: 1000;
+            pointer-events: none; /* Allows clicks to pass through to elements behind */
         }
         .tutorial-overlay {
             position: absolute;
@@ -251,7 +252,8 @@
             z-index: 1001;
             box-shadow: 0 0 15px 5px var(--accent-color), 0 0 3px 2px var(--accent-color) inset;
             border-radius: 3px;
-            transition: box-shadow 0.3s ease-in-out;
+            transition: all 0.3s ease-in-out;
+            pointer-events: all; /* Highlighted element is clickable */
         }
         .tutorial-prompt {
             position: absolute;
@@ -262,6 +264,7 @@
             width: 400px;
             max-width: 90vw;
             box-shadow: 0 0 20px 5px rgba(0,0,0,0.5);
+            pointer-events: all; /* Prompt is clickable */
         }
         .tutorial-prompt h3 {
             border-bottom: 1px solid var(--border-color);
@@ -353,6 +356,20 @@
         </div>
     </div>
 
+    <!-- TUTORIAL CONTAINER (moved outside of view-switched content) -->
+    <div id="tutorial-container" class="hidden">
+        <div class="tutorial-overlay"></div>
+        <div id="tutorial-prompt" class="tutorial-prompt">
+            <h3 id="tutorial-title"></h3>
+            <p id="tutorial-text"></p>
+            <div id="tutorial-nav" class="tutorial-prompt-nav"></div>
+        </div>
+        <audio id="tutorial-audio" loop>
+            <source src="https://github.com/diantha-bot/hosting/raw/main/splintercell_training.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+
 <script>
     // --- DISABLE ENTER KEY ---
     window.addEventListener('keydown', function(e) {
@@ -416,25 +433,10 @@
             </div>
         </main>
         <main id="tutorial-view" class="hidden">
-            <div id="tutorial-content-container">
-                 <!-- TUTORIAL MODULE INJECTED HERE -->
-                 <div id="tutorial-container" class="hidden">
-                    <div class="tutorial-overlay"></div>
-                    <div id="tutorial-prompt" class="tutorial-prompt">
-                        <h3 id="tutorial-title"></h3>
-                        <p id="tutorial-text"></p>
-                        <div id="tutorial-nav" class="tutorial-prompt-nav"></div>
-                    </div>
-                    <audio id="tutorial-audio" loop>
-                        <source src="https://github.com/diantha-bot/hosting/raw/main/splintercell_training.mp3" type="audio/mpeg">
-                        Your browser does not support the audio element.
-                    </audio>
-                </div>
-                <div id="tutorial-entry-point" class="content-menu" style="text-align: center;">
-                    <h2>AGENT INDUCTION</h2>
-                    <p style="text-align:center;">Begin NEMESIS Protocol Training?</p>
-                    <button id="begin-tutorial-btn">BEGIN</button>
-                </div>
+            <div id="tutorial-entry-point" class="content-menu" style="text-align: center;">
+                <h2>AGENT INDUCTION</h2>
+                <p style="text-align:center;">Begin NEMESIS Protocol Training?</p>
+                <button id="begin-tutorial-btn">BEGIN</button>
             </div>
         </main>
     `;
@@ -1007,6 +1009,7 @@
             text: "This tutorial will guide you through creating and editing your agent dossier. This process is critical for operational readiness. You may cancel at any time. Click 'Continue' to proceed.",
             target: "#tutorial-prompt",
             isPromptOnly: true,
+            before: () => showView('tutorial'),
         },
         {
             title: "ACCESSING THE ROSTER",
@@ -1053,7 +1056,7 @@
         {
             title: "DERIVED ATTRIBUTES",
             text: "These values are calculated from your Core Attributes. Hit Points (HP) measure physical endurance. Willpower (WP) is for resisting psychological stress. Sanity (SAN) represents your mental stability. If your SAN drops to your Breaking Point (BP), you will suffer psychological trauma.",
-            target: 'section:nth-of-type(2) .grid-container'
+            target: '#character-sheet-view .form-grid .col-1 .form-section:nth-of-type(2) .grid-container'
         },
         {
             title: "BONDS",
@@ -1078,9 +1081,9 @@
         {
             title: "SKILL IMPROVEMENT: PART 1",
             text: "After a mission, you can improve skills you failed. You mark the failed skill by checking the box next to it. For this demonstration, we will mark 'Alertness.'",
-            target: '#check-skill-Alertness-',
+            target: '#check-skill-Alertness',
             after: () => {
-                const chk = document.getElementById('check-skill-Alertness-');
+                const chk = document.getElementById('check-skill-Alertness');
                 skillValueBeforeRoll = document.getElementById('skill-Alertness').value;
                 chk.checked = true;
                 updateRollSkillsButtonVisibility();
@@ -1090,18 +1093,20 @@
             title: "SKILL IMPROVEMENT: PART 2",
             text: "With a skill checked, the 'Roll 1d4s' button appears. Clicking this initiates a final, irreversible roll to improve all checked skills. Proceed.",
             target: "#roll-skills-btn",
-            after: () => { startSkillImprovement(); }
         },
          {
             title: "SKILL IMPROVEMENT: PART 3",
-            text: "The system processes the improvement roll. In a real scenario, this would be a permanent increase. For this tutorial, we will now reset the value. Close the confirmation window.",
-            target: "#skill-roll-conclusion",
+            text: "The system processes the improvement roll. In a real scenario, this would be a permanent increase. For this tutorial, we will now reset the value. Confirm and close the windows to continue.",
+            target: "#skill-roll-modal .modal-content",
+             before: () => { startSkillImprovement(); },
              after: () => {
                 setTimeout(() => {
-                    closeSkillRollModal();
-                    document.getElementById('skill-Alertness').value = skillValueBeforeRoll;
-                    document.getElementById('check-skill-Alertness-').checked = false;
-                    updateRollSkillsButtonVisibility();
+                    executeSkillRolls().then(() => {
+                        closeSkillRollModal();
+                        document.getElementById('skill-Alertness').value = skillValueBeforeRoll;
+                        document.getElementById('check-skill-Alertness').checked = false;
+                        updateRollSkillsButtonVisibility();
+                    });
                 }, 500);
             }
         },
@@ -1139,7 +1144,6 @@
     ];
     
     function startTutorial() {
-        document.getElementById('tutorial-entry-point').classList.add('hidden');
         document.getElementById('tutorial-container').classList.remove('hidden');
         const audio = document.getElementById('tutorial-audio');
         audio.volume = 0.3;
@@ -1153,7 +1157,6 @@
         audio.pause();
         audio.currentTime = 0;
         document.getElementById('tutorial-container').classList.add('hidden');
-        document.getElementById('tutorial-entry-point').classList.remove('hidden');
         if (highlightedElement) {
             highlightedElement.classList.remove('tutorial-highlight');
             highlightedElement = null;
@@ -1184,7 +1187,7 @@
 
     function positionPrompt(targetEl) {
         const promptEl = document.getElementById('tutorial-prompt');
-        if (!targetEl) { // Center prompt if no target
+        if (!targetEl || step.isPromptOnly) { // Center prompt if no target or if it's a prompt-only step
             promptEl.style.top = '50%';
             promptEl.style.left = '50%';
             promptEl.style.transform = 'translate(-50%, -50%)';
@@ -1223,7 +1226,7 @@
         if (step.before) {
             step.before();
             // Give the view time to render before highlighting
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, 150));
         }
         
         // Update prompt
@@ -1238,7 +1241,9 @@
         }
         navHTML += `<button id="tutorial-cancel-btn">CANCEL</button></div>`;
         navHTML += `<span class="step-counter">${stepIndex + 1} / ${tutorialSteps.length}</span>`;
-        if (stepIndex < tutorialSteps.length -1) {
+        if (step.title === "SYSTEM INDUCTION") {
+            navHTML += `<button id="tutorial-next-btn">CONTINUE >></button>`;
+        } else if (stepIndex < tutorialSteps.length -1) {
             navHTML += `<button id="tutorial-next-btn">NEXT >></button>`;
         } else {
             navHTML += `<button id="tutorial-finish-btn">FINISH</button>`;
@@ -1258,10 +1263,6 @@
 
         // Handle highlighting and positioning
         let targetEl = step.target ? document.querySelector(step.target) : null;
-        
-        if(step.isPromptOnly) {
-            targetEl = document.getElementById('tutorial-prompt');
-        }
         
         highlightElement(targetEl);
         positionPrompt(targetEl);
