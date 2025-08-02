@@ -13,7 +13,7 @@ const tutorialSteps = [
     {
         title: "TUTORIAL",
         text: "This tutorial will guide you through creating a new agent file. Would you like to begin?",
-        targetElement: null, // No spotlight for the initial prompt
+        targetElement: null,
         setup: () => {
             showView('main');
             document.getElementById('tutorial-box').innerHTML = `
@@ -25,15 +25,13 @@ const tutorialSteps = [
                 </div>`;
         }
     },
-    // Step 1: Create New Agent (CORRECTED)
+    // Step 1: Create New Agent
     {
         title: "STEP 1: CREATE FILE",
         text: "Welcome, Recruit. Your first task is to open a new file. Click the highlighted 'CREATE NEW AGENT FILE' button to proceed.",
         targetElement: 'button[onclick*="character-sheet"]',
         spotlightPadding: 10,
         eventListener: (el) => {
-            // The button's original onclick handles the view change.
-            // We just listen for the click to advance the tutorial.
             el.addEventListener('click', advanceTutorial, { once: true });
         }
     },
@@ -43,7 +41,7 @@ const tutorialSteps = [
         text: "Every operative has a background. Select a Branch from the dropdown menu. For now, you will be assigned the lowest available rank. Promotion is earned through successful operations.",
         targetElement: '#branch',
         spotlightPadding: 20,
-        spotlightGroup: ['#rank'], // Also highlight the rank dropdown
+        spotlightGroup: ['#rank'],
         eventListener: (el) => {
             el.addEventListener('change', advanceTutorial, { once: true });
         }
@@ -76,14 +74,13 @@ const tutorialSteps = [
             ['skill-milsci-land', 'skill-milsci-sea', 'skill-milsci-air', 'skill-pilot-airplane', 'skill-pilot-helicopter', 'skill-pilot-boat', 'skill-pilot-rc', 'skill-science-biology', 'skill-science-chemistry', 'skill-science-mathematics', 'skill-science-physics'].forEach(id => baseValues[id] = 0);
             document.querySelectorAll('#craft-skills-container input[type="number"], #language-skills-container input[type="number"]').forEach(input => baseValues[input.id] = 0);
 
-
             skillInputs.forEach(input => {
                 let baseValue = baseValues[input.id] || 0;
                 let currentValue = parseInt(input.value, 10);
                 if (isNaN(currentValue)) currentValue = 0;
 
                 if (currentValue > 80) {
-                    input.value = 80; // Enforce max value
+                    input.value = 80;
                     currentValue = 80;
                 }
                 
@@ -116,8 +113,7 @@ const tutorialSteps = [
         spotlightPadding: 10,
         setup: () => {
             const observer = new MutationObserver(() => {
-                const modal = document.getElementById('skill-roll-modal');
-                if (!modal.classList.contains('hidden')) {
+                if (!document.getElementById('skill-roll-modal').classList.contains('hidden')) {
                     observer.disconnect();
                     advanceTutorial();
                 }
@@ -137,8 +133,7 @@ const tutorialSteps = [
         spotlightNoRadius: true,
         setup: () => {
              const observer = new MutationObserver(() => {
-                const conclusion = document.getElementById('skill-roll-conclusion');
-                if (!conclusion.classList.contains('hidden')) {
+                if (!document.getElementById('skill-roll-conclusion').classList.contains('hidden')) {
                     observer.disconnect();
                     advanceTutorial();
                 }
@@ -158,8 +153,7 @@ const tutorialSteps = [
         spotlightNoRadius: true,
          setup: () => {
             const observer = new MutationObserver(() => {
-                const modal = document.getElementById('skill-roll-modal');
-                if (modal.classList.contains('hidden')) {
+                if (document.getElementById('skill-roll-modal').classList.contains('hidden')) {
                     observer.disconnect();
                     advanceTutorial();
                 }
@@ -178,8 +172,7 @@ const tutorialSteps = [
         spotlightPadding: 30,
         setup: () => {
             const observer = new MutationObserver(() => {
-                const modal = document.getElementById('weapon-preset-modal');
-                if (!modal.classList.contains('hidden')) {
+                if (!document.getElementById('weapon-preset-modal').classList.contains('hidden')) {
                     observer.disconnect();
                     advanceTutorial();
                 }
@@ -194,7 +187,7 @@ const tutorialSteps = [
     {
         title: "STEP 6: LOADOUT",
         text: "For this simulation, select a standard sidearm. Find the 'Medium Pistol' in the list and click 'SELECT'.",
-        targetElement: null, // No spotlight inside the modal
+        targetElement: null,
         setup: () => {
             document.getElementById('weapon-category-select').value = "Firearms";
             populateWeaponPresets();
@@ -227,16 +220,16 @@ function startTutorial() {
     isTutorialActive = true;
     currentTutorialStep = 0;
     resetForm();
-    document.getElementById('tutorial-overlay').classList.add('active');
+    document.getElementById('tutorial-overlay').classList.remove('hidden');
     document.getElementById('tutorial-box').classList.remove('hidden');
     updateTutorialUI();
 }
 
 function endTutorial() {
     isTutorialActive = false;
-    document.getElementById('tutorial-overlay').classList.remove('active');
+    document.getElementById('tutorial-overlay').classList.add('hidden');
     document.getElementById('tutorial-box').classList.add('hidden');
-    document.getElementById('tutorial-overlay').style.clipPath = '';
+    highlightElement(null); // Clear the spotlight
     resetForm();
     showView('main');
 }
@@ -271,7 +264,7 @@ function updateTutorialUI() {
         const target = document.querySelector(step.targetElement);
         highlightElement(target, step.spotlightPadding, step.spotlightGroup, step.spotlightNoRadius);
     } else {
-        highlightElement(null); // Clears the spotlight
+        highlightElement(null);
     }
 
     if (step.eventListener) {
@@ -297,7 +290,7 @@ function updateTutorialUI() {
 function highlightElement(element, padding = 10, groupSelectors = [], noRadius = false) {
     const overlay = document.getElementById('tutorial-overlay');
     if(!element) {
-        overlay.style.clipPath = 'polygon(0% 0%, 0% 100%, 100% 100%, 100% 0%)';
+        overlay.style.clipPath = '';
         return;
     };
     
