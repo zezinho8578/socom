@@ -7,7 +7,6 @@
     <link rel="icon" type="image/png" href="https://www.socom.mil/SOF-ATL/PublishingImages/eSOF-Logo.png">
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
-        /* [PREVIOUS CSS STYLES... NO CHANGES HERE] */
         @keyframes flicker { 0%, 100% { opacity: 0.95; } 50% { opacity: 1; } }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
@@ -195,92 +194,111 @@
         .preset-item button { flex-shrink: 0; }
 
         /* Armor-specific styles */
-        .armor-controls { display: flex; align-items: center; gap: 4px; }
-        #armor-btn { width: 34px; height: 34px; font-size: 16px; line-height: 16px; padding: 0; flex-shrink: 0; }
-        #armor-points { width: 50px; text-align: center; }
-        #armor-btn.armor-active { color: #0AF; border-color: #0AF; text-shadow: 0 0 3px #0AF, 0 0 8px #0AF; box-shadow: 0 0 5px #0AF; background: rgba(0, 170, 255, 0.1); }
-        #armor-points.armor-active { color: #0AF; border-color: #0AF; text-shadow: 0 0 3px #0AF; background: rgba(0, 170, 255, 0.1); }
-        #armor-preset-list .preset-item { cursor: pointer; }
-
-      
-        /* === TUTORIAL STYLES (REWRITTEN) === */
-#tutorial-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: black;
-    opacity: 0.85;
-    z-index: 9998;
-    /* The spotlight effect is now controlled by a box-shadow on a child element */
-}
-
-#tutorial-spotlight {
-    position: absolute;
-    border-radius: 10px;
-    /* This shadow creates the "hole" in the overlay */
-    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.85);
-    transition: all 0.3s ease-in-out;
-}
-
-#tutorial-box {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    width: 350px;
-    background-color: var(--bg-color);
-    border: 2px solid var(--accent-color);
-    box-shadow: 0 0 15px var(--accent-color);
-    z-index: 9999;
-    padding: 15px;
-    color: var(--text-color);
-    cursor: grab;
-}
-
-#tutorial-box h4 {
-    margin: 0 0 10px 0;
-    padding-bottom: 5px;
-    border-bottom: 1px solid var(--border-color);
-    text-align: center;
-    cursor: grab;
-}
-
-#tutorial-box p {
-    font-size: 0.9em;
-    line-height: 1.5;
-    margin: 0 0 15px 0;
-}
-
-.tutorial-controls {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-}
-
+        .armor-controls {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        #armor-btn {
+            width: 34px;
+            height: 34px;
+            font-size: 16px;
+            line-height: 16px;
+            padding: 0;
+            flex-shrink: 0;
+        }
+        #armor-points {
+            width: 50px;
+            text-align: center;
+        }
+        #armor-btn.armor-active {
+            color: #0AF;
+            border-color: #0AF;
+            text-shadow: 0 0 3px #0AF, 0 0 8px #0AF;
+            box-shadow: 0 0 5px #0AF;
+            background: rgba(0, 170, 255, 0.1);
+        }
+        #armor-points.armor-active {
+            color: #0AF;
+            border-color: #0AF;
+            text-shadow: 0 0 3px #0AF;
+            background: rgba(0, 170, 255, 0.1);
+        }
+        #armor-preset-list .preset-item {
+             cursor: pointer;
+        }
     </style>
 </head>
 <body>
+
     <div class="container">
         <!-- All HTML content will be injected by JavaScript -->
     </div>
     
     <div id="skill-tooltip" class="hidden"></div>
     
-    <!-- Modals -->
-    <div id="weapon-preset-modal" class="modal-overlay hidden"> <!-- ... --> </div>
-    <div id="armor-modal" class="modal-overlay hidden"> <!-- ... --> </div>
-    <div id="skill-roll-modal" class="modal-overlay hidden"> <!-- ... --> </div>
+    <!-- Weapon Preset Modal -->
+    <div id="weapon-preset-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>SELECT WEAPON</h2>
+                <button onclick="closeWeaponModal()">CLOSE</button>
+            </div>
+            <div class="modal-controls">
+                <label for="weapon-category-select">CATEGORY</label>
+                <select id="weapon-category-select" onchange="populateWeaponPresets()"></select>
+                <button onclick="addWeapon(null, true)">+ ADD CUSTOM</button>
+            </div>
+            <hr style="border-color: var(--border-color); margin: 15px 0;">
+            <ul id="weapon-preset-list" class="preset-list">
+                <!-- Preset items will be injected here by JS -->
+            </ul>
+        </div>
+    </div>
     
-   <!-- === TUTORIAL UI PLACEHOLDERS === -->
-<div id="tutorial-overlay" class="hidden">
-    <div id="tutorial-spotlight"></div>
-</div>
-<div id="tutorial-box" class="hidden"></div>
+    <!-- Armor Modal -->
+    <div id="armor-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>SELECT ARMOR</h2>
+                <button onclick="closeArmorModal()">CLOSE</button>
+            </div>
+            <div class="modal-controls">
+                <label class="styled-checkbox">
+                    <input type="checkbox" id="helmet-checkbox">
+                    <span class="checkbox-visual"></span> ADD HELMET (+1 AP)
+                </label>
+            </div>
+            <hr style="border-color: var(--border-color); margin: 15px 0;">
+            <ul id="armor-preset-list" class="preset-list">
+                <!-- Armor presets will be injected here by JS -->
+            </ul>
+        </div>
+    </div>
 
+    <!-- Skill Improvement Modal -->
+    <div id="skill-roll-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div id="skill-roll-prompt">
+                <h2 style="margin-bottom: 20px;">IMPROVE SKILLS?</h2>
+                <p style="margin-bottom: 25px;">This should only be done after completing a session. This action is final. Are you sure you want to roll 1d4 for all checked skills?</p>
+                <button onclick="executeSkillRolls()">CONFIRM</button>
+                <button onclick="closeSkillRollModal()">CANCEL</button>
+            </div>
+            <div id="skill-roll-process" class="hidden">
+                <h3 id="rolling-skill-name" style="margin-bottom: 20px; font-size: 1.2em;"></h3>
+                <div id="dice-animation" style="font-size: 4em; font-weight: bold; margin-bottom: 25px; min-height: 60px;">-</div>
+                <p id="roll-result-text"></p>
+            </div>
+            <div id="skill-roll-conclusion" class="hidden">
+                <h2 style="margin-bottom: 20px;">CONCLUDED</h2>
+                <button onclick="closeSkillRollModal()">CLOSE</button>
+            </div>
+        </div>
+    </div>
+    
 <script src="socom_data.js"></script>
 <script src="socom_admin_data.js"></script>
-<script src="tutorial.js"></script>
 <script>
     // --- DISABLE ENTER KEY ---
     window.addEventListener('keydown', function(e) {
@@ -310,7 +328,6 @@
                 <button onclick="showView('loader')">> LOAD AGENT FILE</button>
                 <button onclick="showView('rules')">> RULES</button>
                 <button onclick="showView('about')">> ABOUT SOCOM</button>
-                <button onclick="startTutorial()">> TUTORIAL</button>
             </div>
         </main>
         
@@ -324,7 +341,6 @@
         </main>
     `;
 
-    // [ The rest of the main script... No changes needed here, only in window.onload ]
     document.getElementById('sheet-form').innerHTML = `
         <input type="hidden" id="character-id">
         <section class="form-section"> <h2>IDENTIFICATION</h2> <div class="grid-container" style="grid-template-columns: 1fr 1fr 1fr"> <div><label for="full-name">FULL NAME</label><input type="text" id="full-name"></div> <div><label for="branch">BRANCH</label><select id="branch" onchange="updateRanks()"></select></div> <div><label for="rank">RANK/GRADE</label><select id="rank" onchange="applyAutoTheme()"></select></div> <div><label for="team">TEAM</label><select id="team"><option>SOCOM 1</option><option>SOCOM 2</option><option>SOCOM 3</option><option>SOCOM 4</option><option>SOCOM 5</option><option>SOCOM 6</option></select></div> <div><label for="sex">SEX</label><select id="sex"><option>M</option><option>F</option><option>NA</option></select></div> <div><label for="dob">D.O.B.</label><input type="date" id="dob"></div> <div><label for="nationality">NATIONALITY</label><input type="text" id="nationality"></div> <div><label for="employer">EMPLOYER</label><input type="text" id="employer"></div> <div><label for="education">EDUCATION</label><input type="text" id="education"></div> </div> </section>
@@ -332,6 +348,7 @@
         <section class="form-section"> <h2>WEAPONS & EQUIPMENT</h2> <label for="gear">ARMOR AND GEAR</label> <textarea id="gear"></textarea> <label for="notes-field" style="margin-top:10px;">NOTES</label> <textarea id="notes-field"></textarea> <h3 style="margin-top: 15px;">WEAPONS</h3> <table id="weapons-table" style="width:100%; border-collapse: collapse;"> <thead> <tr><th>NAME</th><th>SKILL%</th><th>RANGE</th><th>DMG</th><th>AP</th><th>LETHALITY</th><th>AMMO</th><th></th></tr> </thead> <tbody id="weapons-body"></tbody> </table> <button type="button" onclick="openWeaponModal()">+ ADD WEAPON</button> </section>
     `;
 
+    // --- CONFIG ---
     const ADMIN_PASSWORD_HASH = 'dmFsa3lyaWU=';
     let isAdmin = false;
     let statsUnlocked = false;
@@ -388,7 +405,6 @@
     // --- INITIALIZATION ---
     window.onload = () => {
         loadContentPanels();
-        initializeTutorial(); // Initialize tutorial box dragging
         populateBranches(); populateStats(); populateSkills(); loadSavedSheets(); applySavedTheme(); setupTooltips(); loadDailyHistory(); populateWeaponCategories();
         document.getElementById('settings-btn').addEventListener('click', () => { document.getElementById('settings-menu').style.display = document.getElementById('settings-menu').style.display === 'block' ? 'none' : 'block'; });
         document.getElementById('lock-branch-rank-checkbox').addEventListener('change', updateBranchRankLockState);
@@ -608,10 +624,12 @@
                 }
 
                 if (bonus > 0) {
+    // Isolate the dice part (e.g., "1D4") from the base damage string (e.g., "1D4-1")
     const dicePart = baseDamage.split(/[-+]/)[0].trim();
+    // Append the new bonus
     damageInput.value = `${dicePart}+${bonus}`;
 } else {
-    damageInput.value = baseDamage;
+    damageInput.value = baseDamage; // Revert to base damage if skill is 50 or below
 }
             }
         });
