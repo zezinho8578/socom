@@ -19,6 +19,65 @@ const baseSkillValues = { 'Accounting': 10, 'Alertness': 20, 'Athletics': 30, 'D
 const statDescriptions = { STR: { 3: "Frail", 6: "Below Average", 9: "Average", 12: "Strong", 15: "Powerful", 18: "Peak Human" }, DEX: { 3: "Clumsy", 6: "Slow", 9: "Average", 12: "Agile", 15: "Nimble", 18: "Lightning Reflexes" }, CON: { 3: "Sickly", 6: "Frail", 9: "Average", 12: "Hardy", 15: "Tough", 18: "Superhuman Endurance" }, INT: { 3: "Dim", 6: "Slow Learner", 9: "Average", 12: "Sharp", 15: "Brilliant", 18: "Genius" }, POW: { 3: "Weak-willed", 6: "Hesitant", 9: "Average", 12: "Determined", 15: "Indomitable", 18: "Unyielding Will" }, CHA: { 3: "Unlikable", 6: "Awkward", 9: "Average", 12: "Likable", 15: "Charismatic", 18: "Compelling Presence" } };
 
 
+// --- TUTORIAL SYSTEM GLOBALS ---
+let tutorialState = {
+    isActive: false,
+    currentStep: 0,
+    activeListener: null, // To hold the event listener for cleanup
+};
+
+const tutorialSteps = [
+    {
+        title: "SYSTEM TUTORIAL INITIATED",
+        text: "This protocol will guide you through the agent creation and file management process. All other system functions will be locked until the tutorial is complete or cancelled. Press BEGIN to proceed.",
+        isIntro: true
+    },
+    {
+        title: "CONFIRMATION",
+        text: "You are about to access the agent creation module. This is where all new operative files are generated. Do you wish to continue?",
+        isConfirmation: true,
+    },
+    {
+        targetElement: '#create-agent-btn',
+        title: "STEP 1: CREATE AGENT FILE",
+        text: "This system is accessed from the main terminal. Your first task is to access the file creation interface. Select the highlighted option to proceed.",
+        nextStepAction: () => {
+            resetForm();
+            showView('character-sheet');
+        }
+    },
+    {
+        targetElement: '#full-name', // Target the input directly
+        title: "STEP 2: IDENTIFICATION",
+        text: "Every asset requires a name. Enter the full name for your operative in the designated field. A minimum of 5 characters is required.",
+        validation: () => {
+            const input = document.getElementById('full-name');
+            return input && input.value.length >= 5;
+        }
+    },
+    {
+        targetElement: '#branch', // Target the select directly
+        title: "STEP 3: BRANCH ASSIGNMENT",
+        text: "Select a branch of service. For intelligence and covert operations, select CIA or NSA. For direct action and field combat, select a military branch. Your choice will determine available ranks and may influence your starting theme.",
+        validation: () => {
+            const select = document.getElementById('branch');
+            return select && select.value !== ''; // Any selection is valid
+        }
+    },
+    {
+        targetElement: '#settings-btn',
+        title: "STEP 4: INTERFACE THEME",
+        text: "The system interface can be customized. Access the settings menu via the gear icon in the top right.",
+        // Progression is handled by click
+    },
+    {
+        targetElement: '#settings-menu',
+        title: "STEP 4: SELECT THEME",
+        text: "Select any theme to continue. This setting is cosmetic and can be changed at any time.",
+        // Progression is handled by click
+    }
+];
+
 // --- APPLICATION INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', initializeApplication);
 
@@ -52,10 +111,38 @@ async function initializeApplication() {
 
         // 5. Add event listeners that were previously in window.onload or inline
         window.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });
-        document.getElementById('settings-btn').addEventListener('click', () => { document.getElementById('settings-menu').style.display = document.getElementById('settings-menu').style.display === 'block' ? 'none' : 'block'; });
+        document.getElementById('settings-btn').addEventListener('click', () => { 
+            if (tutorialState.isActive) return; // Prevent normal operation during tutorial
+            document.getElementById('settings-menu').style.display = document.getElementById('settings-menu').style.display === 'block' ? 'none' : 'block'; 
+        });
         document.getElementById('lock-branch-rank-checkbox').addEventListener('change', updateBranchRankLockState);
         document.getElementById('skills-container').addEventListener('input', updateLinkedWeaponStats);
         document.getElementById('skills-container').addEventListener('change', (event) => { if (event.target.type === 'checkbox') { updateRollSkillsButtonVisibility(); } });
+        
+        // Tutorial Event Delegation
+        document.body.addEventListener('click', (e) => {
+            if (!tutorialState.isActive) return;
+        
+            const step = tutorialSteps[tutorialState.currentStep];
+            if (!step || !step.targetElement) return;
+        
+            const targetElement = document.querySelector(step.targetElement);
+            // e.target.closest(selector) checks if the clicked element or any of its parents match the selector
+            if (targetElement && targetElement.contains(e.target)) {
+                e.preventDefault(); 
+                e.stopPropagation();
+                
+                if(step.targetElement === '#settings-btn'){
+                     document.getElementById('settings-menu').style.display = 'block';
+                }
+                
+                if(step.targetElement === '#settings-menu'){
+                    document.getElementById('settings-menu').style.display = 'none';
+                }
+                
+                advanceTutorial();
+            }
+        }, true); // Use capture phase
 
     } catch (error) {
         console.error("Failed to initialize the application:", error);
@@ -70,31 +157,6 @@ function injectHtmlFromTemplates() {
     const sheetFormContent = document.getElementById('template-sheet-form').content.cloneNode(true);
     document.getElementById('sheet-form').appendChild(sheetFormContent);
 }
-
-// --- NEW CODE: Tutorial System Globals ---
-let tutorialState = {
-    isActive: false,
-    currentStep: 0,
-};
-
-const tutorialSteps = [
-    {
-        title: "SYSTEM TUTORIAL INITIATED",
-        text: "This protocol will guide you through the agent creation and file management process. All other system functions will be locked until the tutorial is complete or cancelled. Press BEGIN to proceed.",
-        isIntro: true // Special flag for the very first screen
-    },
-    {
-        title: "CONFIRMATION",
-        text: "You are about to access the agent creation module. This is where all new operative files are generated. Do you wish to continue?",
-        isConfirmation: true, // Special flag for the confirmation step
-        nextStepAction: () => showView('main')
-    },
-    {
-        targetElement: '#main-view .main-menu button:nth-of-type(1)',
-        title: "STEP 1: CREATE AGENT FILE",
-        text: "Your first task is to access the file creation interface. Select the highlighted option to proceed.",
-    }
-];
 
 // --- DAILY HISTORY FEED ---
 function loadDailyHistory(historyData) {
@@ -127,6 +189,7 @@ function loadDailyHistory(historyData) {
 
 // --- FORM & UI INITIALIZATION ---
 function resetForm() {
+    if (tutorialState.isActive) return;
     document.getElementById('sheet-form').reset();
     document.getElementById('bonds-container').innerHTML = '';
     document.getElementById('weapons-body').innerHTML = '';
@@ -137,7 +200,7 @@ function resetForm() {
     updateRollSkillsButtonVisibility();
 }
 
-function populateBranches() { document.getElementById('branch').innerHTML = Object.keys(branches).map(b => `<option value="${b}">${b.toUpperCase()}</option>`).join(''); }
+function populateBranches() { document.getElementById('branch').innerHTML = '<option value="" disabled selected>Select Branch...</option>' + Object.keys(branches).map(b => `<option value="${b}">${b.toUpperCase()}</option>`).join(''); }
 function populateStats() { document.getElementById('stats-container').innerHTML = stats.map(stat => `<div class="stat-item"><div class="stat-header"><label>${stat}</label><button type="button" onclick="changeStat('${stat}', -1)">-</button><input type="number" id="${stat}" value="${MIN_STAT_VALUE}" readonly oninput="updateAllCalculations()"><button type="button" onclick="changeStat('${stat}', 1)">+</button><span id="${stat}x5">x5: 0</span></div><div id="${stat}-desc" class="stat-desc"></div></div>`).join(''); }
 function populateSkills() { const container = document.getElementById('skills-container'); let html = '<div class="grid-container" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); grid-auto-rows: min-content; align-items: start;">'; html += simpleSkills.map(skill => { const baseValue = baseSkillValues[skill] || 0; const skillId = `skill-${skill.replace(/\s+/g, '-')}`; return `<div class="skill-item-simple"><label class="styled-checkbox"><input type="checkbox" id="check-${skillId}"><span class="checkbox-visual"></span></label><div class="skill-label-input"><label for="${skillId}" data-skill="${skill}">${skill.toUpperCase()}</label><input type="number" id="${skillId}" min="0" max="100" value="${baseValue}"></div></div>`; }).join(''); html += '</div>'; html += '<div class="grid-container" style="grid-template-columns: 1fr 1fr; align-items: stretch; margin-top: 10px;">'; html += `<div><div class="sub-skill-group"> <h3 class="sub-skill-header" data-skill="Military Science">Military Science</h3> <div class="sub-skill-item"><label class="styled-checkbox"><input type="checkbox" id="check-skill-milsci-land"><span class="checkbox-visual"></span></label><div class="skill-label-input"><label data-skill="Military Science">Land</label><input type="number" id="skill-milsci-land" value="0" min="0" max="100"></div></div> <div class="sub-skill-item"><label class="styled-checkbox"><input type="checkbox" id="check-skill-milsci-sea"><span class="checkbox-visual"></span></label><div class="skill-label-input"><label data-skill="Military Science">Sea</label><input type="number" id="skill-milsci-sea" value="0" min="0" max="100"></div></div> <div class="sub-skill-item"><label class="styled-checkbox"><input type="checkbox" id="check-skill-milsci-air"><span class="checkbox-visual"></span></label><div class="skill-label-input"><label data-skill="Military Science">Air</label><input type="number" id="skill-milsci-air" value="0" min="0" max="100"></div></div> </div><div class="sub-skill-group" style="margin-top: 10px;"> <h3 class="sub-skill-header" data-skill="Pilot">Pilot</h3> <div class="sub-skill-item"><label class="styled-checkbox"><input type="checkbox" id="check-skill-pilot-airplane"><span class="checkbox-visual"></span></label><div class="skill-label-input"><label data-skill="Pilot">Airplane</label><input type="number" id="skill-pilot-airplane" value="0" min="0" max="100"></div></div> <div class="sub-skill-item"><label class="styled-checkbox"><input type="checkbox" id="check-skill-pilot-helicopter"><span class="checkbox-visual"></span></label><div class="skill-label-input"><label data-skill="Pilot">Helicopter</label><input type="number" id="skill-pilot-helicopter" value="0" min="0" max="100"></div></div> <div class="sub-skill-item"><label class="styled-checkbox"><input type="checkbox" id="check-skill-pilot-boat"><span class="checkbox-visual"></span></label><div class="skill-label-input"><label data-skill="Pilot">Boat</label><input type="number" id="skill-pilot-boat" value="0" min="0" max="100"></div></div> <div class="sub-skill-item"><label class="styled-checkbox"><input type="checkbox" id="check-skill-pilot-rc"><span class="checkbox-visual"></span></label><div class="skill-label-input"><label data-skill="Pilot">RC/Drone</label><input type="number" id="skill-pilot-rc" value="0" min="0" max="100"></div></div> </div></div>`; html += `<div class="sub-skill-group"> <h3 class="sub-skill-header" data-skill="Science">Science</h3> <div class="sub-skill-item"><label class="styled-checkbox"><input type="checkbox" id="check-skill-science-biology"><span class="checkbox-visual"></span></label><div class="skill-label-input"><label data-skill="Science">Biology</label><input type="number" id="skill-science-biology" value="0" min="0" max="100"></div></div> <div class="sub-skill-item"><label class="styled-checkbox"><input type="checkbox" id="check-skill-science-chemistry"><span class="checkbox-visual"></span></label><div class="skill-label-input"><label data-skill="Science">Chemistry</label><input type="number" id="skill-science-chemistry" value="0" min="0" max="100"></div></div> <div class="sub-skill-item"><label class="styled-checkbox"><input type="checkbox" id="check-skill-science-mathematics"><span class="checkbox-visual"></span></label><div class="skill-label-input"><label data-skill="Science">Mathematics</label><input type="number" id="skill-science-mathematics" value="0" min="0" max="100"></div></div> <div class="sub-skill-item"><label class="styled-checkbox"><input type="checkbox" id="check-skill-science-physics"><span class="checkbox-visual"></span></label><div class="skill-label-input"><label data-skill="Science">Physics</label><input type="number" id="skill-science-physics" value="0" min="0" max="100"></div></div> </div>`; html += '</div>'; html += '<div class="grid-container" style="grid-template-columns: 1fr 1fr; margin-top: 10px;">'; html += `<div class="sub-skill-group"> <div class="sub-skill-header-flex"><h3 class="sub-skill-header" data-skill="Craft">Craft</h3><button type="button" onclick="addCraftSkill()">+ ADD</button></div> <div id="craft-skills-container"></div> </div>`; html += `<div class="sub-skill-group"> <div class="sub-skill-header-flex"><h3 class="sub-skill-header">Foreign Language</h3><button type="button" onclick="addLanguageSkill()">+ ADD</button></div> <div id="language-skills-container"></div> </div>`; html += '</div>'; container.innerHTML = html; }
 
@@ -170,7 +233,15 @@ function applyAutoTheme() {
 }
 
 // --- VIEW MANAGEMENT & UI/CALCS ---
-function showView(viewId) { document.querySelectorAll('main').forEach(el => el.classList.add('hidden')); const viewEl = document.getElementById(`${viewId}-view`); if(viewEl){ viewEl.classList.remove('hidden'); if(viewId === 'loader') loadSavedSheets();} }
+function showView(viewId) { 
+    if(tutorialState.isActive && viewId !== 'character-sheet' && viewId !== 'main') return;
+    document.querySelectorAll('main').forEach(el => el.classList.add('hidden')); 
+    const viewEl = document.getElementById(`${viewId}-view`); 
+    if(viewEl){ 
+        viewEl.classList.remove('hidden'); 
+        if(viewId === 'loader') loadSavedSheets();
+    } 
+}
 function updateRanks() { const rankType = branches[document.getElementById('branch').value] || 'intelligence'; const rankOptions = ranks[rankType].map(r => { const isDisabled = r.adminOnly && !isAdmin; const label = `${r.name} (${r.grade})${r.adminOnly ? ' 🔒' : ''}`; return `<option value="${r.name}" data-grade="${r.grade}" ${isDisabled ? 'disabled' : ''}>${label}</option>`; }).join(''); document.getElementById('rank').innerHTML = rankOptions; applyAutoTheme(); }
 function changeStat(stat, delta) { if (statsUnlocked) return; const input = document.getElementById(stat); let pointsSpent = stats.reduce((acc, s) => acc + (parseInt(document.getElementById(s).value) - MIN_STAT_VALUE), 0); let currentValue = parseInt(input.value); if (delta > 0 && pointsSpent < MAX_STAT_POINTS && currentValue < MAX_STAT_VALUE) { input.value = currentValue + 1; } else if (delta < 0 && currentValue > MIN_STAT_VALUE) { input.value = currentValue - 1; } updateAllCalculations(); }
 function updateAllCalculations() { let pointsSpent = 0; stats.forEach(stat => { const value = parseInt(document.getElementById(stat).value); pointsSpent += (value - MIN_STAT_VALUE); document.getElementById(`${stat}x5`).textContent = `x5: ${value * 5}`; document.getElementById(`${stat}-desc`).textContent = getStatDescription(stat, value); }); document.getElementById('stat-points-remaining').textContent = MAX_STAT_POINTS - pointsSpent; updateDerivedAttributes(); updateBondScores(); updateLinkedWeaponStats(); }
@@ -503,50 +574,60 @@ function screenshotPage(event) {
         }).finally(() => { btn.textContent = originalText; btn.disabled = false; });
 }
 
-// --- NEW CODE: TUTORIAL SYSTEM ---
+// --- TUTORIAL SYSTEM ---
 
 function startTutorial() {
     tutorialState.isActive = true;
     tutorialState.currentStep = 0;
     document.getElementById('tutorial-overlay').classList.remove('hidden');
+    // Ensure sheet is reset for a clean tutorial start
+    document.getElementById('sheet-form').reset(); 
+    showView('main');
     showTutorialStep(0);
 }
 
 function cancelTutorial() {
     tutorialState.isActive = false;
     document.getElementById('tutorial-overlay').classList.add('hidden');
-    // Ensure spotlight is cleared
     const spotlight = document.getElementById('tutorial-spotlight');
     spotlight.style.width = '0px';
     spotlight.style.height = '0px';
     spotlight.style.opacity = '0';
+    // Clean up any lingering listeners
+    if (tutorialState.activeListener) {
+        tutorialState.activeListener.element.removeEventListener(tutorialState.activeListener.type, tutorialState.activeListener.handler);
+        tutorialState.activeListener = null;
+    }
 }
 
 function advanceTutorial() {
-    const currentStepData = tutorialSteps[tutorialState.currentStep];
-    if (currentStepData.nextStepAction) {
-        currentStepData.nextStepAction();
-    }
-
     if (tutorialState.currentStep < tutorialSteps.length - 1) {
         tutorialState.currentStep++;
+        const nextStepData = tutorialSteps[tutorialState.currentStep];
+        if (nextStepData.nextStepAction) {
+            nextStepData.nextStepAction();
+        }
         showTutorialStep(tutorialState.currentStep);
     } else {
         alert("Tutorial Concluded. You are now free to proceed.");
         cancelTutorial();
+        showView('character-sheet');
     }
 }
 
 function regressTutorial() {
     if (tutorialState.currentStep > 0) {
-        // If we go back from step 2, we need to show the confirmation screen again
-        // This kind of specific logic will be built out as we add more steps
-        const comingFromStepData = tutorialSteps[tutorialState.currentStep];
-        if (comingFromStepData.targetElement && comingFromStepData.targetElement.includes('CREATE NEW AGENT')) {
-             // Do nothing special for now, just go back.
+        tutorialState.currentStep--;
+        
+        const previousStep = tutorialSteps[tutorialState.currentStep];
+        if (previousStep.targetElement && previousStep.targetElement.includes('#main-view')) {
+            showView('main');
+        } else if (previousStep.targetElement && previousStep.targetElement.includes('#character-sheet-view')) {
+            showView('character-sheet');
+        } else if (previousStep.targetElement && (previousStep.targetElement.includes('#full-name') || previousStep.targetElement.includes('#branch'))) {
+            showView('character-sheet');
         }
 
-        tutorialState.currentStep--;
         showTutorialStep(tutorialState.currentStep);
     }
 }
@@ -559,45 +640,40 @@ function showTutorialStep(stepIndex) {
         return;
     }
 
-    const overlay = document.getElementById('tutorial-overlay');
+    // Clean up previous step's input listener
+    if (tutorialState.activeListener) {
+        tutorialState.activeListener.element.removeEventListener(tutorialState.activeListener.type, tutorialState.activeListener.handler);
+        tutorialState.activeListener = null;
+    }
+
     const prompt = document.getElementById('tutorial-prompt');
     const spotlight = document.getElementById('tutorial-spotlight');
     const titleEl = document.getElementById('tutorial-title');
     const textEl = document.getElementById('tutorial-text');
     const initialNav = document.getElementById('tutorial-nav-initial');
     const stepsNav = document.getElementById('tutorial-nav-steps');
+    const nextBtn = stepsNav.querySelector('button:nth-of-type(2)');
+    const backBtn = stepsNav.querySelector('button:nth-of-type(1)');
 
-    // Reset prompt position for calculation
-    prompt.style.top = '';
-    prompt.style.bottom = '';
-    prompt.style.left = '50%';
-    prompt.style.transform = 'translateX(-50%)';
-
+    prompt.style.top = ''; prompt.style.bottom = ''; prompt.style.left = '50%'; prompt.style.transform = 'translateX(-50%)';
     titleEl.innerText = step.title;
     textEl.innerText = step.text;
+    nextBtn.disabled = false;
+    nextBtn.innerText = 'NEXT';
+    
+    backBtn.classList.toggle('hidden', stepIndex <= 1 || step.isConfirmation);
 
     if (step.isIntro || step.isConfirmation) {
-        // Handle introductory/confirmation screens with no spotlight
-        spotlight.style.opacity = '0';
-        spotlight.style.width = '0';
-        prompt.style.top = '50%';
-        prompt.style.transform = 'translate(-50%, -50%)';
-        
-        // Show the correct buttons
+        spotlight.style.opacity = '0'; spotlight.style.width = '0';
+        prompt.style.top = '50%'; prompt.style.transform = 'translate(-50%, -50%)';
         initialNav.classList.toggle('hidden', !step.isIntro);
         stepsNav.classList.toggle('hidden', step.isIntro);
         if (step.isConfirmation) {
-            stepsNav.querySelector('button:nth-of-type(1)').classList.add('hidden'); // Hide "BACK" button
-            stepsNav.querySelector('button:nth-of-type(2)').innerText = 'CONTINUE';
+            nextBtn.innerText = 'CONTINUE';
         }
-
     } else {
-        // Handle a standard step with a spotlight
         initialNav.classList.add('hidden');
         stepsNav.classList.remove('hidden');
-        stepsNav.querySelector('button:nth-of-type(1)').classList.remove('hidden'); // Show "BACK" button
-        stepsNav.querySelector('button:nth-of-type(2)').innerText = 'NEXT';
-
 
         const target = document.querySelector(step.targetElement);
         if (!target) {
@@ -606,8 +682,13 @@ function showTutorialStep(stepIndex) {
             return;
         }
 
-        const rect = target.getBoundingClientRect();
-        const padding = 5; // As requested
+        let elementToSpotlight = target;
+        if (target.id === 'full-name' || target.id === 'branch') {
+             elementToSpotlight = target.parentElement.parentElement; // Target the whole div container
+        }
+        
+        const rect = elementToSpotlight.getBoundingClientRect();
+        let padding = (step.targetElement === '#settings-btn') ? 3 : (step.targetElement === '#settings-menu') ? 10 : 5;
 
         spotlight.style.opacity = '1';
         spotlight.style.left = `${rect.left - padding}px`;
@@ -615,23 +696,21 @@ function showTutorialStep(stepIndex) {
         spotlight.style.width = `${rect.width + (padding * 2)}px`;
         spotlight.style.height = `${rect.height + (padding * 2)}px`;
 
-        // Position the prompt box
         const promptHeight = prompt.offsetHeight;
         if (rect.top > (window.innerHeight / 2)) {
-            // Target is in the bottom half, place prompt above
             prompt.style.top = `${rect.top - padding - promptHeight - 20}px`;
         } else {
-            // Target is in the top half, place prompt below
             prompt.style.top = `${rect.bottom + padding + 20}px`;
         }
-    }
-    
-    // Logic for hiding/showing Back button
-    const backBtn = stepsNav.querySelector('button:nth-of-type(1)');
-    // We hide back button on the first *real* step (index 2)
-    if(stepIndex <= 1 || step.isConfirmation) {
-         backBtn.classList.add('hidden');
-    } else {
-         backBtn.classList.remove('hidden');
+        
+        if (step.validation) {
+            const validationHandler = () => { nextBtn.disabled = !step.validation(); };
+            const inputElement = document.querySelector(step.targetElement);
+            const eventType = (inputElement.tagName === 'SELECT') ? 'change' : 'input';
+            
+            inputElement.addEventListener(eventType, validationHandler);
+            tutorialState.activeListener = { element: inputElement, type: eventType, handler: validationHandler };
+            validationHandler(); // Initial check
+        }
     }
 }
