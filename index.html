@@ -437,7 +437,7 @@
         setSkillInputMax(80);
         isSkillSetupMode = true;
         updateSkillPointsCounter();
-        setupTooltips(); // Re-run to catch dynamically added elements
+        setupTooltips();
     }
     
     function populateBranches() { document.getElementById('branch').innerHTML = Object.keys(branches).map(b => `<option value="${b}">${b.toUpperCase()}</option>`).join(''); }
@@ -456,8 +456,26 @@
                 }
             });
             element.addEventListener('mousemove', (e) => {
-                tooltip.style.left = `${e.pageX + 15}px`;
-                tooltip.style.top = `${e.pageY + 15}px`;
+                const tooltipWidth = tooltip.offsetWidth;
+                const tooltipHeight = tooltip.offsetHeight;
+                const windowWidth = window.innerWidth;
+                const windowHeight = window.innerHeight;
+                const padding = 20;
+
+                let newX = e.pageX + padding;
+                let newY = e.pageY + padding;
+
+                if (newX + tooltipWidth > windowWidth) {
+                    newX = e.pageX - tooltipWidth - padding;
+                }
+                if (newY + tooltipHeight > windowHeight) {
+                    newY = e.pageY - tooltipHeight - padding;
+                }
+                if (newX < 0) newX = padding;
+                if (newY < 0) newY = padding;
+
+                tooltip.style.left = `${newX}px`;
+                tooltip.style.top = `${newY}px`;
             });
             element.addEventListener('mouseout', () => {
                 tooltip.classList.add('hidden');
@@ -499,15 +517,25 @@
         let availableRanks = ranks[rankType];
 
         if (!isAdmin) {
-            const lowestRank = availableRanks.find(r => !r.adminOnly);
-            availableRanks = lowestRank ? [lowestRank] : [];
+            availableRanks = availableRanks.filter(r => !r.adminOnly);
         }
 
         const rankOptions = availableRanks.map(r => {
+            const isDisabled = r.adminOnly && !isAdmin;
             const label = `${r.name} (${r.grade})${r.adminOnly ? ' 🔒' : ''}`;
-            return `<option value="${r.name}" data-grade="${r.grade}">${label}</option>`;
+            return `<option value="${r.name}" data-grade="${r.grade}" ${isDisabled ? 'disabled' : ''}>${label}</option>`;
         }).join('');
+        
         document.getElementById('rank').innerHTML = rankOptions;
+        
+        // Non-admins must choose the lowest available rank (E-5 equivalent)
+        if(!isAdmin) {
+            const select = document.getElementById('rank');
+            if (select.options.length > 0) {
+                 select.value = select.options[0].value;
+            }
+        }
+        
         applyAutoTheme();
     }
     function changeStat(stat, delta) { if (statsUnlocked) return; const input = document.getElementById(stat); let pointsSpent = stats.reduce((acc, s) => acc + (parseInt(document.getElementById(s).value) - MIN_STAT_VALUE), 0); let currentValue = parseInt(input.value); if (delta > 0 && pointsSpent < MAX_STAT_POINTS && currentValue < MAX_STAT_VALUE) { input.value = currentValue + 1; } else if (delta < 0 && currentValue > MIN_STAT_VALUE) { input.value = currentValue - 1; } updateAllCalculations(); }
@@ -571,16 +599,16 @@
     function checkAdaptedStatus() { const violenceCount = document.querySelectorAll('#violence1:checked, #violence2:checked, #violence3:checked').length; document.getElementById('violence-adapted').classList.toggle('hidden', violenceCount < 3); const helplessnessCount = document.querySelectorAll('#helplessness1:checked, #helplessness2:checked, #helplessness3:checked').length; document.getElementById('helplessness-adapted').classList.toggle('hidden', helplessnessCount < 3); }
     function addCraftSkill(data = {}){ const container = document.getElementById('craft-skills-container'); const item = document.createElement('div'); item.className = 'sub-skill-item'; const craftTypes = ['Gunsmith', 'Locksmith', 'Mechanic', 'Microelectronics', 'Explosives']; let options = craftTypes.map(c => `<option value="${c}" ${c === data.type ? 'selected' : ''}>${c}</option>`).join(''); const scoreMax = isSkillSetupMode ? 80 : 100; item.innerHTML = `<label class="styled-checkbox"><input type="checkbox" ${data.checked ? 'checked' : ''}><span class="checkbox-visual"></span></label><div class="skill-label-input"><select data-tooltip="${skillDescriptions['Craft']}">${options}</select><input type="number" min="0" max="${scoreMax}" value="${data.score || 0}"></div><button class="remove-btn" onclick="this.parentElement.remove(); if(isSkillSetupMode) updateSkillPointsCounter();">X</button>`; container.appendChild(item); setupTooltips(); if(isSkillSetupMode) updateSkillPointsCounter(); }
     function addLanguageSkill(data = {}){ const container = document.getElementById('language-skills-container'); const item = document.createElement('div'); item.className = 'sub-skill-item'; const scoreMax = isSkillSetupMode ? 80 : 100; item.innerHTML = `<label class="styled-checkbox"><input type="checkbox" ${data.checked ? 'checked' : ''}><span class="checkbox-visual"></span></label><div class="skill-label-input"><input type="text" placeholder="Language" value="${data.lang || ''}"><input type="number" min="0" max="${scoreMax}" value="${data.score || 0}"></div><button class="remove-btn" onclick="this.parentElement.remove(); if(isSkillSetupMode) updateSkillPointsCounter();">X</button>`; container.appendChild(item); if(isSkillSetupMode) updateSkillPointsCounter(); }
-    function addBond(data = {}) { const container = document.getElementById('bonds-container'); const item = document.createElement('div'); item.className = 'bond-item'; item.innerHTML = `<input type="text" placeholder="Bond Name" value="${data.name || ''}"><select class="bond-score"></select><button class="remove-btn" onclick="this.parentElement.remove()">X</button>`; container.appendChild(item); updateBondScores(); if(data.score) item.querySelector('.bond-score').value = data.score; }
+    function addBond(data = {}) { const container = document.getElementById('bonds-container'); const item = document.createElement('div'); item.className = 'bond-item'; item.innerHTML = `<input type="text" placeholder="Bond Name" value="${data.name || ''}"><select class="bond-score"></select>`; container.appendChild(item); updateBondScores(); if(data.score) item.querySelector('.bond-score').value = data.score; }
     function updateBondSlots() {
         const cha = parseInt(document.getElementById('CHA').value) || 0;
         const maxBonds = Math.max(1, Math.min(5, Math.floor(cha / 4)));
         const container = document.getElementById('bonds-container');
-        const currentBonds = container.querySelectorAll('.bond-item').length;
-        if (currentBonds < maxBonds) {
-            for(let i=0; i < maxBonds - currentBonds; i++) addBond();
-        } else if (currentBonds > maxBonds) {
-            for(let i=0; i < currentBonds - maxBonds; i++) container.querySelector('.bond-item:last-child').remove();
+        const currentBonds = container.querySelectorAll('.bond-item');
+        if (currentBonds.length < maxBonds) {
+            for(let i=0; i < maxBonds - currentBonds.length; i++) addBond();
+        } else if (currentBonds.length > maxBonds) {
+            for(let i=0; i < currentBonds.length - maxBonds; i++) container.querySelector('.bond-item:last-child').remove();
         }
     }
     function updateBondScores() { const cha = parseInt(document.getElementById('CHA').value) || 0; document.querySelectorAll('.bond-score').forEach(select => { const currentScore = select.value; let options = ''; for (let i = 0; i <= cha; i++) { options += `<option value="${i}">${i}</option>`; } select.innerHTML = options; select.value = Math.min(currentScore, cha); }); }
@@ -667,17 +695,17 @@
         setVal('character-id', data.id || `char_${Date.now()}`); setVal('full-name', data.fullName); setVal('branch', data.branch); updateRanks(); setVal('rank', data.rank);
         Object.keys(data).forEach(key => setVal(key.replace(/[A-Z]/g, m => '-' + m.toLowerCase()), data[key]));
         for (const stat in data.stats) setVal(stat, data.stats[stat]);
+        updateAllCalculations(); // Important to run after stats are set to update bonds etc.
         setVal('hp-current', data.hpCurrent); setVal('wp-current', data.wpCurrent); setVal('san-current', data.sanCurrent);
         if (data.isArmorActive) { selectArmor(data.currentArmorPoints, false); closeArmorModal(); }
         for (const key in data.psych) setChecked(key, data.psych[key]); checkAdaptedStatus();
-        document.getElementById('bonds-container').innerHTML = ''; updateBondSlots();
-        document.querySelectorAll('#bonds-container .bond-item').forEach((item, index) => { if (data.bonds[index]) { item.querySelector('input[type="text"]').value = data.bonds[index].name; item.querySelector('.bond-score').value = data.bonds[index].score; } });
+        document.querySelectorAll('#bonds-container .bond-item').forEach((item, index) => { if (data.bonds && data.bonds[index]) { item.querySelector('input[type="text"]').value = data.bonds[index].name; item.querySelector('.bond-score').value = data.bonds[index].score; } });
         document.getElementById('weapons-body').innerHTML = ''; data.weapons.forEach(weaponData => addWeapon(weaponData));
         for (const id in data.skillsData) { setVal(id, data.skillsData[id].score); setChecked(`check-${id}`, data.skillsData[id].checked); }
         data.craftSkills.forEach(craftData => addCraftSkill(craftData)); data.languageSkills.forEach(languageData => addLanguageSkill(languageData));
         isSkillSetupMode = data.isSkillSetupMode !== false; setSkillInputMax(isSkillSetupMode ? 80 : 100);
         setChecked('lock-branch-rank-checkbox', data.branchRankLocked); updateBranchRankLockState();
-        updateAllCalculations(); updateSkillPointsCounter(); updateRollSkillsButtonVisibility();
+        updateSkillPointsCounter(); updateRollSkillsButtonVisibility();
         showView('character-sheet'); isFormDirty = false;
     }
     function saveCharacter() { const data = gatherData(); if (!data.fullName) { alert("Agent's Full Name is required to save."); return; } localStorage.setItem(data.id, JSON.stringify(data)); alert(`AGENT FILE: ${data.fullName.toUpperCase()} SAVED LOCALLY.`); loadSavedSheets(); isFormDirty = false; }
