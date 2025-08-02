@@ -334,31 +334,10 @@
         <main id="loader-view" class="hidden"> <div class="loader-menu"> <h2>LOAD AGENT</h2> <input type="file" id="json-file-input" accept=".json" onchange="loadCharacterFromFile(event)" class="button"> <h3>LOCAL SAVES</h3> <ul id="saved-sheets-list"></ul> <button onclick="showView('main')">> RETURN</button> </div> </main>
         <main id="character-sheet-view" class="hidden"> <div id="character-sheet-container"> <button onclick="saveCharacter()">SAVE</button><button onclick="screenshotPage(event)">SCREENSHOT</button><button onclick="exportToJson()">EXPORT TO .JSON</button><label id="lock-branch-rank-container" class="styled-checkbox hidden" style="margin-left: 15px;"><input type="checkbox" id="lock-branch-rank-checkbox"><span class="checkbox-visual"></span> LOCK BRANCH/RANK</label> <button onclick="showView('main')">RETURN TO MENU</button> <form id="sheet-form" onsubmit="return false;"></form> </div> </main>
         <main id="rules-view" class="hidden"> 
-            <div class="content-menu"> 
-                <h2 style="text-align: center;">RULES OF ENGAGEMENT</h2>
-                <h2>Be Civil, Be Respectful.</h2> <p>SOCOM is intended to be a dark and intense game, but we're all here to have fun. Horror is in-character and respect is out-of-character. Don't make it personal and don't take things to the heart.</p>
-                <h2>About PvP.</h2> <p>Tension between characters happens - distrust, paranoia, and conflicting agendas are part of the setting. But player consent is key before betrayal, sabotage, or character-on-character violence. NEMESIS will not tolerate out-of-character grudges; keep the drama in the game.</p>
-                <h2>Communication and Versimilitude.</h2> <p>If you're unsure about something, ask - NEMESIS will always answer. Work with the other players to build suspense and tension and keep the setting immersive. Paranoia is more fun with friends.</p>
-                <h2>Death (and Worse) is Part of the Game.</h2> <p>Your character is not a hero, and they are not safe. SOCOM is about failure, creeping dread, and moral collapse with the occasional success. Expect your character to die, disappear, go insane, or worse. When that happens, we'll work together to bring in a new agent.</p>
-                <h2>No Metagaming, No Powergaming</h2> <p>Metagaming (using OOC knowledge IC) ruins the experience - act on what your character knows, not what you do. Powergaming (forcing actions on others or breaking realism) doesn't fit this setting. Be prepared for failures and bad choices.</p>
-                <h2>Trust NEMESIS, but Question Everything</h2> <p>NEMESIS is not your enemy, but will make your character suffer. If something seems off in the story, that's probably intentional. Keep your eyes open. Assume you're being lied to. And remember that no one is coming to save you.</p>
-                <h2 style="text-align: center; font-size: 1.1em;">CONTENT WARNINGS</h2>
-                <p>SOCOM Operations will often contain multiple of the contents detailed below:</p>
-                <ul> <li>Violence, Gore and Death</li> <li>Torture and Enhanced Interrogation</li> <li>Psychological Horror and Trauma</li> <li>Body Horror</li> <li>Substance Abuse</li> </ul>
-                <p>No explicit sexual content is included in SOCOM, although it can be implied/mentioned.</p>
-                <div style="text-align: center; margin-top: 30px;"> <button onclick="showView('main')">> RETURN TO MENU</button> </div>
-            </div> 
+            <div class="content-menu"><!-- Content for rules will be loaded here --></div> 
         </main>
         <main id="about-view" class="hidden"> 
-            <div class="content-menu">
-                <h2 style="text-align: center; margin-bottom: 20px;">ABOUT SOCOM</h2>
-                <p>SOCOM is a serialized, operation-based TTRPG using a slightly modified <a href="https://www.deltagreen.com" target="_blank" rel="noopener noreferrer" class="themed-link">Delta Green</a> system set from the 1990s through the 2010s, with most missions unfolding in a post-9/11 world. As America wages covert wars across the globe and at home, a clandestine task force known as N.E.M.E.S.I.S., comprised of elite operatives from the CIA, NSA, and the U.S. military, carries out black ops in the name of national security.</p>
-                <p>Players assume the roles of N.E.M.E.S.I.S. agents: psyops, field tacticians, analysts, and infiltrators tasked with counterterrorism, espionage, information warfare, and the moral rot that comes with them.</p>
-                <p style="margin-top: 25px;"><em>Inspired by Metal Gear Solid, Call of Duty, Splinter Cell and The Hunt for Red October.</em></p>
-                <p style="font-size: 1.2em; text-align: center; font-style: italic; margin-top: 40px; margin-bottom: 20px;"> <a href="https://discord.gg/g8DgxusP9u" target="_blank" rel="noopener noreferrer" class="themed-link">/De Opresso Liber/</a> </p>
-                <div style="text-align: center; margin-bottom: 40px;"> <a href="https://www.socom.mil/" target="_blank" rel="noopener noreferrer"> <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/SpecialForces_Badge.svg/1200px-SpecialForces_Badge.svg.png" alt="Green Berets Logo" class="logo" style="height: 70px; margin-right: 0;"> </a> </div>
-                <div style="text-align: center;"> <button onclick="showView('main')">> RETURN TO MENU</button> </div>
-            </div>
+            <div class="content-menu"><!-- Content for about page will be loaded here --></div>
         </main>
     `;
 
@@ -383,7 +362,19 @@
     const baseSkillValues = { 'Accounting': 10, 'Alertness': 20, 'Athletics': 30, 'Disguise': 10, 'Dodge': 30, 'Drive': 20, 'Firearms': 20, 'First Aid': 10, 'Heavy Machinery': 10, 'Heavy Weapons': 10, 'Human Studies': 10, 'Melee Weapons': 30, 'Navigate': 10, 'Paranormal': 10, 'Persuade': 20, 'Psychotherapy': 10, 'Ride': 10, 'Search': 20, 'Stealth': 20, 'Survival': 10, 'Swim': 20, 'Tech Procedures': 20, 'Unarmed Combat': 40 };
     const statDescriptions = { STR: { 3: "Frail", 6: "Below Average", 9: "Average", 12: "Strong", 15: "Powerful", 18: "Peak Human" }, DEX: { 3: "Clumsy", 6: "Slow", 9: "Average", 12: "Agile", 15: "Nimble", 18: "Lightning Reflexes" }, CON: { 3: "Sickly", 6: "Frail", 9: "Average", 12: "Hardy", 15: "Tough", 18: "Superhuman Endurance" }, INT: { 3: "Dim", 6: "Slow Learner", 9: "Average", 12: "Sharp", 15: "Brilliant", 18: "Genius" }, POW: { 3: "Weak-willed", 6: "Hesitant", 9: "Average", 12: "Determined", 15: "Indomitable", 18: "Unyielding Will" }, CHA: { 3: "Unlikable", 6: "Awkward", 9: "Average", 12: "Likable", 15: "Charismatic", 18: "Compelling Presence" } };
     
-    // --- DAILY HISTORY FEED ---
+    // --- CONTENT LOADING ---
+    function loadContentPanels() {
+        fetch('rules.html')
+            .then(response => response.ok ? response.text() : Promise.reject('rules.html not found'))
+            .then(html => { document.querySelector('#rules-view .content-menu').innerHTML = html; })
+            .catch(error => console.error('Error loading rules:', error));
+
+        fetch('about.html')
+            .then(response => response.ok ? response.text() : Promise.reject('about.html not found'))
+            .then(html => { document.querySelector('#about-view .content-menu').innerHTML = html; })
+            .catch(error => console.error('Error loading about page:', error));
+    }
+
     function loadDailyHistory() {
         const contentEl = document.getElementById('history-content');
         const titleEl = document.getElementById('history-title');
@@ -413,6 +404,7 @@
 
     // --- INITIALIZATION ---
     window.onload = () => {
+        loadContentPanels();
         populateBranches(); populateStats(); populateSkills(); loadSavedSheets(); applySavedTheme(); setupTooltips(); loadDailyHistory(); populateWeaponCategories();
         document.getElementById('settings-btn').addEventListener('click', () => { document.getElementById('settings-menu').style.display = document.getElementById('settings-menu').style.display === 'block' ? 'none' : 'block'; });
         document.getElementById('lock-branch-rank-checkbox').addEventListener('change', updateBranchRankLockState);
