@@ -25,13 +25,18 @@ const tutorialSteps = [
                 </div>`;
         }
     },
-    // Step 1: Create New Agent
+    // Step 1: Create New Agent (CORRECTED)
     {
         title: "STEP 1: CREATE FILE",
         text: "Welcome, Recruit. Your first task is to open a new file. Click the highlighted 'CREATE NEW AGENT FILE' button to proceed.",
         targetElement: 'button[onclick*="character-sheet"]',
         spotlightPadding: 10,
-        eventListener: (el) => el.click() // The button click itself advances the tutorial
+        eventListener: (el) => {
+            // This is the correct way to handle it. The original button's onclick
+            // already takes the user to the right view. We just need to advance
+            // the tutorial when that happens.
+            el.addEventListener('click', advanceTutorial, { once: true });
+        }
     },
     // Step 2: Choose Branch
     {
@@ -65,11 +70,24 @@ const tutorialSteps = [
             let totalSpent = 0;
             const skillInputs = document.querySelectorAll('#skills-container input[type="number"]');
             const baseValues = {};
-            simpleSkills.forEach(skill => baseValues[`skill-${skill.replace(/\s+/g, '-')}`] = baseSkillValues[skill] || 0);
+            simpleSkills.forEach(skill => {
+                const skillId = `skill-${skill.replace(/\s+/g, '-')}`;
+                baseValues[skillId] = baseSkillValues[skill] || 0;
+            });
+            
+             // Account for complex skills with base 0
+            ['skill-milsci-land', 'skill-milsci-sea', 'skill-milsci-air', 'skill-pilot-airplane', 'skill-pilot-helicopter', 'skill-pilot-boat', 'skill-pilot-rc', 'skill-science-biology', 'skill-science-chemistry', 'skill-science-mathematics', 'skill-science-physics'].forEach(id => baseValues[id] = 0);
+
 
             skillInputs.forEach(input => {
-                const baseValue = baseValues[input.id] || 0;
+                let baseValue = 0;
+                // find base value for simple skills, craft, and languages
+                if(baseValues[input.id] !== undefined) {
+                    baseValue = baseValues[input.id];
+                }
+
                 let currentValue = parseInt(input.value, 10);
+                if (isNaN(currentValue)) currentValue = 0;
 
                 if (currentValue > 80) {
                     input.value = 80; // Enforce max value
@@ -80,7 +98,9 @@ const tutorialSteps = [
             });
             
             tutorialSkillPoints = 300 - totalSpent;
-            document.getElementById('tutorial-skill-points-counter').textContent = tutorialSkillPoints;
+            const counter = document.getElementById('tutorial-skill-points-counter');
+            if(counter) counter.textContent = tutorialSkillPoints;
+
 
             return tutorialSkillPoints <= 0;
         }
@@ -91,6 +111,7 @@ const tutorialSteps = [
         text: "In the field, you learn under pressure. Check the box next to 'ALERTNESS' to mark it for improvement.",
         targetElement: '#check-skill-Alertness',
         spotlightPadding: 10,
+        spotlightGroup: ['label[for="skill-Alertness"]'],
         eventListener: (el) => {
              el.addEventListener('change', advanceTutorial, { once: true });
         }
@@ -101,7 +122,6 @@ const tutorialSteps = [
         text: "Good. Now, initiate the improvement roll by clicking the 'ROLL 1D4S' button that has appeared.",
         targetElement: '#roll-skills-btn',
         spotlightPadding: 10,
-        eventListener: (el) => el.click(), // Clicking this will open the modal and advance
         setup: () => {
             // The modal opening is handled by the original button's onclick
             // We just need to listen for the modal to appear to move to the next step
@@ -113,6 +133,9 @@ const tutorialSteps = [
                 }
             });
             observer.observe(document.body, { childList: true, subtree: true });
+        },
+        eventListener: (el) => {
+             el.addEventListener('click', () => { /* The observer handles advancement */ }, { once: true });
         }
     },
     // Step 5b: Confirm Roll
@@ -122,7 +145,6 @@ const tutorialSteps = [
         targetElement: '#skill-roll-prompt button[onclick*="executeSkillRolls"]',
         spotlightPadding: 15,
         spotlightNoRadius: true,
-        eventListener: (el) => el.click(),
         setup: () => {
              const observer = new MutationObserver(() => {
                 const conclusion = document.getElementById('skill-roll-conclusion');
@@ -131,7 +153,10 @@ const tutorialSteps = [
                     advanceTutorial();
                 }
             });
-            observer.observe(document.getElementById('skill-roll-modal'), { subtree: true, attributes: true });
+            observer.observe(document.getElementById('skill-roll-modal'), { subtree: true, attributes: true, childList: true });
+        },
+        eventListener: (el) => {
+            el.addEventListener('click', () => { /* The observer handles advancement */ }, { once: true });
         }
     },
     // Step 5c: Close Modal
@@ -141,7 +166,6 @@ const tutorialSteps = [
         targetElement: '#skill-roll-conclusion button',
         spotlightPadding: 15,
         spotlightNoRadius: true,
-        eventListener: (el) => el.click(),
          setup: () => {
             const observer = new MutationObserver(() => {
                 const modal = document.getElementById('skill-roll-modal');
@@ -151,6 +175,9 @@ const tutorialSteps = [
                 }
             });
             observer.observe(document.getElementById('skill-roll-modal'), { attributes: true });
+        },
+        eventListener: (el) => {
+             el.addEventListener('click', () => { /* The observer handles advancement */ }, { once: true });
         }
     },
     // Step 6: Add Weapon
@@ -159,7 +186,6 @@ const tutorialSteps = [
         text: "An operative is only as good as their tools. Access the weapons locker by clicking '+ ADD WEAPON'.",
         targetElement: 'button[onclick*="openWeaponModal"]',
         spotlightPadding: 30,
-        eventListener: (el) => el.click(),
         setup: () => {
             const observer = new MutationObserver(() => {
                 const modal = document.getElementById('weapon-preset-modal');
@@ -169,6 +195,9 @@ const tutorialSteps = [
                 }
             });
             observer.observe(document.body, { childList: true, subtree: true });
+        },
+        eventListener: (el) => {
+             el.addEventListener('click', () => { /* The observer handles advancement */ }, { once: true });
         }
     },
     // Step 6a: Choose Weapon
@@ -177,11 +206,13 @@ const tutorialSteps = [
         text: "For this simulation, select a standard sidearm. Find the 'Medium Pistol' in the list and click 'SELECT'.",
         targetElement: null, // No spotlight inside the modal
         setup: () => {
+            document.getElementById('weapon-category-select').value = "Firearms";
+            populateWeaponPresets();
             // Find the correct button and add a listener to it
             const weaponButtons = document.querySelectorAll('#weapon-preset-list button');
             weaponButtons.forEach(button => {
-                const preset = JSON.parse(button.getAttribute('onclick').match(/addWeapon\((.*?),/)[1]);
-                if (preset.name === 'Medium Pistol') {
+                const presetText = button.getAttribute('onclick');
+                if (presetText && presetText.includes('Medium Pistol')) {
                     button.addEventListener('click', advanceTutorial, { once: true });
                 }
             });
@@ -206,6 +237,7 @@ const tutorialSteps = [
 function startTutorial() {
     isTutorialActive = true;
     currentTutorialStep = 0;
+    resetForm(); // Start with a fresh sheet
     document.getElementById('tutorial-overlay').classList.remove('hidden');
     document.getElementById('tutorial-box').classList.remove('hidden');
     updateTutorialUI();
@@ -226,7 +258,8 @@ function advanceTutorial() {
     if (currentTutorialStep >= tutorialSteps.length) {
         endTutorial();
     } else {
-        updateTutorialUI();
+        // Use a tiny timeout to allow the DOM to update before we try to find the next element
+        setTimeout(updateTutorialUI, 50);
     }
 }
 
@@ -235,19 +268,19 @@ function updateTutorialUI() {
     const box = document.getElementById('tutorial-box');
     const overlay = document.getElementById('tutorial-overlay');
 
+    // Default box content unless setup overrides it
+     box.innerHTML = `
+        <h4>${step.title}</h4>
+        <p>${step.text}</p>
+        <div class="tutorial-controls">
+            ${!step.validation && !step.eventListener ? '<button onclick="advanceTutorial()">NEXT</button>' : ''}
+            <button onclick="endTutorial()">CANCEL TUTORIAL</button>
+        </div>`;
+
     // Run setup function if it exists
     if (step.setup) {
         step.setup();
-    } else {
-        // Default box content
-         box.innerHTML = `
-            <h4>${step.title}</h4>
-            <p>${step.text}</p>
-            <div class="tutorial-controls">
-                ${!step.validation && !step.eventListener ? '<button onclick="advanceTutorial()">NEXT</button>' : ''}
-                <button onclick="endTutorial()">CANCEL TUTORIAL</button>
-            </div>`;
-    }
+    } 
 
     // Handle spotlight effect
     if (step.targetElement) {
@@ -283,16 +316,24 @@ function updateTutorialUI() {
 
 function highlightElement(element, padding = 10, groupSelectors = [], noRadius = false) {
     const overlay = document.getElementById('tutorial-overlay');
+    if(!element) {
+        overlay.style.clipPath = '';
+        return;
+    };
+    
     const rects = [element.getBoundingClientRect()];
 
     // Add grouped elements to the list of rectangles
-    groupSelectors.forEach(selector => {
-        const groupEl = document.querySelector(selector);
-        if (groupEl) rects.push(groupEl.getBoundingClientRect());
-    });
+    if(groupSelectors) {
+        groupSelectors.forEach(selector => {
+            const groupEl = document.querySelector(selector);
+            if (groupEl) rects.push(groupEl.getBoundingClientRect());
+        });
+    }
 
     // Combine all rectangles into one bounding box
     const combinedRect = rects.reduce((acc, rect) => {
+        if (!rect.width && !rect.height) return acc; // Skip empty rects
         const left = Math.min(acc.left, rect.left);
         const top = Math.min(acc.top, rect.top);
         const right = Math.max(acc.right, rect.right);
@@ -304,15 +345,18 @@ function highlightElement(element, padding = 10, groupSelectors = [], noRadius =
     const left = combinedRect.left - padding;
     const width = combinedRect.width + (padding * 2);
     const height = combinedRect.height + (padding * 2);
-    const radius = noRadius ? '0' : '10px';
+    const radius = noRadius ? '0' : '10px'; // This value is not used in clip-path, but good to have
+
+    // A small value to prevent rendering issues on some browsers with perfect rectangles
+    const Epsilon = 0.01;
 
     overlay.style.clipPath = `polygon(
-        0 0, 0 100%, 100% 100%, 100% 0, 0 0,
-        ${left}px ${top}px,
-        ${left}px ${top + height}px,
-        ${left + width}px ${top + height}px,
-        ${left + width}px ${top}px,
-        ${left}px ${top}px
+        0% 0%, 0% 100%, 100% 100%, 100% 0%, 0% 0%,
+        ${left + Epsilon}px ${top + Epsilon}px,
+        ${left + Epsilon}px ${top + height - Epsilon}px,
+        ${left + width - Epsilon}px ${top + height - Epsilon}px,
+        ${left + width - Epsilon}px ${top + Epsilon}px,
+        ${left + Epsilon}px ${top + Epsilon}px
     )`;
 }
 
@@ -320,23 +364,38 @@ function highlightElement(element, padding = 10, groupSelectors = [], noRadius =
 // --- Draggability Setup ---
 function makeDraggable() {
     const box = document.getElementById('tutorial-box');
+    const header = document.querySelector('#tutorial-box h4');
 
     const onMouseDown = (e) => {
+        // only start dragging if the mousedown is on the box itself or its h4, not a button
+        if(e.target.nodeName === 'BUTTON') return;
         isDragging = true;
         offsetX = e.clientX - box.offsetLeft;
         offsetY = e.clientY - box.offsetTop;
         box.style.cursor = 'grabbing';
+        document.body.style.userSelect = 'none';
     };
 
     const onMouseUp = () => {
         isDragging = false;
         box.style.cursor = 'grab';
+        document.body.style.userSelect = '';
     };
 
     const onMouseMove = (e) => {
         if (!isDragging) return;
-        box.style.left = `${e.clientX - offsetX}px`;
-        box.style.top = `${e.clientY - offsetY}px`;
+        let newLeft = e.clientX - offsetX;
+        let newTop = e.clientY - offsetY;
+        
+        // Constrain to viewport
+        const boxRect = box.getBoundingClientRect();
+        if (newLeft < 0) newLeft = 0;
+        if (newTop < 0) newTop = 0;
+        if (newLeft + boxRect.width > window.innerWidth) newLeft = window.innerWidth - boxRect.width;
+        if (newTop + boxRect.height > window.innerHeight) newTop = window.innerHeight - boxRect.height;
+        
+        box.style.left = `${newLeft}px`;
+        box.style.top = `${newTop}px`;
     };
     
     box.addEventListener('mousedown', onMouseDown);
