@@ -227,6 +227,32 @@
         #armor-preset-list .preset-item {
              cursor: pointer;
         }
+        
+        /* Tutorial Styles */
+        #tutorial-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); z-index: 10000;
+        }
+        #tutorial-highlight {
+            position: absolute; border: 3px solid #ffc400;
+            box-shadow: 0 0 15px #ffc400, 0 0 0 9999px rgba(0,0,0,0.8);
+            border-radius: 3px; pointer-events: none;
+            transition: all 0.3s ease-in-out;
+        }
+        #tutorial-box {
+            position: absolute; background: var(--bg-color);
+            border: 1px solid var(--accent-color); padding: 15px; max-width: 350px;
+            z-index: 10001; color: var(--text-color);
+            text-shadow: 0 0 4px var(--accent-color);
+            transition: all 0.3s ease-in-out;
+        }
+        body.tutorial-active * {
+            pointer-events: none;
+        }
+        body.tutorial-active .tutorial-highlight-area,
+        body.tutorial-active .tutorial-highlight-area * {
+            pointer-events: auto;
+        }
     </style>
 </head>
 <body>
@@ -297,6 +323,14 @@
         </div>
     </div>
     
+    <!-- Tutorial Overlay -->
+    <div id="tutorial-overlay" class="hidden">
+        <div id="tutorial-highlight"></div>
+        <div id="tutorial-box">
+            <p id="tutorial-text"></p>
+        </div>
+    </div>
+
 <script src="socom_data.js"></script>
 <script src="socom_admin_data.js"></script>
 <script>
@@ -324,8 +358,9 @@
                     </div>
                 </div>
 
-                <button onclick="resetForm(); showView('character-sheet'); ">> CREATE NEW AGENT FILE</button>
+                <button id="create-agent-btn" onclick="resetForm(); showView('character-sheet'); ">> CREATE NEW AGENT FILE</button>
                 <button onclick="showView('loader')">> LOAD AGENT FILE</button>
+                <button onclick="tutorial.start()">> START TUTORIAL</button>
                 <button onclick="showView('rules')">> RULES</button>
                 <button onclick="showView('about')">> ABOUT SOCOM</button>
             </div>
@@ -344,8 +379,8 @@
     document.getElementById('sheet-form').innerHTML = `
         <input type="hidden" id="character-id">
         <section class="form-section"> <h2>IDENTIFICATION</h2> <div class="grid-container" style="grid-template-columns: 1fr 1fr 1fr"> <div><label for="full-name">FULL NAME</label><input type="text" id="full-name"></div> <div><label for="branch">BRANCH</label><select id="branch" onchange="updateRanks()"></select></div> <div><label for="rank">RANK/GRADE</label><select id="rank" onchange="applyAutoTheme()"></select></div> <div><label for="team">TEAM</label><select id="team"><option>SOCOM 1</option><option>SOCOM 2</option><option>SOCOM 3</option><option>SOCOM 4</option><option>SOCOM 5</option><option>SOCOM 6</option></select></div> <div><label for="sex">SEX</label><select id="sex"><option>M</option><option>F</option><option>NA</option></select></div> <div><label for="dob">D.O.B.</label><input type="date" id="dob"></div> <div><label for="nationality">NATIONALITY</label><input type="text" id="nationality"></div> <div><label for="employer">EMPLOYER</label><input type="text" id="employer"></div> <div><label for="education">EDUCATION</label><input type="text" id="education"></div> </div> </section>
-        <div class="form-grid"> <div class="col-1"> <section class="form-section"> <div style="display: flex; justify-content: space-between; align-items: center;"><h2>CORE ATTRIBUTES (<span id="stat-points-remaining">25</span> PTS)</h2><button type="button" id="toggle-stats-lock-btn" onclick="toggleStatsLock()" class="hidden">FORCE STATS</button></div> <div id="stats-container" style="display: flex; flex-direction: column; gap: 8px;"></div> </section> <section class="form-section"> <h2>DERIVED ATTRIBUTES</h2> <div class="grid-container" style="grid-template-columns: 1fr 1fr 1fr;"> <div><label>HIT POINTS (HP)</label><div class="derived-attr-input"><input type="number" id="hp-current" min="0"> / <input type="number" id="hp-max" value="0" readonly></div></div> <div><label>ARMOR (AP)</label><div class="derived-attr-input armor-controls"><button type="button" id="armor-btn" onclick="toggleArmor()">△</button><input type="number" id="armor-points" class="hidden" min="0" oninput="validateArmorPoints(event)"></div></div> <div><label>WILLPOWER (WP)</label><div class="derived-attr-input"><input type="number" id="wp-current" min="0"> / <input type="number" id="wp-max" value="0" readonly></div></div> <div><label>SANITY (SAN)</label><div class="derived-attr-input"><input type="number" id="san-current" min="0" oninput="checkBreakingPoint()"> / <input type="number" id="san-max" value="0" readonly></div></div> <div><label>BREAKING PT</label><input type="number" id="bp" readonly></div> </div> <div id="bp-warning" class="hidden"> SAN is at or below Breaking Point! Agent must acquire a new disorder. <button type="button" onclick="acknowledgeBreakingPoint()">ACK & RESET BP</button> </div> </section> <section class="form-section"> <div class="bonds-header" style="display: flex; justify-content: space-between; align-items: center;"> <h2>BONDS (<span id="bond-cha-note"></span>)</h2> <button type="button" onclick="addBond()">+ ADD</button> </div> <div id="bonds-container"></div> </section> <section class="form-section"> <h2 style="text-align: center; border:none; margin-bottom: 5px;">PSYCH PROFILE</h2> <div class="san-loss-container"> <div class="san-loss-group"> <div class="san-loss-label"> <label>VIOLENCE</label><span id="violence-adapted" class="adapted-status hidden">ADAPTED</span> </div> <div> <label class="styled-checkbox"><input type="checkbox" id="violence1" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="violence2" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="violence3" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> </div> </div> <div class="san-loss-group"> <div class="san-loss-label"> <label>HELPLESSNESS</label><span id="helplessness-adapted" class="adapted-status hidden">ADAPTED</span> </div> <div> <label class="styled-checkbox"><input type="checkbox" id="helplessness1" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="helplessness2" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="helplessness3" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> </div> </div> </div> </section> </div> <div class="col-2"> <section class="form-section" style="flex-grow: 1; display: flex; flex-direction: column;"> <div style="display: flex; justify-content: space-between; align-items: center;"><h2 style="border-bottom: none;">SKILLS</h2><button type="button" id="roll-skills-btn" class="hidden" onclick="startSkillImprovement()">Roll 1d4s</button></div> <div id="skills-container" style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1;"></div> </section> </div> </div>
-        <section class="form-section"> <h2>WEAPONS & EQUIPMENT</h2> <label for="gear">ARMOR AND GEAR</label> <textarea id="gear"></textarea> <label for="notes-field" style="margin-top:10px;">NOTES</label> <textarea id="notes-field"></textarea> <h3 style="margin-top: 15px;">WEAPONS</h3> <table id="weapons-table" style="width:100%; border-collapse: collapse;"> <thead> <tr><th>NAME</th><th>SKILL%</th><th>RANGE</th><th>DMG</th><th>AP</th><th>LETHALITY</th><th>AMMO</th><th></th></tr> </thead> <tbody id="weapons-body"></tbody> </table> <button type="button" onclick="openWeaponModal()">+ ADD WEAPON</button> </section>
+        <div class="form-grid"> <div class="col-1"> <section class="form-section"> <div style="display: flex; justify-content: space-between; align-items: center;"><h2>CORE ATTRIBUTES (<span id="stat-points-remaining">25</span> PTS)</h2><button type="button" id="toggle-stats-lock-btn" onclick="toggleStatsLock()" class="hidden">FORCE STATS</button></div> <div id="stats-container" style="display: flex; flex-direction: column; gap: 8px;"></div> </section> <section class="form-section"> <h2>DERIVED ATTRIBUTES</h2> <div class="grid-container" style="grid-template-columns: 1fr 1fr 1fr;"> <div><label>HIT POINTS (HP)</label><div class="derived-attr-input"><input type="number" id="hp-current" min="0"> / <input type="number" id="hp-max" value="0" readonly></div></div> <div><label>ARMOR (AP)</label><div class="derived-attr-input armor-controls"><button type="button" id="armor-btn" onclick="toggleArmor()">△</button><input type="number" id="armor-points" class="hidden" min="0" oninput="validateArmorPoints(event)"></div></div> <div><label>WILLPOWER (WP)</label><div class="derived-attr-input"><input type="number" id="wp-current" min="0"> / <input type="number" id="wp-max" value="0" readonly></div></div> <div><label>SANITY (SAN)</label><div class="derived-attr-input"><input type="number" id="san-current" min="0" oninput="checkBreakingPoint()"> / <input type="number" id="san-max" value="0" readonly></div></div> <div><label>BREAKING PT</label><input type="number" id="bp" readonly></div> </div> <div id="bp-warning" class="hidden"> SAN is at or below Breaking Point! Agent must acquire a new disorder. <button type="button" onclick="acknowledgeBreakingPoint()">ACK & RESET BP</button> </div> </section> <section class="form-section"> <div class="bonds-header" style="display: flex; justify-content: space-between; align-items: center;"> <h2>BONDS (<span id="bond-cha-note"></span>)</h2> <button type="button" onclick="addBond()">+ ADD</button> </div> <div id="bonds-container"></div> </section> <section class="form-section"> <h2 style="text-align: center; border:none; margin-bottom: 5px;">PSYCH PROFILE</h2> <div class="san-loss-container"> <div class="san-loss-group"> <div class="san-loss-label"> <label>VIOLENCE</label><span id="violence-adapted" class="adapted-status hidden">ADAPTED</span> </div> <div> <label class="styled-checkbox"><input type="checkbox" id="violence1" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="violence2" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="violence3" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> </div> </div> <div class="san-loss-group"> <div class="san-loss-label"> <label>HELPLESSNESS</label><span id="helplessness-adapted" class="adapted-status hidden">ADAPTED</span> </div> <div> <label class="styled-checkbox"><input type="checkbox" id="helplessness1" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="helplessness2" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="helplessness3" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> </div> </div> </div> </section> </div> <div class="col-2"> <section class="form-section" style="flex-grow: 1; display: flex; flex-direction: column;"> <div style="display: flex; justify-content: space-between; align-items: center;"><h2 style="border-bottom: none;">SKILLS <span id="skill-points-display" class="hidden" style="font-size: 0.8em; opacity: 0.8;">(<span id="skill-points-remaining">300</span> PTS REMAINING)</span></h2><button type="button" id="roll-skills-btn" class="hidden" onclick="startSkillImprovement()">Roll 1d4s</button></div> <div id="skills-container" style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1;"></div> </section> </div> </div>
+        <section class="form-section"> <h2>WEAPONS & EQUIPMENT</h2> <label for="gear">ARMOR AND GEAR</label> <textarea id="gear"></textarea> <label for="notes-field" style="margin-top:10px;">NOTES</label> <textarea id="notes-field"></textarea> <h3 style="margin-top: 15px;">WEAPONS</h3> <table id="weapons-table" style="width:100%; border-collapse: collapse;"> <thead> <tr><th>NAME</th><th>SKILL%</th><th>RANGE</th><th>DMG</th><th>AP</th><th>LETHALITY</th><th>AMMO</th><th></th></tr> </thead> <tbody id="weapons-body"></tbody> </table> <button type="button" id="add-weapon-btn" onclick="openWeaponModal()">+ ADD WEAPON</button> </section>
     `;
 
     // --- CONFIG ---
@@ -441,7 +476,7 @@
 
     // --- THEME MANAGEMENT ---
     function changeTheme(theme) { localStorage.setItem('socom_theme', theme); applyCurrentTheme(theme); }
-    function applyCurrentTheme(theme) { document.body.className = ''; if (isAdmin) document.body.classList.add('admin-mode'); if (theme !== 'default') document.body.classList.add(theme + '-theme'); }
+    function applyCurrentTheme(theme) { document.body.className = ''; if (isAdmin) document.body.classList.add('admin-mode'); if (theme !== 'default') document.body.classList.add(theme + '-theme'); if (tutorial.active) document.body.classList.add('tutorial-active'); }
     function applySavedTheme() { const savedTheme = localStorage.getItem('socom_theme'); if (savedTheme) applyCurrentTheme(savedTheme); else applyAutoTheme(); }
     function applyAutoTheme() {
         const savedTheme = localStorage.getItem('socom_theme');
@@ -450,9 +485,9 @@
         const rankSelect = document.getElementById('rank');
         const grade = rankSelect.options[rankSelect.selectedIndex]?.dataset.grade;
         const officerGrades = ['O-1','O-2','O-3','GS-14','SIS-2'];
-        if (grade && officerGrades.includes(grade)) { document.body.classList.add('officer-theme'); return; }
-        const branchType = branches[document.getElementById('branch').value];
-        if (branchType && branchType !== 'army') { document.body.classList.add(branchType + '-theme'); }
+        if (grade && officerGrades.includes(grade)) { document.body.classList.add('officer-theme'); }
+        else { const branchType = branches[document.getElementById('branch').value]; if (branchType && branchType !== 'army') { document.body.classList.add(branchType + '-theme'); } }
+        if (tutorial.active) document.body.classList.add('tutorial-active');
     }
 
     // --- VIEW MANAGEMENT & UI/CALCS ---
@@ -488,9 +523,13 @@
 
     function closeSkillRollModal() {
         document.getElementById('skill-roll-modal').classList.add('hidden');
+        if (tutorial.active && tutorial.step === 5.4) { tutorial.next(); }
     }
 
     async function executeSkillRolls() {
+        if (tutorial.active && tutorial.step === 5.3) {
+            tutorial.next();
+        }
         const checkedBoxes = Array.from(document.querySelectorAll('#skills-container input[type="checkbox"]:checked'));
         const skillsToRoll = [];
 
@@ -501,7 +540,6 @@
             const scoreInput = skillItem.querySelector('input[type="number"]');
             let skillName = "Unknown Skill";
 
-            // Determine the skill's name for display
             if (skillItem.classList.contains('skill-item-simple')) {
                 skillName = skillItem.querySelector('.skill-label-input label').textContent.trim();
             } else {
@@ -547,7 +585,7 @@
             resultEl.textContent = '';
             
             const animationInterval = setInterval(() => { diceEl.textContent = Math.floor(Math.random() * 4) + 1; }, 100);
-            await new Promise(resolve => setTimeout(resolve, 4000));
+            await new Promise(resolve => setTimeout(resolve, tutorial.active ? 1000 : 4000));
             clearInterval(animationInterval);
 
             const roll = Math.floor(Math.random() * 4) + 1;
@@ -558,7 +596,7 @@
             
             resultEl.textContent = `Result: +${roll}. New Score: ${newScore}.`;
             skill.checkbox.checked = false;
-            await new Promise(resolve => setTimeout(resolve, 2500));
+            await new Promise(resolve => setTimeout(resolve, tutorial.active ? 1000 : 2500));
         }
 
         document.getElementById('skill-roll-process').classList.add('hidden');
@@ -601,41 +639,28 @@
             const skillIdentifier = row.dataset.skillIdentifier;
             if (!skillIdentifier) return; // Skip if this weapon isn't linked to a skill
 
-            // --- Part 1: Update the Skill Value ---
             const newSkillValue = getCalculatedSkill(skillIdentifier);
             const skillInput = row.cells[1].querySelector('input');
             if (skillInput) {
                 skillInput.value = newSkillValue;
             }
 
-            // --- Part 2: Update the Damage Value based on Skill ---
             const baseDamage = row.dataset.baseDamage;
             const damageInput = row.cells[3].querySelector('input');
 
-            // Only apply bonus to Unarmed and Melee weapons that have a base damage value
             if ((skillIdentifier === 'Unarmed Combat' || skillIdentifier === 'Melee Weapons') && baseDamage && damageInput) {
                 let bonus = 0;
-                if (newSkillValue > 90) {
-                    bonus = 3;
-                } else if (newSkillValue > 75) {
-                    bonus = 2;
-                } else if (newSkillValue > 50) {
-                    bonus = 1;
-                }
-
-                if (bonus > 0) {
-    // Isolate the dice part (e.g., "1D4") from the base damage string (e.g., "1D4-1")
-    const dicePart = baseDamage.split(/[-+]/)[0].trim();
-    // Append the new bonus
-    damageInput.value = `${dicePart}+${bonus}`;
-} else {
-    damageInput.value = baseDamage; // Revert to base damage if skill is 50 or below
-}
+                if (newSkillValue > 90) { bonus = 3; } else if (newSkillValue > 75) { bonus = 2; } else if (newSkillValue > 50) { bonus = 1; }
+                if (bonus > 0) { const dicePart = baseDamage.split(/[-+]/)[0].trim(); damageInput.value = `${dicePart}+${bonus}`; } 
+                else { damageInput.value = baseDamage; }
             }
         });
     }
 
     function addWeapon(preset, closeModal = false) {
+        if (tutorial.active && preset?.name === 'Medium Pistol') {
+            tutorial.next();
+        }
         const newRow = document.getElementById('weapons-body').insertRow();
         const defaultData = { name: '', skill: '', range: '', dmg: '', ap: '', lethality: '', ammoC: '', ammoM: '' };
         const effectivePreset = preset || {};
@@ -652,11 +677,17 @@
         newRow.dataset.baseDamage = finalData.dmg || '';
         newRow.innerHTML = `<td><input type="text" value="${finalData.name}"></td><td><input type="number" min="0" max="99" value="${finalData.skill}"></td><td><div class="input-group"><input type="number" min="0" value="${finalData.range}"><span class="input-group-addon">m</span></div></td><td><input type="text" value="${finalData.dmg}"></td><td><input type="text" value="${finalData.ap}"></td><td><div class="input-group"><input type="number" min="0" max="100" value="${finalData.lethality}"><span class="input-group-addon">%</span></div></td><td><div class="derived-attr-input"><input type="number" min="0" value="${finalData.ammoC}"> / <input type="number" min="0" value="${finalData.ammoM}"></div></td><td><button type="button" class="remove-btn" onclick="this.closest('tr').remove()">X</button></td>`;
         if (closeModal) { closeWeaponModal(); }
-        updateLinkedWeaponStats(); // Immediately apply damage bonus if applicable
+        updateLinkedWeaponStats();
     }
 
     // --- WEAPON MODAL ---
-    function openWeaponModal() { document.getElementById('weapon-preset-modal').classList.remove('hidden'); populateWeaponPresets(); }
+    function openWeaponModal() { 
+        document.getElementById('weapon-preset-modal').classList.remove('hidden'); 
+        populateWeaponPresets(); 
+        if (tutorial.active && tutorial.step === 6.1) {
+            setTimeout(() => tutorial.next(), 100); // Timeout to allow modal to render
+        }
+    }
     function closeWeaponModal() { document.getElementById('weapon-preset-modal').classList.add('hidden'); }
     function populateWeaponCategories() { const select = document.getElementById('weapon-category-select'); select.innerHTML = Object.keys(weaponPresets).map(cat => `<option value="${cat}">${cat.toUpperCase()}</option>`).join(''); }
     function populateWeaponPresets() {
@@ -677,20 +708,9 @@
     }
     
     // --- ARMOR MANAGEMENT ---
-    function toggleArmor() {
-        if (isArmorActive) {
-            deactivateArmor();
-        } else {
-            openArmorModal();
-        }
-    }
-    function openArmorModal() {
-        populateArmorPresets();
-        document.getElementById('armor-modal').classList.remove('hidden');
-    }
-    function closeArmorModal() {
-        document.getElementById('armor-modal').classList.add('hidden');
-    }
+    function toggleArmor() { if (isArmorActive) { deactivateArmor(); } else { openArmorModal(); } }
+    function openArmorModal() { populateArmorPresets(); document.getElementById('armor-modal').classList.remove('hidden'); }
+    function closeArmorModal() { document.getElementById('armor-modal').classList.add('hidden'); }
     function populateArmorPresets() {
         const list = document.getElementById('armor-preset-list');
         const helmetCheckbox = document.getElementById('helmet-checkbox');
@@ -706,59 +726,257 @@
         document.querySelectorAll('#armor-preset-list .preset-item').forEach(item => {
             item.addEventListener('mouseover', () => {
                 const isBombSuit = item.getAttribute('data-is-bomb-suit') === 'true';
-                if (isBombSuit) {
-                    helmetCheckbox.checked = false;
-                    helmetCheckbox.disabled = true;
-                } else {
-                    helmetCheckbox.disabled = false;
-                }
+                if (isBombSuit) { helmetCheckbox.checked = false; helmetCheckbox.disabled = true; } 
+                else { helmetCheckbox.disabled = false; }
             });
         });
     }
     function selectArmor(baseAP, isBombSuit) {
         const helmetCheckbox = document.getElementById('helmet-checkbox');
         let totalAP = baseAP;
-        if (helmetCheckbox.checked && !isBombSuit) {
-            totalAP += 1;
-        }
-        isArmorActive = true;
-        currentArmorPoints = totalAP;
-        const apInput = document.getElementById('armor-points');
-        const armorBtn = document.getElementById('armor-btn');
-        apInput.value = totalAP;
-        apInput.classList.remove('hidden');
-        apInput.classList.add('armor-active');
+        if (helmetCheckbox.checked && !isBombSuit) { totalAP += 1; }
+        isArmorActive = true; currentArmorPoints = totalAP;
+        const apInput = document.getElementById('armor-points'); const armorBtn = document.getElementById('armor-btn');
+        apInput.value = totalAP; apInput.classList.remove('hidden'); apInput.classList.add('armor-active');
         armorBtn.classList.add('armor-active');
         closeArmorModal();
     }
     function deactivateArmor() {
-        isArmorActive = false;
-        currentArmorPoints = 0;
-        const apInput = document.getElementById('armor-points');
-        const armorBtn = document.getElementById('armor-btn');
-        const helmetCheckbox = document.getElementById('helmet-checkbox');
-        apInput.value = 0;
-        apInput.classList.add('hidden');
-        apInput.classList.remove('armor-active');
+        isArmorActive = false; currentArmorPoints = 0;
+        const apInput = document.getElementById('armor-points'); const armorBtn = document.getElementById('armor-btn'); const helmetCheckbox = document.getElementById('helmet-checkbox');
+        apInput.value = 0; apInput.classList.add('hidden'); apInput.classList.remove('armor-active');
         armorBtn.classList.remove('armor-active');
-        helmetCheckbox.checked = false;
-        helmetCheckbox.disabled = false;
+        helmetCheckbox.checked = false; helmetCheckbox.disabled = false;
     }
     function validateArmorPoints(event) {
-        const input = event.target;
-        let value = parseInt(input.value, 10);
-        if (isNaN(value)) {
-            value = currentArmorPoints; // Keep current value if input is invalid
-        }
-        if (value > currentArmorPoints) {
-            input.value = currentArmorPoints;
-        } else {
-            currentArmorPoints = value;
-        }
-        if (currentArmorPoints <= 0) {
-            deactivateArmor();
-        }
+        const input = event.target; let value = parseInt(input.value, 10);
+        if (isNaN(value)) { value = currentArmorPoints; }
+        if (value > currentArmorPoints) { input.value = currentArmorPoints; } else { currentArmorPoints = value; }
+        if (currentArmorPoints <= 0) { deactivateArmor(); }
     }
+    
+    // --- TUTORIAL SYSTEM ---
+    const tutorial = {
+        active: false,
+        step: 0,
+        skillPointsTotal: 300,
+        elements: {},
+        listeners: {},
+        observers: {},
+
+        init: function() {
+            this.elements.overlay = document.getElementById('tutorial-overlay');
+            this.elements.highlight = document.getElementById('tutorial-highlight');
+            this.elements.box = document.getElementById('tutorial-box');
+            this.elements.text = document.getElementById('tutorial-text');
+        },
+
+        start: function() {
+            if (this.active) return;
+            this.init();
+            resetForm();
+            showView('character-sheet');
+            this.active = true;
+            this.step = 1;
+            document.body.classList.add('tutorial-active');
+            this.elements.overlay.classList.remove('hidden');
+            this.runStep(this.step);
+        },
+
+        end: function() {
+            this.highlightElement(null, "Tutorial complete. Your agent file is ready. Good luck.");
+            setTimeout(() => {
+                this.active = false;
+                this.step = 0;
+                this.cleanupStep();
+                document.body.classList.remove('tutorial-active');
+                this.elements.overlay.classList.add('hidden');
+                document.getElementById('rank').disabled = false;
+                document.getElementById('skill-points-display').classList.add('hidden');
+            }, 4000);
+        },
+
+        next: function() {
+            this.cleanupStep();
+            this.step++;
+            this.runStep(this.step);
+        },
+
+        runStep: function(step) {
+            switch (step) {
+                case 1: // Re-route from main menu button
+                    this.step = 2;
+                    this.runStep(2);
+                    break;
+                case 2: // Choose Branch
+                    const branchSelect = document.getElementById('branch');
+                    const rankSelect = document.getElementById('rank');
+                    rankSelect.disabled = true;
+                    this.highlightElement(branchSelect, "First, select your branch of service. You will start at the lowest rank, but can be promoted for good performance in operations.");
+                    this.listeners.branchChange = () => this.next();
+                    branchSelect.addEventListener('change', this.listeners.branchChange);
+                    break;
+                case 3: // Distribute Core Attributes
+                    const statsContainer = document.getElementById('stats-container');
+                    this.highlightElement(statsContainer, "Now, define your core attributes. You have 25 points to spend by clicking the '+' buttons. All points must be used to continue.");
+                    const pointsRemaining = document.getElementById('stat-points-remaining');
+                    this.observers.stats = new MutationObserver(() => {
+                        if (pointsRemaining.textContent === '0') this.next();
+                    });
+                    this.observers.stats.observe(pointsRemaining, { childList: true, characterData: true });
+                    break;
+                case 4: // Distribute Skill Points
+                    const skillsContainer = document.getElementById('skills-container');
+                    document.getElementById('skill-points-display').classList.remove('hidden');
+                    this.updateSkillPoints();
+                    this.highlightElement(skillsContainer, `Skills define your capabilities. You have ${this.skillPointsTotal} points to distribute. No single skill can exceed 80 during creation. Spend all points to proceed.`);
+                    this.listeners.skillInput = (e) => {
+                        if (e.target.type === 'number') {
+                            if (parseInt(e.target.value) > 80) e.target.value = 80;
+                            this.updateSkillPoints();
+                        }
+                    };
+                    skillsContainer.addEventListener('input', this.listeners.skillInput);
+                    break;
+                case 5.1: // Check a skill box
+                    const firearmsCheckbox = document.getElementById('check-skill-Firearms');
+                    this.highlightElement(firearmsCheckbox.parentElement, "After an operation, you can improve skills you've used. Check the box next to a skill to mark it for improvement. Let's try 'Firearms'.");
+                    this.listeners.checkbox = () => { if (firearmsCheckbox.checked) this.next(); };
+                    firearmsCheckbox.addEventListener('change', this.listeners.checkbox);
+                    break;
+                case 5.2: // Click Roll button
+                    const rollBtn = document.getElementById('roll-skills-btn');
+                    this.highlightElement(rollBtn, "Good. Now, click here to roll for improvement.");
+                    this.listeners.rollClick = () => this.next();
+                    rollBtn.addEventListener('click', this.listeners.rollClick);
+                    break;
+                case 5.3: // Click Confirm in modal
+                    const confirmBtn = document.querySelector('#skill-roll-prompt button:first-of-type');
+                    this.highlightElement(confirmBtn, "Confirm the action.");
+                    // The next step is triggered from within executeSkillRolls()
+                    break;
+                case 5.4: // See result and close
+                    const closeBtn = document.querySelector('#skill-roll-conclusion button');
+                    this.highlightElement(closeBtn, "The roll is complete and the skill has been updated. Close this window.");
+                    // The next step is triggered from within closeSkillRollModal()
+                    break;
+                case 6.1: // Click Add Weapon
+                    const addWeaponBtn = document.getElementById('add-weapon-btn');
+                    this.highlightElement(addWeaponBtn, "Every agent needs a sidearm. Click to add a weapon.");
+                    this.listeners.addWpnClick = () => this.next();
+                    addWeaponBtn.addEventListener('click', this.listeners.addWpnClick);
+                    break;
+                case 6.2: // Choose a Medium Pistol
+                    setTimeout(() => {
+                        const listItems = document.querySelectorAll('#weapon-preset-list .preset-item');
+                        let targetButton = null;
+                        listItems.forEach(item => { if (item.querySelector('h4').textContent.includes('Medium Pistol')) { targetButton = item.querySelector('button'); } });
+                        if(targetButton) {
+                            this.highlightElement(targetButton, "Select a Medium Pistol from the list.");
+                            // The next step is triggered from within addWeapon()
+                        }
+                    }, 200);
+                    break;
+                case 7: // Conclude
+                    this.end();
+                    break;
+            }
+        },
+        
+        updateSkillPoints: function() {
+            let spentPoints = 0;
+            const allSkillInputs = document.querySelectorAll('#skills-container input[type="number"]');
+            allSkillInputs.forEach(input => {
+                const skillId = input.id;
+                const skillName = document.querySelector(`label[for="${skillId}"]`)?.dataset.skill || 
+                                  input.closest('.sub-skill-item')?.querySelector('label[data-skill]')?.dataset.skill ||
+                                  input.closest('.sub-skill-group')?.querySelector('h3')?.dataset.skill;
+
+                let baseValue = 0;
+                if (skillName && baseSkillValues[skillName]) {
+                    baseValue = baseSkillValues[skillName];
+                } else if (input.id.startsWith('skill-')) { // Fallback for complex skills
+                    const simpleName = input.id.replace('skill-', '').replace(/-/g, ' ');
+                    if (baseSkillValues[simpleName]) baseValue = baseSkillValues[simpleName];
+                }
+                spentPoints += (parseInt(input.value) || 0) - baseValue;
+            });
+            const remaining = this.skillPointsTotal - spentPoints;
+            document.getElementById('skill-points-remaining').textContent = remaining;
+            if (remaining <= 0) {
+                if (this.step === 4) {
+                    document.getElementById('skill-points-remaining').textContent = 0;
+                    this.next();
+                }
+            }
+        },
+
+        highlightElement: function(el, text, pos = 'right') {
+            this.elements.text.innerHTML = text;
+            if (el) {
+                el.classList.add('tutorial-highlight-area');
+                const rect = el.getBoundingClientRect();
+                this.elements.highlight.style.width = `${rect.width}px`;
+                this.elements.highlight.style.height = `${rect.height}px`;
+                this.elements.highlight.style.top = `${rect.top}px`;
+                this.elements.highlight.style.left = `${rect.left}px`;
+                this.elements.highlight.classList.remove('hidden');
+
+                // Position text box
+                const boxRect = this.elements.box.getBoundingClientRect();
+                if (pos === 'right') {
+                    this.elements.box.style.left = `${rect.right + 15}px`;
+                    this.elements.box.style.top = `${rect.top + (rect.height / 2) - (boxRect.height / 2)}px`;
+                } else { // 'bottom'
+                    this.elements.box.style.left = `${rect.left + (rect.width / 2) - (boxRect.width / 2)}px`;
+                    this.elements.box.style.top = `${rect.bottom + 15}px`;
+                }
+                // Boundary checks
+                if (parseInt(this.elements.box.style.left) + boxRect.width > window.innerWidth) {
+                    this.elements.box.style.left = `${rect.left - boxRect.width - 15}px`;
+                }
+                if (parseInt(this.elements.box.style.top) < 0) {
+                    this.elements.box.style.top = '10px';
+                }
+            } else { // No element, just show text centered
+                this.elements.highlight.classList.add('hidden');
+                this.elements.box.style.top = '50%';
+                this.elements.box.style.left = '50%';
+                this.elements.box.style.transform = 'translate(-50%, -50%)';
+            }
+        },
+
+        cleanupStep: function() {
+            // Remove listeners
+            for (const key in this.listeners) {
+                if (this.listeners[key]) {
+                    const [elName, eventName] = this.getListenerInfo(key);
+                    const el = document.getElementById(elName) || document.querySelector(elName);
+                    if (el) el.removeEventListener(eventName, this.listeners[key]);
+                    this.listeners[key] = null;
+                }
+            }
+            // Disconnect observers
+            for (const key in this.observers) {
+                if (this.observers[key]) {
+                    this.observers[key].disconnect();
+                    this.observers[key] = null;
+                }
+            }
+            // Remove highlight class
+            const highlighted = document.querySelector('.tutorial-highlight-area');
+            if (highlighted) highlighted.classList.remove('tutorial-highlight-area');
+        },
+        
+        getListenerInfo: function(key) {
+            if (key === 'branchChange') return ['branch', 'change'];
+            if (key === 'skillInput') return ['#skills-container', 'input'];
+            if (key === 'checkbox') return ['#check-skill-Firearms', 'change'];
+            if (key === 'rollClick') return ['#roll-skills-btn', 'click'];
+            if (key === 'addWpnClick') return ['#add-weapon-btn', 'click'];
+            return [null, null];
+        }
+    };
 </script>
 
 </body>
