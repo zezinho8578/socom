@@ -51,11 +51,12 @@ async function initializeApplication() {
         populateWeaponCategories();
 
         // 5. Add event listeners that were previously in window.onload or inline
-        window.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });
+        window.add('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });
         document.getElementById('settings-btn').addEventListener('click', () => { document.getElementById('settings-menu').style.display = document.getElementById('settings-menu').style.display === 'block' ? 'none' : 'block'; });
         document.getElementById('lock-branch-rank-checkbox').addEventListener('change', updateBranchRankLockState);
         document.getElementById('skills-container').addEventListener('input', updateLinkedWeaponStats);
         document.getElementById('skills-container').addEventListener('change', (event) => { if (event.target.type === 'checkbox') { updateRollSkillsButtonVisibility(); } });
+         document.body.addEventListener('click', handleTutorialAction, true); // Use capture phase
 
     } catch (error) {
         console.error("Failed to initialize the application:", error);
