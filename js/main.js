@@ -56,7 +56,8 @@ async function initializeApplication() {
         document.getElementById('lock-branch-rank-checkbox').addEventListener('change', updateBranchRankLockState);
         document.getElementById('skills-container').addEventListener('input', updateLinkedWeaponStats);
         document.getElementById('skills-container').addEventListener('change', (event) => { if (event.target.type === 'checkbox') { updateRollSkillsButtonVisibility(); } });
-         document.body.addEventListener('click', handleTutorialAction, true); // Use capture phase
+        document.body.addEventListener('click', handleTutorialAction, true); // Use capture phase
+    } catch (error) {
 
     } catch (error) {
         console.error("Failed to initialize the application:", error);
