@@ -356,13 +356,14 @@
     let currentArmorPoints = 0;
     let isFormDirty = false;
     let isSkillSetupMode = false;
+    let totalBaseSkillPoints = 0;
     const SKILL_POINTS_BUDGET = 300;
     const MAX_STAT_POINTS = 25, MIN_STAT_VALUE = 8, MAX_STAT_VALUE = 18;
     const branches = { "NSA": "intelligence", "CIA": "intelligence", "Army": "army", "Navy": "navy", "Marines": "marines", "Air Force": "airforce" };
     const ranks = { intelligence: [ {name: "Case Officer", grade: "GS-11"}, {name: "Supervisory CO", grade: "GS-14", adminOnly: true}, {name: "Chief of Station", grade: "SIS-2", adminOnly: true} ], army: [ {name: "Sergeant", grade: "E-5"}, {name: "Staff Sergeant", grade: "E-6"}, {name: "Sergeant First Class", grade: "E-7"}, {name: "Master Sergeant", grade: "E-8", adminOnly: true}, {name: "Second Lieutenant", grade: "O-1", adminOnly: true}, {name: "First Lieutenant", grade: "O-2", adminOnly: true}, {name: "Captain", grade: "O-3", adminOnly: true} ], marines: [ {name: "Sergeant", grade: "E-5"}, {name: "Staff Sergeant", grade: "E-6"}, {name: "Gunnery Sergeant", grade: "E-7"}, {name: "Master Sergeant", grade: "E-8", adminOnly: true}, {name: "Second Lieutenant", grade: "O-1", adminOnly: true}, {name: "First Lieutenant", grade: "O-2", adminOnly: true}, {name: "Captain", grade: "O-3", adminOnly: true} ], navy: [ {name: "Petty Officer 2nd Class", grade: "E-5"}, {name: "Petty Officer 1st Class", grade: "E-6"}, {name: "Chief Petty Officer", grade: "E-7"}, {name: "Senior Chief Petty Officer", grade: "E-8", adminOnly: true}, {name: "Ensign", grade: "O-1", adminOnly: true}, {name: "Lieutenant (JG)", grade: "O-2", adminOnly: true}, {name: "Lieutenant", grade: "O-3", adminOnly: true} ], airforce: [ {name: "Staff Sergeant", grade: "E-5"}, {name: "Technical Sergeant", grade: "E-6"}, {name: "Master Sergeant", grade: "E-7"}, {name: "Senior Master Sergeant", grade: "E-8", adminOnly: true}, {name: "Second Lieutenant", grade: "O-1", adminOnly: true}, {name: "First Lieutenant", grade: "O-2", adminOnly: true}, {name: "Captain", grade: "O-3", adminOnly: true} ] };
     const stats = ["STR", "DEX", "CON", "INT", "POW", "CHA"];
     const simpleSkills = [ "Accounting", "Alertness", "Artillery", "Athletics", "Criminology", "Disguise", "Dodge", "Drive", "Firearms", "First Aid", "Forensics", "Heavy Machinery", "Heavy Weapons", "Human Studies", "HUMINT", "Leadership", "Medicine", "Melee Weapons", "Navigate", "Paranormal", "Persuade", "Pharmacy", "Psychotherapy", "Ride", "Search", "SIGINT", "Stealth", "Support Int.", "Surgery", "Survival", "Swim", "Tech Procedures", "Unarmed Combat" ].sort();
-    const baseSkillValues = { 'Accounting': 10, 'Alertness': 20, 'Athletics': 30, 'Disguise': 10, 'Dodge': 30, 'Drive': 20, 'Firearms': 20, 'First Aid': 10, 'Heavy Machinery': 10, 'Heavy Weapons': 10, 'Human Studies': 10, 'Melee Weapons': 30, 'Navigate': 10, 'Paranormal': 10, 'Persuade': 20, 'Psychotherapy': 10, 'Ride': 10, 'Search': 20, 'Stealth': 20, 'Survival': 10, 'Swim': 20, 'Tech Procedures': 20, 'Unarmed Combat': 40 };
+    const baseSkillValues = { 'Accounting': 10, 'Alertness': 20, 'Artillery': 0, 'Athletics': 30, 'Criminology': 0, 'Disguise': 10, 'Dodge': 30, 'Drive': 20, 'Firearms': 20, 'First Aid': 10, 'Forensics': 0, 'Heavy Machinery': 10, 'Heavy Weapons': 10, 'Human Studies': 10, 'HUMINT': 0, 'Leadership': 0, 'Medicine': 0, 'Melee Weapons': 30, 'Navigate': 10, 'Paranormal': 10, 'Persuade': 20, 'Pharmacy': 0, 'Psychotherapy': 10, 'Ride': 10, 'Search': 20, 'SIGINT': 0, 'Stealth': 20, 'Support Int.': 0, 'Surgery': 0, 'Survival': 10, 'Swim': 20, 'Tech Procedures': 20, 'Unarmed Combat': 40 };
     const statDescriptions = { STR: { 3: "Frail", 6: "Below Average", 9: "Average", 12: "Strong", 15: "Powerful", 18: "Peak Human" }, DEX: { 3: "Clumsy", 6: "Slow", 9: "Average", 12: "Agile", 15: "Nimble", 18: "Lightning Reflexes" }, CON: { 3: "Sickly", 6: "Frail", 9: "Average", 12: "Hardy", 15: "Tough", 18: "Superhuman Endurance" }, INT: { 3: "Dim", 6: "Slow Learner", 9: "Average", 12: "Sharp", 15: "Brilliant", 18: "Genius" }, POW: { 3: "Weak-willed", 6: "Hesitant", 9: "Average", 12: "Determined", 15: "Indomitable", 18: "Unyielding Will" }, CHA: { 3: "Unlikable", 6: "Awkward", 9: "Average", 12: "Likable", 15: "Charismatic", 18: "Compelling Presence" } };
     
     // --- CONTENT LOADING ---
@@ -407,24 +408,27 @@
 
     // --- INITIALIZATION ---
     window.onload = () => {
+        totalBaseSkillPoints = Object.values(baseSkillValues).reduce((a, b) => a + b, 0);
+
         loadContentPanels();
         populateBranches(); populateStats(); populateSkills(); loadSavedSheets(); applySavedTheme(); setupTooltips(); loadDailyHistory(); populateWeaponCategories();
         document.getElementById('settings-btn').addEventListener('click', () => { document.getElementById('settings-menu').style.display = document.getElementById('settings-menu').style.display === 'block' ? 'none' : 'block'; });
         document.getElementById('lock-branch-rank-checkbox').addEventListener('change', updateBranchRankLockState);
-        document.getElementById('sheet-form').addEventListener('input', () => { isFormDirty = true; updateSkillPointsCounter(); });
+        document.getElementById('sheet-form').addEventListener('input', () => { isFormDirty = true; if(isSkillSetupMode) updateSkillPointsCounter(); });
         document.getElementById('skills-container').addEventListener('input', updateLinkedWeaponStats);
         document.getElementById('skills-container').addEventListener('change', (event) => { if (event.target.type === 'checkbox') { updateRollSkillsButtonVisibility(); } });
 
         window.addEventListener('beforeunload', (e) => {
             if (isFormDirty) {
-                e.preventDefault(); // For legacy browsers
-                e.returnValue = ''; // Standard for modern browsers
+                e.preventDefault();
+                e.returnValue = '';
             }
         });
     };
     
     function resetForm() {
         document.getElementById('sheet-form').reset();
+        document.getElementById('character-id').value = `char_${Date.now()}`;
         document.getElementById('bonds-container').innerHTML = '';
         document.getElementById('weapons-body').innerHTML = '';
         deactivateArmor();
@@ -433,8 +437,9 @@
         updateBranchRankLockState();
         updateRollSkillsButtonVisibility();
         isFormDirty = false;
-
+        
         // Activate skill point setup mode for new characters
+        setSkillInputMax(80);
         isSkillSetupMode = true;
         updateSkillPointsCounter();
     }
@@ -476,7 +481,7 @@
     function confirmReturnToMenu() {
         if (isFormDirty) {
             if (confirm("UNSAVED DATA DETECTED. Returning to the main menu will discard all changes. Proceed?")) {
-                isFormDirty = false; // Reset flag before leaving
+                isFormDirty = false;
                 showView('main');
             }
         } else {
@@ -500,6 +505,16 @@
     function getStatDescription(stat, val) { const tiers = statDescriptions[stat]; let desc = tiers[val] || ''; for (const key in tiers) { if (val >= key) desc = tiers[key]; } return `// ${desc}`; }
     
     // --- SKILL IMPROVEMENT & POINT SYSTEM ---
+    function setSkillInputMax(maxValue) {
+        const skillInputs = document.querySelectorAll('#skills-container input[type="number"]');
+        skillInputs.forEach(input => {
+            input.max = maxValue;
+            if (parseInt(input.value) > maxValue) {
+                input.value = maxValue;
+            }
+        });
+    }
+
     function updateSkillPointsCounter() {
         const counterEl = document.getElementById('skill-points-counter');
         const lockBtn = document.getElementById('lock-skills-btn');
@@ -513,15 +528,19 @@
         lockBtn.classList.remove('hidden');
 
         const skillInputs = document.querySelectorAll('#skills-container input[type="number"]');
-        let totalPoints = 0;
-        skillInputs.forEach(input => { totalPoints += parseInt(input.value, 10) || 0; });
+        let currentPointsSum = 0;
+        skillInputs.forEach(input => {
+            currentPointsSum += parseInt(input.value, 10) || 0;
+        });
+        
+        const pointsSpent = currentPointsSum - totalBaseSkillPoints;
 
-        counterEl.textContent = `(${totalPoints} / ${SKILL_POINTS_BUDGET} PTS)`;
-        lockBtn.disabled = totalPoints !== SKILL_POINTS_BUDGET;
+        counterEl.textContent = `(${pointsSpent} / ${SKILL_POINTS_BUDGET} PTS)`;
+        lockBtn.disabled = pointsSpent !== SKILL_POINTS_BUDGET;
 
-        if (totalPoints > SKILL_POINTS_BUDGET) {
+        if (pointsSpent > SKILL_POINTS_BUDGET) {
             counterEl.style.color = 'var(--danger-color)';
-        } else if (totalPoints === SKILL_POINTS_BUDGET) {
+        } else if (pointsSpent === SKILL_POINTS_BUDGET) {
             counterEl.style.color = 'var(--accent-color)';
         } else {
             counterEl.style.color = 'inherit';
@@ -531,8 +550,9 @@
     function lockSkills() {
         if (confirm("You have allocated exactly 300 skill points. This will finalize the skill setup for this character, and this point counter will be hidden. Are you sure?")) {
             isSkillSetupMode = false;
-            updateSkillPointsCounter(); // This will hide the UI elements
-            isFormDirty = true; // Mark as dirty to prompt a save
+            setSkillInputMax(100);
+            updateSkillPointsCounter();
+            isFormDirty = true;
         }
     }
 
@@ -563,7 +583,6 @@
             const scoreInput = skillItem.querySelector('input[type="number"]');
             let skillName = "Unknown Skill";
 
-            // Determine the skill's name for display
             if (skillItem.classList.contains('skill-item-simple')) {
                 skillName = skillItem.querySelector('.skill-label-input label').textContent.trim();
             } else {
@@ -609,7 +628,7 @@
             resultEl.textContent = '';
             
             const animationInterval = setInterval(() => { diceEl.textContent = Math.floor(Math.random() * 4) + 1; }, 100);
-            await new Promise(resolve => setTimeout(resolve, 4000));
+            await new Promise(resolve => setTimeout(resolve, 1000));
             clearInterval(animationInterval);
 
             const roll = Math.floor(Math.random() * 4) + 1;
@@ -620,7 +639,7 @@
             
             resultEl.textContent = `Result: +${roll}. New Score: ${newScore}.`;
             skill.checkbox.checked = false;
-            await new Promise(resolve => setTimeout(resolve, 2500));
+            await new Promise(resolve => setTimeout(resolve, 1500));
         }
 
         document.getElementById('skill-roll-process').classList.add('hidden');
@@ -628,11 +647,10 @@
         updateRollSkillsButtonVisibility();
     }
 
-
     // --- INTERACTIVE SECTIONS ---
     function checkAdaptedStatus() { const violenceCount = document.querySelectorAll('#violence1:checked, #violence2:checked, #violence3:checked').length; document.getElementById('violence-adapted').classList.toggle('hidden', violenceCount < 3); const helplessnessCount = document.querySelectorAll('#helplessness1:checked, #helplessness2:checked, #helplessness3:checked').length; document.getElementById('helplessness-adapted').classList.toggle('hidden', helplessnessCount < 3); }
-    function addCraftSkill(data = {}){ const container = document.getElementById('craft-skills-container'); const item = document.createElement('div'); item.className = 'sub-skill-item'; const craftTypes = ['Gunsmith', 'Locksmith', 'Mechanic', 'Microelectronics', 'Explosives']; let options = craftTypes.map(c => `<option value="${c}" ${c === data.type ? 'selected' : ''}>${c}</option>`).join(''); item.innerHTML = `<label class="styled-checkbox"><input type="checkbox" ${data.checked ? 'checked' : ''}><span class="checkbox-visual"></span></label><div class="skill-label-input"><select data-skill="Craft">${options}</select><input type="number" min="0" max="100" value="${data.score || 0}"></div><button class="remove-btn" onclick="this.parentElement.remove(); updateSkillPointsCounter();">X</button>`; container.appendChild(item); setupTooltips(); updateSkillPointsCounter(); }
-    function addLanguageSkill(data = {}){ const container = document.getElementById('language-skills-container'); const item = document.createElement('div'); item.className = 'sub-skill-item'; item.innerHTML = `<label class="styled-checkbox"><input type="checkbox" ${data.checked ? 'checked' : ''}><span class="checkbox-visual"></span></label><div class="skill-label-input"><input type="text" placeholder="Language" value="${data.lang || ''}"><input type="number" min="0" max="100" value="${data.score || 0}"></div><button class="remove-btn" onclick="this.parentElement.remove(); updateSkillPointsCounter();">X</button>`; container.appendChild(item); updateSkillPointsCounter(); }
+    function addCraftSkill(data = {}){ const container = document.getElementById('craft-skills-container'); const item = document.createElement('div'); item.className = 'sub-skill-item'; const craftTypes = ['Gunsmith', 'Locksmith', 'Mechanic', 'Microelectronics', 'Explosives']; let options = craftTypes.map(c => `<option value="${c}" ${c === data.type ? 'selected' : ''}>${c}</option>`).join(''); const scoreMax = isSkillSetupMode ? 80 : 100; item.innerHTML = `<label class="styled-checkbox"><input type="checkbox" ${data.checked ? 'checked' : ''}><span class="checkbox-visual"></span></label><div class="skill-label-input"><select data-skill="Craft">${options}</select><input type="number" min="0" max="${scoreMax}" value="${data.score || 0}"></div><button class="remove-btn" onclick="this.parentElement.remove(); if(isSkillSetupMode) updateSkillPointsCounter();">X</button>`; container.appendChild(item); setupTooltips(); if(isSkillSetupMode) updateSkillPointsCounter(); }
+    function addLanguageSkill(data = {}){ const container = document.getElementById('language-skills-container'); const item = document.createElement('div'); item.className = 'sub-skill-item'; const scoreMax = isSkillSetupMode ? 80 : 100; item.innerHTML = `<label class="styled-checkbox"><input type="checkbox" ${data.checked ? 'checked' : ''}><span class="checkbox-visual"></span></label><div class="skill-label-input"><input type="text" placeholder="Language" value="${data.lang || ''}"><input type="number" min="0" max="${scoreMax}" value="${data.score || 0}"></div><button class="remove-btn" onclick="this.parentElement.remove(); if(isSkillSetupMode) updateSkillPointsCounter();">X</button>`; container.appendChild(item); if(isSkillSetupMode) updateSkillPointsCounter(); }
     function addBond(data = {}) { const container = document.getElementById('bonds-container'); const item = document.createElement('div'); item.className = 'bond-item'; item.innerHTML = `<label class="styled-checkbox"><input type="checkbox" ${data.checked ? 'checked' : ''}><span class="checkbox-visual"></span></label><input type="text" placeholder="Bond Name" value="${data.name || ''}"><select class="bond-score"></select><button class="remove-btn" onclick="this.parentElement.remove()">X</button>`; container.appendChild(item); updateBondScores(); if(data.score) item.querySelector('.bond-score').value = data.score; }
     function updateBondScores() { const cha = parseInt(document.getElementById('CHA').value) || 0; document.getElementById('bond-cha-note').textContent = `MAX SCORE: ${cha}`; document.querySelectorAll('.bond-score').forEach(select => { const currentScore = select.value; let options = ''; for (let i = 0; i <= cha; i++) { options += `<option value="${i}">${i}</option>`; } select.innerHTML = options; select.value = Math.min(currentScore, cha); }); }
     
@@ -663,33 +681,26 @@
             const skillIdentifier = row.dataset.skillIdentifier;
             if (!skillIdentifier) return; // Skip if this weapon isn't linked to a skill
 
-            // --- Part 1: Update the Skill Value ---
             const newSkillValue = getCalculatedSkill(skillIdentifier);
             const skillInput = row.cells[1].querySelector('input');
             if (skillInput) {
                 skillInput.value = newSkillValue;
             }
-
-            // --- Part 2: Update the Damage Value based on Skill ---
+            
             const baseDamage = row.dataset.baseDamage;
             const damageInput = row.cells[3].querySelector('input');
 
-            // Only apply bonus to Unarmed and Melee weapons that have a base damage value
             if ((skillIdentifier === 'Unarmed Combat' || skillIdentifier === 'Melee Weapons') && baseDamage && damageInput) {
                 let bonus = 0;
-                if (newSkillValue > 90) {
-                    bonus = 3;
-                } else if (newSkillValue > 75) {
-                    bonus = 2;
-                } else if (newSkillValue > 50) {
-                    bonus = 1;
-                }
+                if (newSkillValue > 90) bonus = 3;
+                else if (newSkillValue > 75) bonus = 2;
+                else if (newSkillValue > 50) bonus = 1;
 
                 if (bonus > 0) {
                     const dicePart = baseDamage.split(/[-+]/)[0].trim();
                     damageInput.value = `${dicePart}+${bonus}`;
                 } else {
-                    damageInput.value = baseDamage; // Revert to base damage if skill is 50 or below
+                    damageInput.value = baseDamage;
                 }
             }
         });
@@ -698,21 +709,17 @@
     function addWeapon(preset, closeModal = false) {
         const newRow = document.getElementById('weapons-body').insertRow();
         const defaultData = { name: '', skill: '', range: '', dmg: '', ap: '', lethality: '', ammoC: '', ammoM: '' };
-        const effectivePreset = preset || {};
+        const data = { ...defaultData, ...preset };
 
-        let finalData;
-        if (effectivePreset.skillIdentifier) {
-            const calculatedSkill = getCalculatedSkill(effectivePreset.skillIdentifier);
-            finalData = { ...defaultData, ...effectivePreset, skill: calculatedSkill };
-        } else {
-            finalData = { ...defaultData, ...effectivePreset };
+        if (data.skillIdentifier) {
+            data.skill = getCalculatedSkill(data.skillIdentifier);
         }
 
-        newRow.dataset.skillIdentifier = finalData.skillIdentifier || '';
-        newRow.dataset.baseDamage = finalData.dmg || '';
-        newRow.innerHTML = `<td><input type="text" value="${finalData.name}"></td><td><input type="number" min="0" max="99" value="${finalData.skill}"></td><td><div class="input-group"><input type="number" min="0" value="${finalData.range}"><span class="input-group-addon">m</span></div></td><td><input type="text" value="${finalData.dmg}"></td><td><input type="text" value="${finalData.ap}"></td><td><div class="input-group"><input type="number" min="0" max="100" value="${finalData.lethality}"><span class="input-group-addon">%</span></div></td><td><div class="derived-attr-input"><input type="number" min="0" value="${finalData.ammoC}"> / <input type="number" min="0" value="${finalData.ammoM}"></div></td><td><button type="button" class="remove-btn" onclick="this.closest('tr').remove()">X</button></td>`;
+        newRow.dataset.skillIdentifier = data.skillIdentifier || '';
+        newRow.dataset.baseDamage = data.dmg || '';
+        newRow.innerHTML = `<td><input type="text" value="${data.name}"></td><td><input type="number" min="0" max="99" value="${data.skill}"></td><td><div class="input-group"><input type="number" min="0" value="${data.range}"><span class="input-group-addon">m</span></div></td><td><input type="text" value="${data.dmg}"></td><td><input type="text" value="${data.ap}"></td><td><div class="input-group"><input type="number" min="0" max="100" value="${data.lethality}"><span class="input-group-addon">%</span></div></td><td><div class="derived-attr-input"><input type="number" min="0" value="${data.ammoC || ''}"> / <input type="number" min="0" value="${data.ammoM || ''}"></div></td><td><button type="button" class="remove-btn" onclick="this.closest('tr').remove()">X</button></td>`;
         if (closeModal) { closeWeaponModal(); }
-        updateLinkedWeaponStats(); // Immediately apply damage bonus if applicable
+        updateLinkedWeaponStats();
     }
 
     // --- WEAPON MODAL ---
@@ -807,8 +814,8 @@
     function validateArmorPoints(event) {
         const input = event.target;
         let value = parseInt(input.value, 10);
-        if (isNaN(value)) {
-            value = currentArmorPoints; // Keep current value if input is invalid
+        if (isNaN(value) || value < 0) {
+            value = currentArmorPoints;
         }
         if (value > currentArmorPoints) {
             input.value = currentArmorPoints;
@@ -819,6 +826,175 @@
             deactivateArmor();
         }
     }
+
+    // --- SAVE/LOAD ---
+    function gatherData() {
+        const getVal = id => document.getElementById(id).value;
+        const getNum = id => parseInt(getVal(id)) || 0;
+        const getChecked = id => document.getElementById(id).checked;
+
+        const skillsData = {};
+        document.querySelectorAll('#skills-container input[type="number"]').forEach(input => {
+            const checkbox = document.getElementById(`check-${input.id}`);
+            skillsData[input.id] = { score: input.value, checked: checkbox ? checkbox.checked : false };
+        });
+
+        const craftSkills = [];
+        document.querySelectorAll('#craft-skills-container .sub-skill-item').forEach(item => {
+            craftSkills.push({
+                type: item.querySelector('select').value,
+                score: item.querySelector('input[type="number"]').value,
+                checked: item.querySelector('input[type="checkbox"]').checked
+            });
+        });
+
+        const languageSkills = [];
+        document.querySelectorAll('#language-skills-container .sub-skill-item').forEach(item => {
+            languageSkills.push({
+                lang: item.querySelector('input[type="text"]').value,
+                score: item.querySelector('input[type="number"]').value,
+                checked: item.querySelector('input[type="checkbox"]').checked
+            });
+        });
+
+        const bonds = Array.from(document.querySelectorAll('#bonds-container .bond-item')).map(item => ({
+            name: item.querySelector('input[type="text"]').value,
+            score: item.querySelector('.bond-score').value,
+            checked: item.querySelector('input[type="checkbox"]').checked
+        }));
+
+        const weapons = Array.from(document.querySelectorAll('#weapons-body tr')).map(row => {
+            const inputs = row.querySelectorAll('input');
+            return {
+                name: inputs[0].value, skill: inputs[1].value, range: inputs[2].value, dmg: inputs[4].value, ap: inputs[5].value, lethality: inputs[6].value,
+                ammoC: inputs[8].value, ammoM: inputs[9].value, skillIdentifier: row.dataset.skillIdentifier, baseDamage: row.dataset.baseDamage
+            };
+        });
+
+        return {
+            id: getVal('character-id'), fullName: getVal('full-name'), branch: getVal('branch'), rank: getVal('rank'), team: getVal('team'), sex: getVal('sex'), dob: getVal('dob'), nationality: getVal('nationality'), employer: getVal('employer'), education: getVal('education'),
+            stats: { STR: getNum('STR'), DEX: getNum('DEX'), CON: getNum('CON'), INT: getNum('INT'), POW: getNum('POW'), CHA: getNum('CHA') },
+            hpCurrent: getNum('hp-current'), wpCurrent: getNum('wp-current'), sanCurrent: getNum('san-current'),
+            isArmorActive: isArmorActive, currentArmorPoints: currentArmorPoints,
+            psych: { violence1: getChecked('violence1'), violence2: getChecked('violence2'), violence3: getChecked('violence3'), helplessness1: getChecked('helplessness1'), helplessness2: getChecked('helplessness2'), helplessness3: getChecked('helplessness3'), },
+            skillsData, craftSkills, languageSkills, bonds, weapons,
+            gear: getVal('gear'), notes: getVal('notes-field'),
+            isSkillSetupMode: isSkillSetupMode, branchRankLocked: getChecked('lock-branch-rank-checkbox'),
+        };
+    }
+
+    function loadCharacter(data) {
+        resetForm();
+        const setVal = (id, val) => { if(document.getElementById(id)) document.getElementById(id).value = val; };
+        const setChecked = (id, val) => { if(document.getElementById(id)) document.getElementById(id).checked = val; };
+        
+        setVal('character-id', data.id || `char_${Date.now()}`);
+        Object.keys(data).forEach(key => setVal(key.replace(/[A-Z]/g, m => '-' + m.toLowerCase()), data[key]));
+        setVal('full-name', data.fullName);
+        setVal('branch', data.branch);
+        updateRanks();
+        setVal('rank', data.rank);
+
+        for (const stat in data.stats) setVal(stat, data.stats[stat]);
+        setVal('hp-current', data.hpCurrent); setVal('wp-current', data.wpCurrent); setVal('san-current', data.sanCurrent);
+        
+        if (data.isArmorActive) {
+            selectArmor(data.currentArmorPoints, false); closeArmorModal(); // Simplified activation
+        }
+
+        for (const key in data.psych) setChecked(key, data.psych[key]);
+        checkAdaptedStatus();
+        
+        document.getElementById('bonds-container').innerHTML = '';
+        data.bonds.forEach(bondData => addBond(bondData));
+        document.getElementById('weapons-body').innerHTML = '';
+        data.weapons.forEach(weaponData => addWeapon(weaponData));
+        
+        for (const id in data.skillsData) { setVal(id, data.skillsData[id].score); setChecked(`check-${id}`, data.skillsData[id].checked); }
+        data.craftSkills.forEach(craftData => addCraftSkill(craftData));
+        data.languageSkills.forEach(languageData => addLanguageSkill(languageData));
+        
+        isSkillSetupMode = data.isSkillSetupMode !== false; // Default to true for legacy saves
+        setSkillInputMax(isSkillSetupMode ? 80 : 100);
+
+        setChecked('lock-branch-rank-checkbox', data.branchRankLocked);
+        updateBranchRankLockState();
+        
+        updateAllCalculations();
+        updateSkillPointsCounter();
+        updateRollSkillsButtonVisibility();
+        
+        showView('character-sheet');
+        isFormDirty = false;
+    }
+
+    function saveCharacter() {
+        const data = gatherData();
+        if (!data.fullName) { alert("Agent's Full Name is required to save."); return; }
+        localStorage.setItem(data.id, JSON.stringify(data));
+        alert(`AGENT FILE: ${data.fullName.toUpperCase()} SAVED LOCALLY.`);
+        loadSavedSheets();
+        isFormDirty = false;
+    }
+    
+    function exportToJson() {
+        const data = gatherData();
+        if (!data.fullName) { alert("Agent's Full Name is required to export."); return; }
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${data.fullName.replace(/[^\w\s]/gi, '').replace(/ /g, '_')}_SOCOM.json`;
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(a.href);
+        isFormDirty = false;
+    }
+
+    function loadCharacterFromFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => { try { loadCharacter(JSON.parse(e.target.result)); } catch (err) { alert("Error parsing JSON file."); console.error(err); } };
+        reader.readAsText(file);
+        event.target.value = null; // Reset file input
+    }
+    
+    function loadSavedSheets() {
+        const list = document.getElementById('saved-sheets-list');
+        list.innerHTML = '';
+        const sheets = Object.keys(localStorage)
+            .filter(key => key.startsWith('char_'))
+            .map(key => JSON.parse(localStorage.getItem(key)))
+            .filter(data => data && data.id && data.fullName);
+
+        if (sheets.length === 0) {
+            list.innerHTML = '<li>NO LOCAL SAVES FOUND</li>';
+        } else {
+            sheets.forEach(sheet => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span>${sheet.fullName.toUpperCase()}</span>
+                <div>
+                    <button onclick="loadCharacterFromStorage('${sheet.id}')">LOAD</button>
+                    <button class="remove-btn" onclick="deleteSheet('${sheet.id}', '${sheet.fullName.replace(/'/g, "\\'")}')">X</button>
+                </div>`;
+                list.appendChild(li);
+            });
+        }
+    }
+    
+    function loadCharacterFromStorage(id) {
+        if(isFormDirty && !confirm("You have unsaved changes that will be lost. Load anyway?")) return;
+        const dataString = localStorage.getItem(id);
+        if (dataString) loadCharacter(JSON.parse(dataString));
+    }
+    
+    function deleteSheet(id, name) {
+        if (confirm(`Are you sure you want to delete the file for agent ${name}? This action cannot be undone.`)) {
+            localStorage.removeItem(id);
+            loadSavedSheets();
+        }
+    }
+
 </script>
 
 </body>
