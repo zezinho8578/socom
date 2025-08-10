@@ -359,7 +359,7 @@
     let isFormDirty = false;
     let isSkillSetupMode = false;
     let totalBaseSkillPoints = 0;
-    const SKILL_POINTS_BUDGET = 300;
+    const SKILL_POINTS_BUDGET = 400;
     const MAX_STAT_POINTS = 25, MIN_STAT_VALUE = 8, MAX_STAT_VALUE = 18;
     // START: MODIFIED DATA
     const branches = { "NSA": "intelligence", "CIA": "intelligence", "Army": "army", "Navy": "navy", "Marines": "marines", "Air Force": "airforce", "Undesignated": "undesignated" };
@@ -373,8 +373,8 @@
     };
     // END: MODIFIED DATA
     const stats = ["STR", "DEX", "CON", "INT", "POW", "CHA"];
-    const simpleSkills = [ "Accounting", "Alertness", "Artillery", "Athletics", "Criminology", "Disguise", "Dodge", "Drive", "Firearms", "First Aid", "Forensics", "Heavy Machinery", "Heavy Weapons", "Human Studies", "HUMINT", "Leadership", "Medicine", "Melee Weapons", "Navigate", "Paranormal", "Persuade", "Pharmacy", "Psychotherapy", "Ride", "Search", "SIGINT", "Stealth", "Support Int.", "Surgery", "Survival", "Swim", "Tech Procedures", "Unarmed Combat" ].sort();
-    const baseSkillValues = { 'Accounting': 10, 'Alertness': 20, 'Artillery': 0, 'Athletics': 30, 'Criminology': 0, 'Disguise': 10, 'Dodge': 30, 'Drive': 20, 'Firearms': 20, 'First Aid': 10, 'Forensics': 0, 'Heavy Machinery': 10, 'Heavy Weapons': 10, 'Human Studies': 10, 'HUMINT': 0, 'Leadership': 0, 'Medicine': 0, 'Melee Weapons': 30, 'Navigate': 10, 'Paranormal': 10, 'Persuade': 20, 'Pharmacy': 0, 'Psychotherapy': 10, 'Ride': 10, 'Search': 20, 'SIGINT': 0, 'Stealth': 20, 'Support Int.': 0, 'Surgery': 0, 'Survival': 10, 'Swim': 20, 'Tech Procedures': 20, 'Unarmed Combat': 40 };
+    const simpleSkills = [ "Accounting", "Alertness", "Artillery", "Athletics", "Criminology", "Demolitions", "Disguise", "Dodge", "Drive", "Firearms", "First Aid", "Forensics", "Heavy Machinery", "Heavy Weapons", "Human Studies", "HUMINT", "Leadership", "Medicine", "Melee Weapons", "Navigate", "Paranormal", "Persuade", "Pharmacy", "Psychotherapy", "Ride", "Search", "SIGINT", "Stealth", "Support Int.", "Surgery", "Survival", "Swim", "Tech Procedures", "Unarmed Combat" ].sort();
+    const baseSkillValues = { 'Accounting': 10, 'Alertness': 20, 'Artillery': 0, 'Athletics': 30, 'Criminology': 10, 'Demolitions': 10, 'Disguise': 10, 'Dodge': 30, 'Drive': 20, 'Firearms': 20, 'First Aid': 10, 'Forensics': 0, 'Heavy Machinery': 10, 'Heavy Weapons': 10, 'Human Studies': 10, 'HUMINT': 10, 'Leadership': 0, 'Medicine': 0, 'Melee Weapons': 30, 'Navigate': 10, 'Paranormal': 10, 'Persuade': 20, 'Pharmacy': 0, 'Psychotherapy': 10, 'Ride': 10, 'Search': 20, 'SIGINT': 0, 'Stealth': 20, 'Support Int.': 0, 'Surgery': 0, 'Survival': 10, 'Swim': 20, 'Tech Procedures': 20, 'Unarmed Combat': 40 };
     const statDescriptions = { STR: { 3: "Frail", 6: "Below Average", 9: "Average", 12: "Strong", 15: "Powerful", 18: "Peak Human" }, DEX: { 3: "Clumsy", 6: "Slow", 9: "Average", 12: "Agile", 15: "Nimble", 18: "Lightning Reflexes" }, CON: { 3: "Sickly", 6: "Frail", 9: "Average", 12: "Hardy", 15: "Tough", 18: "Superhuman Endurance" }, INT: { 3: "Dim", 6: "Slow Learner", 9: "Average", 12: "Sharp", 15: "Brilliant", 18: "Genius" }, POW: { 3: "Weak-willed", 6: "Hesitant", 9: "Average", 12: "Determined", 15: "Indomitable", 18: "Unyielding Will" }, CHA: { 3: "Unlikable", 6: "Awkward", 9: "Average", 12: "Likable", 15: "Charismatic", 18: "Compelling Presence" } };
     const tooltipData = {
         'STR': 'Strength: Governs physical power, melee damage, lifting capacity, and athletic tasks involving raw force.',
@@ -673,18 +673,42 @@
     
     // --- SKILL IMPROVEMENT & POINT SYSTEM ---
     function setSkillInputMax(maxValue) { const skillInputs = document.querySelectorAll('#skills-container input[type="number"]'); skillInputs.forEach(input => { input.max = maxValue; if (parseInt(input.value) > maxValue) { input.value = maxValue; } }); }
+    
     function updateSkillPointsCounter() {
         const counterEl = document.getElementById('skill-points-counter'), lockBtn = document.getElementById('lock-skills-btn');
-        if (!isSkillSetupMode) { counterEl.classList.add('hidden'); lockBtn.classList.add('hidden'); return; }
-        counterEl.classList.remove('hidden'); lockBtn.classList.remove('hidden');
-        const skillInputs = document.querySelectorAll('#skills-container input[type="number"]'); let currentPointsSum = 0;
+        counterEl.classList.remove('hidden'); // Always show the counter element.
+        lockBtn.classList.toggle('hidden', !isSkillSetupMode); // Show/hide lock button based on mode.
+
+        const skillInputs = document.querySelectorAll('#skills-container input[type="number"]');
+        let currentPointsSum = 0;
         skillInputs.forEach(input => { currentPointsSum += parseInt(input.value, 10) || 0; });
-        const pointsSpent = currentPointsSum - totalBaseSkillPoints;
-        counterEl.textContent = `(${pointsSpent} / ${SKILL_POINTS_BUDGET} PTS)`;
-        lockBtn.disabled = pointsSpent !== SKILL_POINTS_BUDGET;
-        if (pointsSpent > SKILL_POINTS_BUDGET) { counterEl.style.color = 'var(--danger-color)'; } else if (pointsSpent === SKILL_POINTS_BUDGET) { counterEl.style.color = 'var(--accent-color)'; } else { counterEl.style.color = 'inherit'; }
+
+        if (isSkillSetupMode) {
+            const pointsSpent = currentPointsSum - totalBaseSkillPoints;
+            counterEl.textContent = `(${pointsSpent} / ${SKILL_POINTS_BUDGET} PTS)`;
+            lockBtn.disabled = pointsSpent !== SKILL_POINTS_BUDGET;
+            if (pointsSpent > SKILL_POINTS_BUDGET) {
+                counterEl.style.color = 'var(--danger-color)';
+            } else if (pointsSpent === SKILL_POINTS_BUDGET) {
+                counterEl.style.color = 'var(--accent-color)';
+            } else {
+                counterEl.style.color = 'inherit';
+            }
+        } else {
+            counterEl.textContent = `(TOTAL POINTS: ${currentPointsSum})`;
+            counterEl.style.color = 'inherit';
+        }
     }
-    function lockSkills() { if (confirm("You have allocated exactly 300 skill points. This will finalize the skill setup for this character. Are you sure?")) { isSkillSetupMode = false; setSkillInputMax(100); updateSkillPointsCounter(); isFormDirty = true; } }
+    
+    function lockSkills() { 
+        if (confirm(`You have allocated exactly ${SKILL_POINTS_BUDGET} skill points. This will finalize the skill setup for this character. Are you sure?`)) { 
+            isSkillSetupMode = false; 
+            setSkillInputMax(100); 
+            updateSkillPointsCounter(); 
+            isFormDirty = true; 
+        } 
+    }
+    
     function updateRollSkillsButtonVisibility() { const checkedSkills = document.querySelectorAll('#skills-container input[type="checkbox"]:checked'); document.getElementById('roll-skills-btn').classList.toggle('hidden', checkedSkills.length === 0); }
     function startSkillImprovement() { document.getElementById('skill-roll-modal').classList.remove('hidden'); document.getElementById('skill-roll-prompt').classList.remove('hidden'); document.getElementById('skill-roll-process').classList.add('hidden'); document.getElementById('skill-roll-conclusion').classList.add('hidden'); }
     function closeSkillRollModal() { document.getElementById('skill-roll-modal').classList.add('hidden'); }
