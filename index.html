@@ -658,15 +658,70 @@
 
     function changeStat(stat, delta) { if (statsUnlocked) return; const input = document.getElementById(stat); let pointsSpent = stats.reduce((acc, s) => acc + (parseInt(document.getElementById(s).value) - MIN_STAT_VALUE), 0); let currentValue = parseInt(input.value); if (delta > 0 && pointsSpent < MAX_STAT_POINTS && currentValue < MAX_STAT_VALUE) { input.value = currentValue + 1; } else if (delta < 0 && currentValue > MIN_STAT_VALUE) { input.value = currentValue - 1; } updateAllCalculations(); }
     function updateAllCalculations() { let pointsSpent = 0; stats.forEach(stat => { const value = parseInt(document.getElementById(stat).value); pointsSpent += (value - MIN_STAT_VALUE); document.getElementById(`${stat}x5`).textContent = `x5: ${value * 5}`; document.getElementById(`${stat}-desc`).textContent = getStatDescription(stat, value); }); document.getElementById('stat-points-remaining').textContent = MAX_STAT_POINTS - pointsSpent; updateDerivedAttributes(); updateBondSlots(); updateBondScores(); updateLinkedWeaponStats(); }
-    function updateDerivedAttributes() {
-        const str = parseInt(document.getElementById('STR').value), con = parseInt(document.getElementById('CON').value), pow = parseInt(document.getElementById('POW').value);
-        const hpMaxInput = document.getElementById('hp-max'), wpMaxInput = document.getElementById('wp-max'), sanMaxInput = document.getElementById('san-max'), bpInput = document.getElementById('bp');
-        if (!isAdmin) { hpMaxInput.value = Math.ceil((str + con) / 2); wpMaxInput.value = pow; sanMaxInput.value = pow * 5; bpInput.value = Math.max(0, parseInt(sanMaxInput.value) - pow); }
-        const hpCurrent = document.getElementById('hp-current'); hpCurrent.max = parseInt(hpMaxInput.value); if(!hpCurrent.value || parseInt(hpCurrent.value) > hpCurrent.max) hpCurrent.value = hpCurrent.max;
-        const wpCurrent = document.getElementById('wp-current'); wpCurrent.max = parseInt(wpMaxInput.value); if(!wpCurrent.value || parseInt(wpCurrent.value) > wpCurrent.max) wpCurrent.value = wpCurrent.max;
-        const sanCurrent = document.getElementById('san-current'); sanCurrent.max = parseInt(sanMaxInput.value); if(!sanCurrent.value || parseInt(sanCurrent.value) > sanCurrent.max) sanCurrent.value = sanCurrent.max;
-        checkBreakingPoint();
+   function updateDerivedAttributes() {
+    const str = parseInt(document.getElementById('STR').value);
+    const con = parseInt(document.getElementById('CON').value);
+    const pow = parseInt(document.getElementById('POW').value);
+
+    // Get input elements
+    const hpCurrentInput = document.getElementById('hp-current');
+    const hpMaxInput = document.getElementById('hp-max');
+    const wpCurrentInput = document.getElementById('wp-current');
+    const wpMaxInput = document.getElementById('wp-max');
+    const sanCurrentInput = document.getElementById('san-current');
+    const sanMaxInput = document.getElementById('san-max');
+    const bpInput = document.getElementById('bp');
+
+    // Store old max values before recalculating
+    const oldHpMax = parseInt(hpMaxInput.value) || 0;
+    const oldWpMax = parseInt(wpMaxInput.value) || 0;
+    const oldSanMax = parseInt(sanMaxInput.value) || 0;
+
+    // Calculate new max values
+    const newHpMax = Math.ceil((str + con) / 2);
+    const newWpMax = pow;
+    const newSanMax = pow * 5;
+
+    if (!isAdmin) {
+        hpMaxInput.value = newHpMax;
+        wpMaxInput.value = newWpMax;
+        sanMaxInput.value = newSanMax;
+        bpInput.value = Math.max(0, newSanMax - pow);
     }
+
+    // For each attribute, check if the current value was equal to the old max.
+    // If it was, scale it up to the new max value.
+    // Also handle the case where the value is uninitialized.
+
+    // Update HP
+    if (parseInt(hpCurrentInput.value) === oldHpMax || !hpCurrentInput.value) {
+        hpCurrentInput.value = hpMaxInput.value;
+    }
+    hpCurrentInput.max = hpMaxInput.value;
+    if (parseInt(hpCurrentInput.value) > parseInt(hpMaxInput.value)) {
+        hpCurrentInput.value = hpMaxInput.value;
+    }
+
+    // Update WP
+    if (parseInt(wpCurrentInput.value) === oldWpMax || !wpCurrentInput.value) {
+        wpCurrentInput.value = wpMaxInput.value;
+    }
+    wpCurrentInput.max = wpMaxInput.value;
+    if (parseInt(wpCurrentInput.value) > parseInt(wpMaxInput.value)) {
+        wpCurrentInput.value = wpMaxInput.value;
+    }
+
+    // Update SAN
+    if (parseInt(sanCurrentInput.value) === oldSanMax || !sanCurrentInput.value) {
+        sanCurrentInput.value = sanMaxInput.value;
+    }
+    sanCurrentInput.max = sanMaxInput.value;
+    if (parseInt(sanCurrentInput.value) > parseInt(sanMaxInput.value)) {
+        sanCurrentInput.value = sanMaxInput.value;
+    }
+
+    checkBreakingPoint();
+}
     function checkBreakingPoint() { const sanCurrent = parseInt(document.getElementById('san-current').value), bp = parseInt(document.getElementById('bp').value); document.getElementById('bp-warning').classList.toggle('hidden', sanCurrent > bp); }
     function acknowledgeBreakingPoint() { document.getElementById('bp').value = Math.max(0, parseInt(document.getElementById('san-current').value) - parseInt(document.getElementById('POW').value)); document.getElementById('bp-warning').classList.add('hidden'); }
     function getStatDescription(stat, val) { const tiers = statDescriptions[stat]; let desc = tiers[val] || ''; for (const key in tiers) { if (val >= key) desc = tiers[key]; } return `// ${desc}`; }
