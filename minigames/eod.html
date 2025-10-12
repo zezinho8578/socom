@@ -176,18 +176,34 @@
             keypad: {
                 name: "KEYPAD",
                 generate(game) {
-                    const rulePool = [
-                        { text: "The first digit is the number of starting strikes.", depends: null, getValue: () => game.maxStrikes },
-                        { text: "The second digit is the first number in the serial number.", depends: null, getValue: () => { const d = game.serial.match(/\d/); return d ? d[0] : 0; } },
-                        { text: "The third digit is the total number of modules on the device.", depends: null, getValue: () => Object.keys(game.modules).length },
-                        { text: "The last digit is the number of vowels in the serial number.", depends: null, getValue: () => (game.serial.match(/[AEIOU]/gi) || []).length },
-                        { text: "The first digit is the number of <strong>BLACK</strong> wires.", depends: 'wires', getValue: () => game.modules.wires.data.currentWires.filter(c=>c==='black').length },
-                        { text: "The second digit is one more than the number of <strong>BLUE</strong> wires.", depends: 'wires', getValue: () => game.modules.wires.data.currentWires.filter(c=>c==='blue').length + 1 },
-                    ];
+                    const rulePools = {
+                        first: [
+                            { text: "The first digit is the number of starting strikes.", depends: null, getValue: () => game.maxStrikes },
+                            { text: "The first digit is the total number of modules on the device.", depends: null, getValue: () => Object.keys(game.modules).length },
+                            { text: "The first digit is the number of <strong>BLACK</strong> wires.", depends: 'wires', getValue: () => game.modules.wires.data.currentWires.filter(c=>c==='black').length },
+                        ],
+                        second: [
+                            { text: "The second digit is the first number in the serial number.", depends: null, getValue: () => { const d = game.serial.match(/\d/); return d ? d[0] : 0; } },
+                            { text: "The second digit is one more than the number of <strong>BLUE</strong> wires.", depends: 'wires', getValue: () => game.modules.wires.data.currentWires.filter(c=>c==='blue').length + 1 },
+                        ],
+                        third: [
+                            { text: "The third digit is the number of <strong>WHITE</strong> wires.", depends: 'wires', getValue: () => game.modules.wires.data.currentWires.filter(c=>c==='white').length },
+                            { text: "The third digit is the last number in the serial number.", depends: null, getValue: () => { const d = game.serial.match(/\d/g); return d ? d[d.length - 1] : 0; } },
+                        ],
+                        last: [
+                            { text: "The last digit is the number of vowels in the serial number.", depends: null, getValue: () => (game.serial.match(/[AEIOU]/gi) || []).length },
+                            { text: "The last digit is the total number of wires on the device.", depends: 'wires', getValue: () => game.modules.wires.data.currentWires.length },
+                        ]
+                    };
 
-                    const validRules = rulePool.filter(r => r.depends === null || !!game.modules[r.depends]).sort(() => 0.5 - Math.random());
-                    const chosenRules = validRules.slice(0, 4);
-                    const correctCode = chosenRules.map(r => r.getValue()).join('');
+                    const chosenRules = [];
+                    let correctCode = "";
+                    for (const position in rulePools) {
+                        const validRules = rulePools[position].filter(r => r.depends === null || !!game.modules[r.depends]);
+                        const chosenRule = validRules[Math.floor(Math.random() * validRules.length)];
+                        chosenRules.push(chosenRule);
+                        correctCode += chosenRule.getValue().toString().slice(-1);
+                    }
 
                     return {
                         data: { display: "", correctCode, solved: false },
@@ -200,11 +216,7 @@
                 generate(game) {
                     const colors = ['red', 'blue', 'white', 'yellow'];
                     const labels = ['DETONATE', 'ABORT', 'HOLD', 'PRESS'];
-                    const data = {
-                        currentColor: colors[Math.floor(Math.random() * colors.length)],
-                        currentLabel: labels[Math.floor(Math.random() * labels.length)],
-                        solved: false, isHeld: false
-                    };
+                    const data = { currentColor: colors[Math.floor(Math.random() * colors.length)], currentLabel: labels[Math.floor(Math.random() * labels.length)], solved: false, isHeld: false };
                     
                     const rulePool = [
                         { text: "<strong>IF</strong> the button is BLUE and says 'ABORT', <strong>PRESS AND HOLD</strong>.", test: () => data.currentColor === 'blue' && data.currentLabel === 'ABORT', action: 'hold' },
@@ -262,14 +274,13 @@
             const availableModules = [...series.modulePool].sort(() => 0.5 - Math.random());
             const chosenModuleKeys = availableModules.slice(0, series.moduleCount);
             
+            chosenModuleKeys.forEach(key => game.modules[key] = {});
+            
             let manualHTML = '';
             for(const key of chosenModuleKeys) {
-                game.modules[key] = MODULE_GENERATORS[key].generate(game);
-            }
-            // Re-generate to ensure all dependencies are met
-            for(const key of chosenModuleKeys) {
-                 game.modules[key] = MODULE_GENERATORS[key].generate(game);
-                 manualHTML += game.modules[key].manualHTML;
+                 const generatedModule = MODULE_GENERATORS[key].generate(game);
+                 game.modules[key] = generatedModule;
+                 manualHTML += generatedModule.manualHTML;
             }
             
             document.getElementById('setup-view').classList.add('hidden');
