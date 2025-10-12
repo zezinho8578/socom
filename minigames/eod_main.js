@@ -4,9 +4,29 @@
 let game = {};
 
 function initializeSetup() {
+    // --- PERSISTENT LOCKOUT CHECK ---
+    const perm_lock_time = localStorage.getItem('socom_eod_perm_lock');
+    if (perm_lock_time) {
+        const time_diff = Date.now() - parseInt(perm_lock_time, 10);
+        if (time_diff < 300000) { // 5 minutes in ms
+            forceShowDetonatedState(true); // true for permanent lock
+            return;
+        } else {
+            localStorage.removeItem('socom_eod_perm_lock');
+            localStorage.setItem('socom_eod_attempts', '0');
+        }
+    }
+
+    const lockout = localStorage.getItem('socom_eod_lockout');
+    if (lockout) {
+        forceShowDetonatedState(false);
+        return;
+    }
+
+    // --- STANDARD INITIALIZATION ---
     const grid = document.getElementById('series-selection-grid');
     grid.innerHTML = '';
-    for(const key in BOMB_SERIES_DEFINITIONS) {
+    for (const key in BOMB_SERIES_DEFINITIONS) {
         const series = BOMB_SERIES_DEFINITIONS[key];
         const btn = document.createElement('button');
         btn.className = `series-btn ${series.color}`;
@@ -34,10 +54,8 @@ function startGame(series) {
     const availableModules = [...series.modulePool].sort(() => 0.5 - Math.random());
     const chosenModuleKeys = availableModules.slice(0, series.moduleCount);
     
-    // First pass to establish which modules exist
     chosenModuleKeys.forEach(key => game.modules[key] = {}); 
     
-    // Second pass to generate modules with context-aware rules
     let manualHTML = '';
     for(const key of chosenModuleKeys) {
          const generatedModule = MODULE_GENERATORS[key].generate(game);
@@ -68,19 +86,69 @@ function updateDisplays() {
 }
 function handleStrike() { if (!game.isActive) return; game.strikes++; updateDisplays(); document.body.classList.add('flash'); setTimeout(() => document.body.classList.remove('flash'), 300); if (game.strikes > game.maxStrikes) { detonate(); } }
 function checkWinCondition() { if (Object.values(game.modules).every(m => m.data.solved)) { disarm(); } }
-function detonate() { game.isActive = false; clearInterval(game.timerInterval); document.getElementById('status').textContent = 'STATUS: DETONATED'; document.getElementById('status').style.color = 'var(--danger-color)'; document.body.style.backgroundColor = 'var(--danger-bg)'; }
-function disarm() { game.isActive = false; clearInterval(game.timerInterval); document.getElementById('status').textContent = 'STATUS: DISARMED'; document.getElementById('status').style.color = 'var(--success-color)'; document.getElementById('timer').style.color = 'var(--success-color)'; }
-function resetGame() {
+
+function detonate() {
+    game.isActive = false;
     clearInterval(game.timerInterval);
-    game = {};
-    document.getElementById('game-view').classList.add('hidden');
-    document.getElementById('reset-btn').classList.add('hidden');
-    document.getElementById('setup-view').classList.remove('hidden');
-    
-    // Reset visual styles
-    document.body.style.backgroundColor = 'var(--bg-color)';
-    document.getElementById('timer').style.color = 'var(--danger-color)';
-    document.getElementById('status').style.color = 'var(--text-color)';
+    document.getElementById('status').textContent = 'STATUS: DETONATED';
+    document.getElementById('status').style.color = 'var(--danger-color)';
+    document.body.style.backgroundColor = 'var(--danger-bg)';
+    localStorage.setItem('socom_eod_lockout', Date.now());
+    localStorage.setItem('socom_eod_attempts', '0');
+}
+
+function disarm() {
+    game.isActive = false;
+    clearInterval(game.timerInterval);
+    document.getElementById('status').textContent = 'STATUS: DISARMED';
+    document.getElementById('status').style.color = 'var(--success-color)';
+    document.getElementById('timer').style.color = 'var(--success-color)';
+}
+
+function resetGame() {
+    const code = prompt("ADMINISTRATIVE OVERRIDE REQUIRED.\nEnter 4-digit reset code:");
+
+    if (code === null) { return; } // User pressed cancel.
+
+    if (code === "1711") {
+        localStorage.removeItem('socom_eod_lockout');
+        localStorage.removeItem('socom_eod_attempts');
+        localStorage.removeItem('socom_eod_perm_lock');
+        window.location.reload();
+    } else {
+        let attempts = parseInt(localStorage.getItem('socom_eod_attempts') || '0', 10);
+        attempts++;
+        localStorage.setItem('socom_eod_attempts', attempts);
+
+        alert('ERROR: Invalid override code.');
+
+        if (attempts >= 2) {
+            localStorage.setItem('socom_eod_perm_lock', Date.now());
+            forceShowDetonatedState(true);
+        }
+    }
+}
+
+function forceShowDetonatedState(isPermanent) {
+    document.getElementById('setup-view').classList.add('hidden');
+    document.getElementById('game-view').classList.remove('hidden');
+    document.getElementById('reset-btn').classList.remove('hidden');
+
+    document.body.style.backgroundColor = 'var(--danger-bg)';
+    document.getElementById('modules-container').innerHTML = '';
+    document.getElementById('manual-panel').innerHTML = '<h3>SIGNAL LOST</h3><p>Device data purged. Terminal requires administrative override to reset simulation access.</p>';
+    document.getElementById('timer').textContent = "00:00";
+    document.getElementById('strikes').textContent = "STRIKES: -/-";
+    document.getElementById('serial-number').textContent = "S/N: CORRUPT";
+
+    if (isPermanent) {
+        document.getElementById('status').textContent = 'STATUS: TERMINAL LOCKED';
+        document.getElementById('status').style.color = 'var(--danger-color)';
+        document.getElementById('reset-btn').disabled = true;
+    } else {
+        document.getElementById('status').textContent = 'STATUS: DETONATED';
+        document.getElementById('status').style.color = 'var(--danger-color)';
+    }
 }
 
 // --- MODULE RENDERING ---
