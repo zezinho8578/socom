@@ -68,7 +68,18 @@
 
         .node.start { background-color: var(--node-start); animation: pulse-blue 1.5s infinite; }
         .node.end { border: 2px dashed var(--accent-color); }
-        .node.end::after { content: 'TARGET'; font-size: 6px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--accent-color); opacity: 0.8; }
+        .node.end::after { 
+            content: 'TARGET'; 
+            font-size: 10px; 
+            font-weight: bold;
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            color: var(--accent-color); 
+            opacity: 0.8;
+            text-shadow: 0 0 3px var(--bg-color);
+        }
         .node.firewall { background-color: var(--node-firewall); }
         .node.captured { background-color: var(--node-captured); box-shadow: 0 0 5px var(--node-captured); z-index: 2; }
         .node.ice-flash { animation: pulse-red 0.5s ease; }
@@ -132,13 +143,38 @@
 
         <div style="text-align: center; margin-top: 20px;">
             <a href="https://socom.vercel.app/minigames/" class="button">> RETURN TO UTILITIES MENU</a>
-            <button id="reset-btn" class="hidden" onclick="window.location.reload()">RESTART SIM</button>
+            <button id="reset-btn" class="hidden" onclick="resetSim()">RESTART SIM</button>
         </div>
     </div>
 
     <script>
         // --- GAME STATE & CORE LOGIC ---
         let game = {};
+
+        function initializeSim() {
+            // --- PERSISTENT LOCKOUT CHECK ---
+            const perm_lock_time = localStorage.getItem('socom_net_perm_lock');
+            if (perm_lock_time) {
+                const time_diff = Date.now() - parseInt(perm_lock_time, 10);
+                if (time_diff < 300000) { // 5 minutes in ms
+                    forceShowLostState(true); // true for permanent lock
+                    return;
+                } else {
+                    localStorage.removeItem('socom_net_perm_lock');
+                    localStorage.removeItem('socom_net_attempts');
+                }
+            }
+
+            const lockout = localStorage.getItem('socom_net_lockout');
+            if (lockout) {
+                forceShowLostState(false);
+                return;
+            }
+
+            // If no locks, show setup
+            document.getElementById('setup-view').classList.remove('hidden');
+        }
+
 
         function startIntrusion() {
             // --- 1. GATHER SETUP DATA ---
@@ -258,29 +294,23 @@
 
         function handleNodeClick(x, y) {
             if (!game.isActive) return;
-
             const node = game.grid[y][x];
             if (node.captured) return;
 
-            // Check if the clicked node is adjacent to any captured node
             const isAdjacent = game.path.some(p => 
                 (Math.abs(p.x - x) === 1 && p.y === y) || (p.x === x && Math.abs(p.y - y) === 1)
             );
             if (!isAdjacent) return;
 
-            // Handle firewall penalty
             if (node.type === 'firewall') {
-                game.traceProgress = Math.min(100, game.traceProgress + 5); // Add 5% to trace
+                game.traceProgress = Math.min(100, game.traceProgress + 5);
             }
-
             node.captured = true;
             game.path.push(node);
             
-            // Update visuals
             const el = document.querySelector(`.node[data-x='${x}'][data-y='${y}']`);
             el.classList.add('captured');
 
-            // Check for win condition
             if (node.type === 'end') {
                 winGame();
             }
@@ -288,31 +318,24 @@
 
         function updateTrace() {
             if (!game.isActive) return;
-
             game.traceProgress += game.traceSpeed;
             document.getElementById('trace-bar-inner').style.width = `${game.traceProgress}%`;
 
-            // Handle Fumble ICE effect
-            if (game.iceActive && Math.random() < 0.05) { // 5% chance per tick
+            if (game.iceActive && Math.random() < 0.05) {
                 triggerICE();
             }
-
             if (game.traceProgress >= 100) {
                 loseGame();
             }
         }
 
         function triggerICE() {
-            if (game.path.length <= 1) return; // Don't reset the start node
-
+            if (game.path.length <= 1) return;
             const nodeToReset = game.path[Math.floor(Math.random() * (game.path.length - 1)) + 1];
             if (!nodeToReset) return;
-
             const resetIndex = game.path.findIndex(p => p.x === nodeToReset.x && p.y === nodeToReset.y);
-
             const nodesToSever = game.path.slice(resetIndex);
             game.path = game.path.slice(0, resetIndex);
-
             nodesToSever.forEach(node => {
                 node.captured = false;
                 const el = document.querySelector(`.node[data-x='${node.x}'][data-y='${node.y}']`);
@@ -329,6 +352,10 @@
             game.isActive = false;
             document.getElementById('status-display').textContent = "STATUS: SUCCESS";
             document.getElementById('status-display').style.color = 'var(--success-color)';
+            // Clear any locks from previous failures
+            localStorage.removeItem('socom_net_lockout');
+            localStorage.removeItem('socom_net_attempts');
+            localStorage.removeItem('socom_net_perm_lock');
         }
 
         function loseGame() {
@@ -337,7 +364,57 @@
             document.getElementById('status-display').textContent = "STATUS: TRACE COMPLETE";
             document.getElementById('status-display').style.color = 'var(--danger-color)';
             document.getElementById('grid-container').classList.add('game-lost');
+            localStorage.setItem('socom_net_lockout', Date.now());
+            localStorage.setItem('socom_net_attempts', '0');
         }
+
+        function resetSim() {
+            const code = prompt("ADMINISTRATIVE OVERRIDE REQUIRED.\nEnter 4-digit reset code:");
+            if (code === null) return;
+
+            if (code === "1711") {
+                localStorage.removeItem('socom_net_lockout');
+                localStorage.removeItem('socom_net_attempts');
+                localStorage.removeItem('socom_net_perm_lock');
+                window.location.reload();
+            } else {
+                let attempts = parseInt(localStorage.getItem('socom_net_attempts') || '0', 10);
+                attempts++;
+                localStorage.setItem('socom_net_attempts', attempts);
+                alert('ERROR: Invalid override code.');
+                if (attempts >= 2) {
+                    localStorage.setItem('socom_net_perm_lock', Date.now());
+                    forceShowLostState(true);
+                }
+            }
+        }
+
+        function forceShowLostState(isPermanent) {
+            document.getElementById('setup-view').classList.add('hidden');
+            document.getElementById('game-view').classList.remove('hidden');
+            document.getElementById('reset-btn').classList.remove('hidden');
+            
+            document.getElementById('grid-container').innerHTML = '';
+            document.getElementById('roll-result').classList.add('hidden');
+            document.getElementById('trace-bar-inner').style.width = '100%';
+            
+            const statusDisplay = document.getElementById('status-display');
+            const resetButton = document.getElementById('reset-btn');
+
+            if (isPermanent) {
+                statusDisplay.textContent = 'STATUS: TERMINAL LOCKED';
+                statusDisplay.style.color = 'var(--danger-color)';
+                resetButton.disabled = true;
+            } else {
+                statusDisplay.textContent = 'STATUS: TRACE COMPLETE';
+                statusDisplay.style.color = 'var(--danger-color)';
+                resetButton.disabled = false;
+            }
+        }
+
+        // --- INITIALIZE ---
+        window.onload = initializeSim;
+
     </script>
 </body>
 </html>
