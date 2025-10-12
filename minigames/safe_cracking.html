@@ -10,6 +10,7 @@
         @keyframes flicker { 0%, 100% { opacity: 0.95; } 50% { opacity: 1; } }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         @keyframes flash-red-bg { 0%, 100% { background: #400; } 50% { background: transparent; } }
+        @keyframes flash-red-border { 0%, 100% { border-color: var(--danger-color); box-shadow: 0 0 8px var(--danger-color); } 50% { border-color: var(--accent-color); box-shadow: none; } }
 
         :root {
             --bg-color: #050805; --scanline-color: rgba(0, 255, 85, 0.1); --text-color: #00ff55;
@@ -37,12 +38,12 @@
         /* --- Game Specific Styles --- */
         #game-view-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: center; }
         #lock-interface { text-align: center; }
-        #dial-container { width: 300px; height: 300px; position: relative; margin: 20px auto; cursor: ew-resize; }
+        #dial-container { width: 300px; height: 300px; position: relative; margin: 20px auto; }
         #lock-dial { width: 100%; height: 100%; border-radius: 50%; background: #000; border: 3px solid var(--border-color); position: relative; display: flex; justify-content: center; align-items: center; }
-        #dial-marker { position: absolute; top: 0px; left: 50%; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 15px solid var(--accent-color); z-index: 10; transform-origin: 50% 150px; /* Moves pivot to center of dial */ }
+        #dial-marker { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 15px solid var(--accent-color); z-index: 10; }
         #dial-number { font-size: 4em; font-weight: bold; text-shadow: 0 0 8px var(--accent-color); z-index: 5; }
         .dial-tick-label { position: absolute; font-size: 14px; color: var(--accent-color); opacity: 0.7; transform: translate(-50%, -50%); }
-        .dial-tick-minor { position: absolute; background: var(--accent-color); opacity: 0.5; width: 1px; height: 10px; transform-origin: 50% 0; }
+        .dial-tick-minor { position: absolute; background: var(--accent-color); opacity: 0.5; width: 1px; height: 10px; transform-origin: 0 150px; }
         
         #pin-indicators { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; }
         .pin-light { width: 25px; height: 25px; border-radius: 50%; background: #333; border: 2px solid #111; transition: all 0.2s; }
@@ -50,12 +51,16 @@
         .pin-light.fail { background: var(--danger-color); box-shadow: 0 0 10px var(--danger-color); animation: flash-red-bg 0.3s; }
         
         #controls-interface { border-left: 1px solid var(--border-color); padding-left: 20px; }
-        #tension-meter { display: flex; justify-content: space-between; align-items: center; width: 100%; height: 150px; background: #000; border: 1px solid var(--border-color); padding: 5px; box-sizing: border-box; }
+        #tension-meter { display: flex; justify-content: space-between; align-items: center; width: 100%; height: 150px; background: #000; border: 1px solid var(--border-color); padding: 5px; box-sizing: border-box; position: relative; }
         .tension-bar { flex-grow: 1; background-color: var(--accent-color); width: 2px; height: 100%; transform: scaleY(0.05); transition: transform 0.05s ease-out; }
+        #meter-cooldown-msg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); color: var(--danger-color); display: flex; justify-content: center; align-items: center; font-size: 1.5em; animation: blink 1s infinite; z-index: 20; }
         
-        #instruction-text { font-size: 1.2em; font-weight: bold; text-align: center; margin-top: 15px; min-height: 1.5em; }
-        #set-pin-btn { width: 100%; padding: 15px; font-size: 1.5em; margin-top: 15px; }
-
+        #instruction-text, #status-text { text-align: center; min-height: 1.5em; }
+        #instruction-text { font-size: 1.2em; font-weight: bold; margin-top: 10px; }
+        #status-text { font-size: 1em; color: var(--success-color); }
+        #rotation-controls { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px; }
+        .rotate-btn { font-size: 2em; width: 60px; height: 60px; padding: 0; }
+        .rotate-btn.warning-flash { animation: flash-red-border 0.5s infinite; }
     </style>
 </head>
 <body>
@@ -102,16 +107,22 @@
                     <div id="dial-container">
                         <div id="lock-dial">
                             <div id="dial-number">0</div>
-                            <!-- Numbers and ticks will be injected here -->
                         </div>
-                        <div id="dial-marker"></div>
+                        <div id="dial-marker-container">
+                            <div id="dial-marker"></div>
+                        </div>
                     </div>
                 </div>
                 <div id="controls-interface">
                     <h3>TENSION METER</h3>
-                    <div id="tension-meter"></div>
+                    <div id="tension-meter"><div id="meter-cooldown-msg" class="hidden">COOLING DOWN</div></div>
                     <h3 style="margin-top: 20px;">CONTROLS</h3>
-                    <button id="set-pin-btn" onclick="setPin()">SET PIN</button>
+                    <div id="status-text"></div>
+                    <div id="rotation-controls">
+                        <button class="rotate-btn" id="rotate-ccw-btn">&lt;</button>
+                        <button id="set-pin-btn" onclick="setPin()">SET PIN</button>
+                        <button class="rotate-btn" id="rotate-cw-btn">&gt;</button>
+                    </div>
                     <div id="instruction-text"></div>
                 </div>
             </div>
@@ -131,9 +142,8 @@
             const perm_lock_time = localStorage.getItem('socom_safe_perm_lock');
             if (perm_lock_time) {
                 const time_diff = Date.now() - parseInt(perm_lock_time, 10);
-                if (time_diff < 300000) { // 5 minutes
-                    forceShowFailure(true); return;
-                } else {
+                if (time_diff < 300000) { forceShowFailure(true); return; } 
+                else {
                     localStorage.removeItem('socom_safe_perm_lock');
                     localStorage.removeItem('socom_safe_attempts');
                     localStorage.removeItem('socom_safe_lockout');
@@ -158,24 +168,30 @@
             game = {
                 pinsToSet: parseInt(document.getElementById('lock-quality').value),
                 combination: [], pinStates: [], currentPinIndex: 0,
-                currentAngle: 0, currentDirection: 1, isDragging: false,
-                lastMouseX: 0, noiseLevel: 0.1, sweetSpotWidth: 2,
-                attemptsLeft: Infinity, isActive: true,
+                currentAngle: 0, requiredDirection: null, isFumble: false, isFailure: false,
+                noiseLevel: 0.1, sweetSpotWidth: 2, attemptsLeft: Infinity,
+                isActive: true, rotationInterval: null,
+                meterCoolingDown: false, controlsSwapped: false,
             };
 
             const resultEl = document.getElementById('roll-result');
             let resultText = '';
             if (roll >= 96) {
-                resultText = `FUMBLE (${roll}) - Booby-trapped mechanism! You have only two attempts before it locks.`;
+                resultText = `FUMBLE (${roll}) - Booby-trapped mechanism! Required rotation enforced. Controls are faulty. Two attempts only.`;
                 resultEl.style.borderColor = 'var(--danger-color)';
+                game.isFumble = true;
                 game.attemptsLeft = 2;
+                game.requiredDirection = 1; // Start clockwise
+                setInterval(fumbleControlSwap, 12000); // Swap controls every 12s
             } else if (roll > skill) {
-                resultText = `FAILURE (${roll}) - Worn tumblers. The tension meter is noisy with false signals.`;
+                resultText = `FAILURE (${roll}) - Worn tumblers. Required rotation enforced. Meter may overheat.`;
                 resultEl.style.borderColor = 'var(--danger-color)';
+                game.isFailure = true;
                 game.noiseLevel = 0.4;
                 game.sweetSpotWidth = 1;
+                game.requiredDirection = 1; // Start clockwise
             } else if (roll <= 5) {
-                resultText = `CRITICAL (${roll}) - High-quality tools. The mechanism feels clear, and the first number is obvious.`;
+                resultText = `CRITICAL (${roll}) - High-quality tools. The mechanism feels clear, first number is revealed.`;
                 resultEl.style.borderColor = 'var(--success-color)';
                 game.noiseLevel = 0.05;
                 game.sweetSpotWidth = 3;
@@ -188,8 +204,9 @@
             generateCombination();
             generateDialLabels();
             generateTensionMeterBars();
+            
             if (roll <= 5) { 
-                 document.getElementById('instruction-text').textContent = `First Number: ${game.combination[0]}`;
+                document.getElementById('status-text').textContent = `First Number: ${game.combination[0]}`;
             }
             
             setupEventListeners();
@@ -199,9 +216,9 @@
 
         function generateTensionMeterBars() {
             const meter = document.getElementById('tension-meter');
-            meter.innerHTML = '';
+            meter.innerHTML = '<div id="meter-cooldown-msg" class="hidden">COOLING DOWN</div>'; // Reset
             tensionBars = [];
-            for (let i = 0; i < 30; i++) { // 30 bars for a smooth look
+            for (let i = 0; i < 30; i++) {
                 const bar = document.createElement('div');
                 bar.className = 'tension-bar';
                 meter.appendChild(bar);
@@ -211,11 +228,12 @@
         
         function generateDialLabels() {
             const dial = document.getElementById('lock-dial');
+            dial.innerHTML = '<div id="dial-number">0</div>'; // Clear previous labels
             const radius = dial.offsetWidth / 2;
             for (let i = 0; i < 100; i++) {
-                const angleDeg = (i / 100) * 360;
+                const angleDeg = i * 3.6;
                 const angleRad = angleDeg * (Math.PI / 180);
-                if (i % 10 === 0) { // Major tick
+                if (i % 10 === 0) {
                     const labelRadius = radius * 0.8;
                     const x = labelRadius * Math.sin(angleRad) + radius;
                     const y = labelRadius * -Math.cos(angleRad) + radius;
@@ -225,12 +243,15 @@
                     label.style.left = `${x}px`;
                     label.style.top = `${y}px`;
                     dial.appendChild(label);
-                } else if (i % 5 === 0) { // Minor tick
+                } else if (i % 5 === 0 && i !== 0) {
                     const tick = document.createElement('div');
                     tick.className = 'dial-tick-minor';
-                    tick.style.transform = `translateX(-50%) rotate(${angleDeg}deg)`;
-                    tick.style.left = `calc(50%)`;
-                    tick.style.top = `7px`; // Position near the edge
+                    const tickRadius = radius - 15;
+                    const x = tickRadius * Math.sin(angleRad) + radius;
+                    const y = tickRadius * -Math.cos(angleRad) + radius;
+                    tick.style.left = `${x}px`;
+                    tick.style.top = `${y}px`;
+                    tick.style.transform = `translate(-50%, -50%) rotate(${angleDeg}deg)`;
                     dial.appendChild(tick);
                 }
             }
@@ -241,44 +262,51 @@
             for (let i = 0; i < game.pinsToSet; i++) {
                 let num;
                 do { num = Math.floor(Math.random() * 100);
-                } while (i > 0 && num === game.combination[i-1]);
+                } while (i > 0 && num === game.combination[i - 1]);
                 game.combination.push(num);
             }
         }
         
         function setupEventListeners() {
-            const dialContainer = document.getElementById('dial-container');
-            dialContainer.onmousedown = (e) => {
-                if (!game.isActive) return;
-                game.isDragging = true;
-                game.lastMouseX = e.clientX;
-                dialContainer.style.cursor = 'grabbing';
+            const ccwBtn = document.getElementById('rotate-ccw-btn');
+            const cwBtn = document.getElementById('rotate-cw-btn');
+            
+            const startRotation = (direction) => {
+                if (game.rotationInterval) clearInterval(game.rotationInterval);
+                if (game.isFumble && Math.random() < 0.15) return; // Fumble: ignore press
+
+                const effectiveDirection = game.controlsSwapped ? -direction : direction;
+                
+                if (game.requiredDirection && effectiveDirection !== game.requiredDirection) {
+                    handleFailure(); return;
+                }
+                
+                game.rotationInterval = setInterval(() => {
+                    game.currentAngle += effectiveDirection * 0.7; // Speed
+                    updateUI();
+                }, 10);
             };
-            document.onmousemove = (e) => {
-                if (!game.isDragging || !game.isActive) return;
-                const deltaX = e.clientX - game.lastMouseX;
-                game.currentAngle += deltaX * 0.5; // Sensitivity
-                game.lastMouseX = e.clientX;
-                updateUI();
-            };
-            document.onmouseup = () => {
-                if (!game.isDragging) return;
-                game.isDragging = false;
-                dialContainer.style.cursor = 'ew-resize';
-            };
+
+            const stopRotation = () => clearInterval(game.rotationInterval);
+
+            ccwBtn.onmousedown = () => startRotation(-1);
+            cwBtn.onmousedown = () => startRotation(1);
+            document.body.onmouseup = stopRotation;
+            document.body.onmouseleave = stopRotation;
         }
 
         function setPin() {
-            if (!game.isActive) return;
+            if (!game.isActive || game.meterCoolingDown) return;
             const currentNum = Math.round(((game.currentAngle % 360 + 360) % 360) / 3.6) % 100;
             const targetNum = game.combination[game.currentPinIndex];
             const diff = Math.min(Math.abs(currentNum - targetNum), 100 - Math.abs(currentNum - targetNum));
 
-            if (diff <= game.sweetSpotWidth) { // Success
+            if (diff <= game.sweetSpotWidth) {
                 game.pinStates[game.currentPinIndex] = 'success';
                 game.currentPinIndex++;
+                if (game.requiredDirection) game.requiredDirection *= -1; // Reverse required direction
                 if (game.currentPinIndex >= game.pinsToSet) { winGame(); }
-            } else { // Failure
+            } else {
                 handleFailure();
             }
             updateUI();
@@ -294,15 +322,48 @@
             
             setTimeout(() => {
                 game.pinStates = []; game.currentPinIndex = 0;
-                game.currentDirection = 1; generateCombination();
+                if(game.requiredDirection) game.requiredDirection = 1;
+                generateCombination();
                 updateUI();
             }, 500);
         }
-        
+
         function gameLoop() {
             if(!game.isActive) return;
-            updateTensionMeter();
+            if(!game.meterCoolingDown) {
+                updateTensionMeter();
+                 if(game.isFailure && Math.random() < 0.005) triggerMeterCooldown();
+            }
             game.animationFrame = requestAnimationFrame(gameLoop);
+        }
+        
+        function triggerMeterCooldown() {
+            game.meterCoolingDown = true;
+            document.getElementById('meter-cooldown-msg').classList.remove('hidden');
+            const cooldown = (Math.random() * 10000) + 5000; // 5-15 seconds
+            setTimeout(() => {
+                game.meterCoolingDown = false;
+                document.getElementById('meter-cooldown-msg').classList.add('hidden');
+            }, cooldown);
+        }
+        
+        function fumbleControlSwap() {
+            if(!game.isActive || !game.isFumble) return;
+            const statusEl = document.getElementById('status-text');
+            statusEl.textContent = 'WARNING: CONTROLS REVERSING';
+            statusEl.style.color = 'var(--danger-color)';
+            document.querySelectorAll('.rotate-btn').forEach(b => b.classList.add('warning-flash'));
+            
+            setTimeout(() => {
+                game.controlsSwapped = true;
+                statusEl.textContent = 'CONTROLS REVERSED';
+                 setTimeout(() => {
+                     game.controlsSwapped = false;
+                     statusEl.textContent = '';
+                     statusEl.style.color = 'var(--success-color)';
+                     document.querySelectorAll('.rotate-btn').forEach(b => b.classList.remove('warning-flash'));
+                 }, 3000); // Reversed for 3 seconds
+            }, 1500); // Warning for 1.5 seconds
         }
 
         function updateTensionMeter() {
@@ -321,16 +382,11 @@
         }
 
         function updateUI() {
-            // Update marker rotation
-            const marker = document.getElementById('dial-marker');
-            const direction = game.currentDirection === 1 ? 1 : -1;
-            marker.style.transform = `translateX(-50%) rotate(${game.currentAngle * direction}deg)`;
-            
-            // Update number display
-            const num = Math.round(((game.currentAngle % 360 + 360) % 360) / 3.6) % 100;
+            const markerContainer = document.getElementById('dial-marker-container');
+            markerContainer.style.transform = `rotate(${game.currentAngle}deg)`;
+            const num = Math.round(((game.currentAngle * -1 % 360 + 360) % 360) / 3.6) % 100;
             document.getElementById('dial-number').textContent = num;
             
-            // Update pin indicators
             const indicatorsContainer = document.getElementById('pin-indicators');
             indicatorsContainer.innerHTML = '';
             for (let i = 0; i < game.pinsToSet; i++) {
@@ -341,14 +397,19 @@
             }
             
             if(game.isActive) {
-                 const dir = game.currentDirection === 1 ? 'CLOCKWISE' : 'COUNTER-CLOCKWISE';
-                 document.getElementById('instruction-text').textContent = `ROTATE ${dir}`;
+                 if (game.requiredDirection) {
+                     const dir = game.requiredDirection === 1 ? 'CLOCKWISE' : 'COUNTER-CLOCKWISE';
+                     document.getElementById('instruction-text').textContent = `REQUIRED: ${dir}`;
+                 } else {
+                     document.getElementById('instruction-text').textContent = 'ROTATE FREELY';
+                 }
             }
         }
-
+        
         function winGame() {
             game.isActive = false;
-            cancelAnimationFrame(game.animationFrame);
+            if (game.animationFrame) cancelAnimationFrame(game.animationFrame);
+            if (game.rotationInterval) clearInterval(game.rotationInterval);
             document.getElementById('instruction-text').textContent = 'LOCK OPENED';
             document.getElementById('instruction-text').style.color = 'var(--success-color)';
             document.getElementById('set-pin-btn').disabled = true;
@@ -359,11 +420,11 @@
 
         function loseGame() {
             game.isActive = false;
-            cancelAnimationFrame(game.animationFrame);
+            if (game.animationFrame) cancelAnimationFrame(game.animationFrame);
+            if (game.rotationInterval) clearInterval(game.rotationInterval);
             document.getElementById('instruction-text').textContent = 'MECHANISM JAMMED - RESET REQUIRED';
             document.getElementById('instruction-text').style.color = 'var(--danger-color)';
             document.getElementById('set-pin-btn').disabled = true;
-
             localStorage.setItem('socom_safe_lockout', Date.now());
             localStorage.setItem('socom_safe_attempts', '0');
         }
@@ -371,7 +432,6 @@
         function resetSim() {
              const code = prompt("ADMINISTRATIVE OVERRIDE REQUIRED.\nEnter 4-digit reset code:");
             if (code === null) return;
-
             if (code === "1711") {
                 localStorage.removeItem('socom_safe_lockout');
                 localStorage.removeItem('socom_safe_attempts');
@@ -393,7 +453,6 @@
             document.getElementById('setup-view').classList.add('hidden');
             document.getElementById('game-view').classList.remove('hidden');
             document.getElementById('reset-btn').classList.remove('hidden');
-
             const text = isPermanent ? 'TERMINAL LOCKED' : 'MECHANISM JAMMED';
             document.getElementById('roll-result').textContent = 'SIMULATION FAILURE';
             document.getElementById('roll-result').style.borderColor = 'var(--danger-color)';
