@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.O.C.O.M. // Signal Triangulation</title>
+    <link rel="icon" type="image/png" href="https://www.socom.mil/SOF-ATL/PublishingImages/eSOF-Logo.png">
+    <style>
+        /* Base styles copied from your main project */
+        @keyframes flicker { 0%, 100% { opacity: 0.95; } 50% { opacity: 1; } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        :root {
+            --bg-color: #050805; --scanline-color: rgba(0, 255, 85, 0.1); --text-color: #00ff55;
+            --accent-color: #00ff55; --border-color: #00521d; --input-bg: rgba(0, 31, 9, 0.95);
+            --danger-color: #ff4141; --danger-bg: rgba(255, 65, 65, 0.15); --container-bg: rgba(0,0,0,0.4);
+            --success-color: #0f0;
+        }
+
+        body { font-family: 'Courier New', Courier, monospace; margin: 0; background-color: var(--bg-color); color: var(--text-color); text-shadow: 0 0 4px var(--accent-color); animation: flicker 0.15s infinite; }
+        .container { max-width: 1200px; margin: 10px auto; padding: 10px; border: 1px solid var(--border-color); background: var(--container-bg); }
+        .header { display: flex; align-items: center; border-bottom: 1px solid var(--accent-color); padding-bottom: 5px; margin-bottom: 15px; }
+        .logo { max-width: 80px; margin-right: 15px; filter: grayscale(100%) brightness(200%) contrast(150%); }
+        h1 { font-size: 22px; text-transform: uppercase; } h1::after { content: '_'; animation: blink 1s step-end infinite; }
+        h2 { text-transform: uppercase; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; margin-top: 20px; }
+        .content-menu { padding: 20px; border: 1px solid var(--border-color); margin: 20px 0; background: var(--input-bg); }
+        button, .button { background: transparent; color: var(--accent-color); border: 1px solid var(--accent-color); padding: 8px 15px; font-size: 14px; cursor: pointer; margin: 5px; font-family: 'Courier New', Courier, monospace; text-transform: uppercase; text-decoration: none; }
+        button:hover, .button:hover { background: var(--accent-color); color: var(--bg-color); text-shadow: none; }
+        input, select { width: 100%; padding: 6px; box-sizing: border-box; background-color: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); font-family: 'Courier New', Courier, monospace; }
+        label { font-weight: bold; display: block; margin-bottom: 4px; color: var(--accent-color); font-size: 14px; }
+        .hidden { display: none !important; }
+        .grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .status-message { padding: 10px; margin-bottom: 15px; border: 1px solid; text-align: center; }
+
+        /* --- Game Specific Styles --- */
+        #game-view-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; align-items: flex-start; }
+        #map-container { border: 1px solid var(--border-color); background: #000; padding: 5px; }
+        #map-canvas { width: 100%; display: block; aspect-ratio: 1/1; }
+        #control-panel { border: 1px solid var(--border-color); padding: 15px; }
+        .receiver { margin-bottom: 20px; }
+        .receiver.locked { border-left: 3px solid var(--success-color); padding-left: 10px; }
+        .waveform-canvas { width: 100%; height: 50px; background: #000; border: 1px solid var(--border-color); margin-top: 5px; }
+        .signal-strength { font-weight: bold; }
+
+        /* Custom Slider Styles */
+        input[type=range] { -webkit-appearance: none; width: 100%; margin: 5px 0; background: transparent; }
+        input[type=range]:focus { outline: none; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 3px; cursor: pointer; background: var(--border-color); }
+        input[type=range]::-webkit-slider-thumb { border: 1px solid var(--accent-color); height: 15px; width: 8px; background: var(--accent-color); cursor: pointer; -webkit-appearance: none; margin-top: -6px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header class="header">
+            <img src="https://images.squarespace-cdn.com/content/v1/629e0596d168b365d297c6c4/cea70b06-895e-401c-9669-04fa59cfc5e6/socom-logo.png" alt="SOCOM Logo" class="logo">
+            <h1>S.O.C.O.M. // SIGNAL TRIANGULATION</h1>
+        </header>
+
+        <!-- SETUP VIEW -->
+        <div id="setup-view">
+            <div class="content-menu">
+                <h2>PROCEDURAL SETUP</h2>
+                <div class="grid-2-col">
+                    <div>
+                        <label for="sigint-skill">AGENT SIGINT SKILL %</label>
+                        <input type="number" id="sigint-skill" min="0" max="100" placeholder="e.g., 55">
+                    </div>
+                    <div>
+                        <label for="d100-roll">D100 ROLL</label>
+                        <input type="number" id="d100-roll" min="1" max="100" placeholder="e.g., 23">
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button onclick="startTriangulation()">BEGIN TRIANGULATION</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- GAME VIEW -->
+        <div id="game-view" class="hidden">
+            <div id="status-display" class="status-message"></div>
+            <div id="game-view-grid">
+                <div id="map-container">
+                     <canvas id="map-canvas"></canvas>
+                </div>
+                <div id="control-panel">
+                    <!-- Receivers will be generated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="https://socom.vercel.app/minigames/" class="button">> RETURN TO UTILITIES MENU</a>
+            <button id="reset-btn" class="hidden" onclick="window.location.reload()">RESTART SIM</button>
+        </div>
+    </div>
+
+    <script>
+        // --- GAME STATE & CORE LOGIC ---
+        let game = {};
+        const MAP_SIZE = 1000;
+
+        function startTriangulation() {
+            const skill = parseInt(document.getElementById('sigint-skill').value);
+            const roll = parseInt(document.getElementById('d100-roll').value);
+            if (isNaN(skill) || isNaN(roll)) {
+                alert('Please fill in your SIGINT skill and d100 roll.');
+                return;
+            }
+
+            // --- 1. INITIALIZE GAME STATE ---
+            game = {
+                target: { x: Math.random() * MAP_SIZE, y: Math.random() * MAP_SIZE },
+                ghostTarget: null,
+                receivers: [],
+                pings: [],
+                noiseFactor: 1,
+                isActive: true,
+            };
+
+            // --- 2. DEFINE RECEIVER POSITIONS & SOLUTIONS ---
+            const receiverPositions = [
+                { x: 0, y: MAP_SIZE / 2 },
+                { x: MAP_SIZE, y: 0 },
+                { x: MAP_SIZE / 2, y: MAP_SIZE }
+            ];
+            for(let i = 0; i < 3; i++) {
+                const pos = receiverPositions[i];
+                const dx = game.target.x - pos.x;
+                const dy = game.target.y - pos.y;
+                const perfectAngle = (Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360;
+                game.receivers.push({
+                    id: i,
+                    position: pos,
+                    perfectFreq: 100 + Math.random() * 800,
+                    perfectAngle: perfectAngle,
+                    currentFreq: 500,
+                    currentAngle: 180,
+                    strength: 0,
+                    locked: false,
+                });
+            }
+
+            // --- 3. PERFORM SKILL CHECK ---
+            const resultEl = document.getElementById('status-display');
+            let resultText = '';
+            if (roll >= 96) {
+                resultText = `FUMBLE (${roll}) - Hostile signal detected! A ghost signal is interfering with telemetry. High noise.`;
+                resultEl.style.borderColor = 'var(--danger-color)';
+                game.noiseFactor = 4.0;
+                game.ghostTarget = { x: Math.random() * MAP_SIZE, y: Math.random() * MAP_SIZE };
+            } else if (roll > skill) {
+                resultText = `FAILURE (${roll}) - High atmospheric interference. Signal is noisy and hard to lock.`;
+                resultEl.style.borderColor = 'var(--danger-color)';
+                game.noiseFactor = 2.5;
+            } else if (roll <= 5) {
+                resultText = `CRITICAL (${roll}) - Clear channel! Minimal noise and one receiver is pre-calibrated.`;
+                resultEl.style.borderColor = 'var(--success-color)';
+                game.noiseFactor = 0.5;
+                const r = game.receivers[0];
+                r.currentAngle = r.perfectAngle;
+                r.currentFreq = r.perfectFreq;
+            } else { // Success
+                resultText = `SUCCESS (${roll}) - Standard signal. Operating within expected parameters.`;
+                resultEl.style.borderColor = 'var(--accent-color)';
+                game.noiseFactor = 1.0;
+            }
+            resultEl.textContent = resultText;
+            
+            // --- 4. RENDER UI ---
+            document.getElementById('setup-view').classList.add('hidden');
+            document.getElementById('game-view').classList.remove('hidden');
+            document.getElementById('reset-btn').classList.remove('hidden');
+            
+            renderControls();
+            
+            // Generate decorative pings for the map
+            for(let i=0; i<30; i++) {
+                game.pings.push({ x: Math.random(), y: Math.random(), life: Math.random() });
+            }
+
+            // --- 5. START GAME LOOP ---
+            game.animationFrame = requestAnimationFrame(updateLoop);
+        }
+        
+        function renderControls() {
+            const panel = document.getElementById('control-panel');
+            panel.innerHTML = '';
+            game.receivers.forEach(r => {
+                const el = document.createElement('div');
+                el.className = 'receiver';
+                el.id = `receiver-${r.id}`;
+                el.innerHTML = `
+                    <h3>RECEIVER 0${r.id + 1} // SIG: <span class="signal-strength" id="strength-${r.id}">0%</span></h3>
+                    <label>FREQUENCY (100-900 MHz)</label>
+                    <input type="range" id="freq-${r.id}" min="100" max="900" value="${r.currentFreq}" oninput="updateReceiver(${r.id})">
+                    <label>DIRECTION (0-360°)</label>
+                    <input type="range" id="angle-${r.id}" min="0" max="360" value="${r.currentAngle}" oninput="updateReceiver(${r.id})">
+                    <canvas class="waveform-canvas" id="wave-${r.id}"></canvas>
+                `;
+                panel.appendChild(el);
+            });
+        }
+
+        function updateReceiver(id) {
+            const r = game.receivers.find(rec => rec.id === id);
+            r.currentFreq = parseFloat(document.getElementById(`freq-${id}`).value);
+            r.currentAngle = parseFloat(document.getElementById(`angle-${id}`).value);
+
+            // Calculate strength based on distance from perfect values
+            const freqDiff = Math.abs(r.currentFreq - r.perfectFreq) / 800; // Normalize
+            const angleDiff = Math.min(Math.abs(r.currentAngle - r.perfectAngle), 360 - Math.abs(r.currentAngle - r.perfectAngle)) / 180; // Normalize
+            let totalError = (freqDiff + angleDiff) * game.noiseFactor;
+            
+            // Check against ghost target if it exists
+            if (game.ghostTarget) {
+                const dx = game.ghostTarget.x - r.position.x;
+                const dy = game.ghostTarget.y - r.position.y;
+                const ghostAngle = (Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360;
+                // Ghost has same frequency
+                const ghostAngleDiff = Math.min(Math.abs(r.currentAngle - ghostAngle), 360 - Math.abs(r.currentAngle - ghostAngle)) / 180;
+                let ghostError = (freqDiff + ghostAngleDiff) * game.noiseFactor;
+                totalError = Math.min(totalError, ghostError);
+            }
+
+            r.strength = Math.max(0, 100 - (totalError * 100));
+            document.getElementById(`strength-${id}`).textContent = `${r.strength.toFixed(0)}%`;
+
+            if (r.strength > 95) {
+                if (!r.locked) {
+                    r.locked = true;
+                    document.getElementById(`receiver-${id}`).classList.add('locked');
+                }
+            } else {
+                 if (r.locked) {
+                    r.locked = false;
+                    document.getElementById(`receiver-${id}`).classList.remove('locked');
+                }
+            }
+            checkWinCondition();
+        }
+
+        function checkWinCondition() {
+            if (game.receivers.every(r => r.locked)) {
+                game.isActive = false;
+                const resultEl = document.getElementById('status-display');
+                resultEl.textContent = "TRIANGULATION COMPLETE - TARGET ACQUIRED";
+                resultEl.style.borderColor = 'var(--success-color)';
+                resultEl.style.color = 'var(--success-color)';
+            }
+        }
+
+        function updateLoop() {
+            if (!game.animationFrame) return; // Stop loop if cancelled
+            drawMap();
+            game.receivers.forEach(r => drawWaveform(r.id, r.strength));
+            if(game.isActive) requestAnimationFrame(updateLoop);
+        }
+
+        // --- DRAWING FUNCTIONS ---
+        const mapCanvas = document.getElementById('map-canvas');
+        const mapCtx = mapCanvas.getContext('2d');
+        mapCanvas.width = MAP_SIZE;
+        mapCanvas.height = MAP_SIZE;
+
+        function drawMap() {
+            mapCtx.clearRect(0, 0, MAP_SIZE, MAP_SIZE);
+            
+            // Draw grid
+            mapCtx.strokeStyle = "rgba(0, 255, 85, 0.1)";
+            mapCtx.lineWidth = 2;
+            for (let i = 0; i < MAP_SIZE; i += 50) {
+                mapCtx.beginPath();
+                mapCtx.moveTo(i, 0);
+                mapCtx.lineTo(i, MAP_SIZE);
+                mapCtx.moveTo(0, i);
+                mapCtx.lineTo(MAP_SIZE, i);
+                mapCtx.stroke();
+            }
+
+            // Draw and update pings
+            game.pings.forEach(p => {
+                p.life -= 0.01;
+                if (p.life <= 0) {
+                    p.x = Math.random(); p.y = Math.random(); p.life = Math.random();
+                }
+                mapCtx.fillStyle = `rgba(0, 255, 85, ${p.life})`;
+                mapCtx.beginPath();
+                mapCtx.arc(p.x * MAP_SIZE, p.y * MAP_SIZE, 3, 0, Math.PI * 2);
+                mapCtx.fill();
+            });
+
+            // Draw receiver lines if locked
+            mapCtx.lineWidth = 3;
+            game.receivers.forEach(r => {
+                if (r.locked) {
+                    mapCtx.strokeStyle = `rgba(0, 255, 85, 0.7)`;
+                    mapCtx.beginPath();
+                    mapCtx.moveTo(r.position.x, r.position.y);
+                    const angleRad = r.currentAngle * Math.PI / 180;
+                    mapCtx.lineTo(r.position.x + Math.cos(angleRad) * MAP_SIZE * 2, r.position.y + Math.sin(angleRad) * MAP_SIZE * 2);
+                    mapCtx.stroke();
+                }
+            });
+            
+            // If game won, draw target marker
+            if (!game.isActive) {
+                mapCtx.strokeStyle = 'var(--success-color)';
+                mapCtx.fillStyle = 'var(--success-color)';
+                mapCtx.lineWidth = 5;
+                mapCtx.beginPath();
+                mapCtx.arc(game.target.x, game.target.y, 20, 0, Math.PI * 2);
+                mapCtx.stroke();
+                mapCtx.font = "bold 30px 'Courier New'";
+                mapCtx.textAlign = "center";
+                mapCtx.fillText(`(${Math.round(game.target.x)}, ${Math.round(game.target.y)})`, game.target.x, game.target.y - 30);
+            }
+        }
+        
+        function drawWaveform(id, strength) {
+            const canvas = document.getElementById(`wave-${id}`);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const noise = (100 - strength) / 100; // 0 for perfect, 1 for worst
+
+            ctx.clearRect(0, 0, w, h);
+            ctx.strokeStyle = 'var(--accent-color)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, h/2);
+
+            for(let x=0; x < w; x++) {
+                const sine = Math.sin(x * 0.1) * (h/4);
+                const randomJitter = (Math.random() - 0.5) * h * noise;
+                ctx.lineTo(x, h/2 + sine + randomJitter);
+            }
+            ctx.stroke();
+        }
+        
+        // --- INITIALIZE ---
+        window.onload = () => {}; // Wait for user to start
+
+    </script>
+</body>
+</html>
