@@ -1,0 +1,69 @@
+/* Base styles copied from your main project */
+@keyframes flicker { 0%, 100% { opacity: 0.95; } 50% { opacity: 1; } }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+@keyframes flash-red { 0%, 100% { background-color: var(--danger-bg); } 50% { background-color: var(--bg-color); } }
+
+:root {
+    --bg-color: #050805; --scanline-color: rgba(0, 255, 85, 0.1); --text-color: #00ff55;
+    --accent-color: #00ff55; --border-color: #00521d; --input-bg: rgba(0, 31, 9, 0.95);
+    --danger-color: #ff4141; --danger-bg: rgba(255, 65, 65, 0.15); --container-bg: rgba(0,0,0,0.4);
+    --success-color: #0f0;
+}
+
+body { font-family: 'Courier New', Courier, monospace; margin: 0; background-color: var(--bg-color); color: var(--text-color); text-shadow: 0 0 4px var(--accent-color); animation: flicker 0.15s infinite; }
+body.flash { animation: flash-red 0.3s ease-in-out; }
+
+.container { max-width: 1200px; margin: 10px auto; padding: 10px; border: 1px solid var(--border-color); background: var(--container-bg); }
+.header { display: flex; align-items: center; border-bottom: 1px solid var(--accent-color); padding-bottom: 5px; margin-bottom: 15px; }
+.logo { max-width: 80px; margin-right: 15px; filter: grayscale(100%) brightness(200%) contrast(150%); }
+h1 { font-size: 22px; text-transform: uppercase; } h1::after { content: '_'; animation: blink 1s step-end infinite; }
+h2, h3 { text-transform: uppercase; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; margin-top: 20px; }
+h3:first-child { margin-top: 0; }
+.content-menu { padding: 20px; border: 1px solid var(--border-color); margin: 20px 0; background: var(--input-bg); }
+button, .button { background: transparent; color: var(--accent-color); border: 1px solid var(--accent-color); padding: 8px 15px; font-size: 14px; cursor: pointer; margin: 5px; font-family: 'Courier New', Courier, monospace; text-transform: uppercase; text-decoration: none; }
+button:hover, .button:hover { background: var(--accent-color); color: var(--bg-color); text-shadow: none; }
+button:disabled { cursor: not-allowed; opacity: 0.5; }
+input { width: 100%; padding: 6px; box-sizing: border-box; background-color: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); font-family: 'Courier New', Courier, monospace; }
+label { font-weight: bold; display: block; margin-bottom: 4px; color: var(--accent-color); font-size: 14px; }
+.hidden { display: none !important; }
+.grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+ul { list-style-type: none; padding-left: 0; }
+li { background: rgba(0,0,0,0.2); border-left: 3px solid var(--border-color); padding: 10px; margin-bottom: 8px; }
+li strong { color: var(--accent-color); }
+
+/* --- Game Specific Styles --- */
+#game-view { display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; align-items: flex-start; }
+.device-panel { border: 1px solid var(--border-color); padding: 15px; }
+.device-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.timer-display { font-size: 2.5em; font-weight: bold; color: var(--danger-color); }
+.strike-display { font-size: 1.5em; }
+.status-display { text-align: center; font-size: 1.5em; font-weight: bold; margin-top: 20px; }
+.serial-number { text-align: center; padding: 5px; background: #000; border: 1px solid var(--border-color); margin-bottom: 15px; font-size: 1.1em; letter-spacing: 2px; }
+#roll-result-display { margin-top: 20px; padding: 15px; border: 1px solid; text-align: center; }
+#roll-result-display.crit { border-color: var(--success-color); color: var(--success-color); }
+#roll-result-display.success { border-color: var(--accent-color); }
+#roll-result-display.fail { border-color: var(--danger-color); color: var(--danger-color); }
+
+/* Module Styles */
+.module { background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); margin-bottom: 15px; position: relative; }
+.module-header { background: var(--border-color); padding: 5px 10px; font-weight: bold; }
+.module-content { padding: 15px; }
+.module-solved-light { width: 10px; height: 10px; background: #444; border-radius: 50%; position: absolute; top: 8px; right: 10px; border: 1px solid #000; }
+.module-solved-light.solved { background: var(--success-color); box-shadow: 0 0 5px var(--success-color); }
+
+.wires-container { display: flex; justify-content: center; align-items: center; gap: 15px; height: 160px; }
+.wire { width: 30px; height: 150px; border: 2px solid #111; border-radius: 5px; cursor: pointer; transition: all 0.1s; }
+.wire:hover { transform: scale(1.1); }
+.wire.cut { height: 10px; background: #333 !important; cursor: not-allowed; border-color: #555; align-self: flex-end; }
+
+.keypad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.keypad-display { height: 30px; background: #000; border: 1px solid var(--border-color); margin-bottom: 10px; text-align: right; padding: 5px; font-size: 1.5em; }
+
+#big-button { width: 100%; height: 80px; font-size: 1.8em; font-weight: bold; user-select: none; }
+
+/* Setup Styles */
+.series-selection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.series-btn { padding: 20px 10px; font-size: 1.1em; }
+.series-btn.green { border-color: #2E8B57; color: #2E8B57; } .series-btn.green:hover { background: #2E8B57; color: var(--bg-color); }
+.series-btn.blue { border-color: #4682B4; color: #4682B4; } .series-btn.blue:hover { background: #4682B4; color: var(--bg-color); }
+.series-btn.red { border-color: #B22222; color: #B22222; } .series-btn.red:hover { background: #B22222; color: var(--bg-color); }
