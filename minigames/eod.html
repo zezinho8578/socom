@@ -6,7 +6,7 @@
     <title>S.O.C.O.M. // EOD Simulation</title>
     <link rel="icon" type="image/png" href="https://www.socom.mil/SOF-ATL/PublishingImages/eSOF-Logo.png">
     <style>
-        /* Base styles copied from your main project for consistency */
+        /* Base styles copied from your main project */
         @keyframes flicker { 0%, 100% { opacity: 0.95; } 50% { opacity: 1; } }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         @keyframes flash-red { 0%, 100% { background-color: var(--danger-bg); } 50% { background-color: var(--bg-color); } }
@@ -23,48 +23,55 @@
         }
         body.flash { animation: flash-red 0.3s ease-in-out; }
 
-        .container { position: relative; max-width: 1200px; margin: 10px auto; padding: 10px; border: 1px solid var(--border-color); background: var(--container-bg); }
+        .container { max-width: 1200px; margin: 10px auto; padding: 10px; border: 1px solid var(--border-color); background: var(--container-bg); }
         .header { display: flex; align-items: center; border-bottom: 1px solid var(--accent-color); padding-bottom: 5px; margin-bottom: 15px; }
         .logo { max-width: 80px; margin-right: 15px; filter: grayscale(100%) brightness(200%) contrast(150%); }
-
-        h1 { font-size: 22px; text-transform: uppercase; }
-        h1::after { content: '_'; animation: blink 1s step-end infinite; }
-        h2 { font-size: 16px; margin-top: 10px; margin-bottom: 10px; text-transform: uppercase; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; }
-        
+        h1 { font-size: 22px; text-transform: uppercase; } h1::after { content: '_'; animation: blink 1s step-end infinite; }
+        h2, h3 { text-transform: uppercase; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; }
         .content-menu { padding: 20px; border: 1px solid var(--border-color); margin: 20px 0; background: var(--input-bg); }
-        
-        button, .button {
-            background: transparent; color: var(--accent-color); border: 1px solid var(--accent-color);
-            padding: 8px 15px; font-size: 14px; cursor: pointer; margin: 5px;
-            font-family: 'Courier New', Courier, monospace; text-transform: uppercase;
-            text-decoration: none;
-        }
+        button, .button { background: transparent; color: var(--accent-color); border: 1px solid var(--accent-color); padding: 8px 15px; font-size: 14px; cursor: pointer; margin: 5px; font-family: 'Courier New', Courier, monospace; text-transform: uppercase; text-decoration: none; }
         button:hover, .button:hover { background: var(--accent-color); color: var(--bg-color); text-shadow: none; }
         button:disabled { cursor: not-allowed; opacity: 0.5; }
+        input { width: 100%; padding: 6px; box-sizing: border-box; background-color: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); font-family: 'Courier New', Courier, monospace; }
+        label { font-weight: bold; display: block; margin-bottom: 4px; color: var(--accent-color); font-size: 14px; }
+        .hidden { display: none !important; }
+        .grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 
-        /* Minigame specific styles */
-        .eod-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; align-items: flex-start; }
+        /* --- Game Specific Styles --- */
+        #game-view { display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; align-items: flex-start; }
         .device-panel { border: 1px solid var(--border-color); padding: 15px; }
         .device-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .timer-display { font-size: 2.5em; font-weight: bold; color: var(--danger-color); }
         .strike-display { font-size: 1.5em; }
-        .wires-container { display: flex; justify-content: center; align-items: center; gap: 15px; padding: 20px 0; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); }
-        .wire {
-            width: 30px;
-            height: 150px;
-            border: 2px solid #111;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: transform 0.1s, background-color 0.1s;
-        }
-        .wire:hover { transform: scale(1.1); }
-        .wire.cut { background-color: #333 !important; height: 70px; align-self: flex-start; margin-top: 40px; cursor: not-allowed; }
         .status-display { text-align: center; font-size: 1.5em; font-weight: bold; margin-top: 20px; }
+        .serial-number { text-align: center; padding: 5px; background: #000; border: 1px solid var(--border-color); margin-bottom: 15px; font-size: 1.1em; letter-spacing: 2px; }
         
-        .manual-panel h3 { margin-top: 0; }
-        .manual-panel ul { list-style-type: none; padding-left: 0; }
-        .manual-panel li { background: rgba(0,0,0,0.2); border-left: 3px solid var(--border-color); padding: 10px; margin-bottom: 8px; }
-        .manual-panel li strong { color: var(--accent-color); }
+        /* Module Styles */
+        .module { background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); margin-bottom: 15px; position: relative; }
+        .module-header { background: var(--border-color); padding: 5px 10px; font-weight: bold; }
+        .module-content { padding: 15px; }
+        .module-solved-light { width: 10px; height: 10px; background: #444; border-radius: 50%; position: absolute; top: 8px; right: 10px; border: 1px solid #000; }
+        .module-solved-light.solved { background: #0f0; box-shadow: 0 0 5px #0f0; }
+
+        .wires-container { display: flex; justify-content: center; align-items: center; gap: 15px; }
+        .wire { width: 30px; height: 150px; border: 2px solid #111; border-radius: 5px; cursor: pointer; transition: transform 0.1s; }
+        .wire:hover { transform: scale(1.1); }
+        .wire.cut { background: #333 !important; cursor: not-allowed; }
+
+        .keypad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+        .keypad-display { height: 30px; background: #000; border: 1px solid var(--border-color); margin-bottom: 10px; text-align: right; padding: 5px; font-size: 1.5em; }
+        
+        .big-button { width: 100%; height: 80px; font-size: 1.8em; font-weight: bold; }
+        
+        /* Setup Styles */
+        .series-selection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+        .series-btn { padding: 20px 10px; font-size: 1.1em; }
+        .series-btn.green { border-color: #2E8B57; color: #2E8B57; } .series-btn.green:hover { background: #2E8B57; color: var(--bg-color); }
+        .series-btn.blue { border-color: #4682B4; color: #4682B4; } .series-btn.blue:hover { background: #4682B4; color: var(--bg-color); }
+        .series-btn.yellow { border-color: #DAA520; color: #DAA520; } .series-btn.yellow:hover { background: #DAA520; color: var(--bg-color); }
+        .series-btn.red { border-color: #B22222; color: #B22222; } .series-btn.red:hover { background: #B22222; color: var(--bg-color); }
+        .series-btn.purple { border-color: #8A2BE2; color: #8A2BE2; } .series-btn.purple:hover { background: #8A2BE2; color: var(--bg-color); }
+        .series-btn.black { border-color: #777; color: #777; } .series-btn.black:hover { background: #777; color: var(--bg-color); }
     </style>
 </head>
 <body>
@@ -75,195 +82,354 @@
             <h1>S.O.C.O.M. // EOD SIMULATION</h1>
         </header>
 
-        <div class="eod-grid">
-            
+        <!-- SETUP VIEW -->
+        <div id="setup-view">
+            <div class="content-menu">
+                <h2>PROCEDURAL SETUP</h2>
+                <div class="grid-2-col">
+                    <div>
+                        <label for="demo-skill">AGENT DEMOLITIONS SKILL %</label>
+                        <input type="number" id="demo-skill" min="0" max="100" placeholder="e.g., 65">
+                    </div>
+                    <div>
+                        <label for="d100-roll">D100 ROLL</label>
+                        <input type="number" id="d100-roll" min="1" max="100" placeholder="e.g., 34">
+                    </div>
+                </div>
+            </div>
+            <div class="content-menu">
+                <h2>SELECT BOMB SERIES</h2>
+                <div id="series-selection-grid" class="series-selection-grid">
+                    <!-- Bomb series buttons will be generated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- GAME VIEW -->
+        <div id="game-view" class="hidden">
             <!-- Left Panel: The Interactive Device -->
             <div class="device-panel">
                 <div class="device-header">
-                    <div id="timer" class="timer-display">02:00</div>
-                    <div id="strikes" class="strike-display">STRIKES: 0/2</div>
+                    <div id="timer" class="timer-display">--:--</div>
+                    <div id="strikes" class="strike-display">STRIKES: -/-</div>
                 </div>
-
-                <div class="wires-container" id="wires-container">
-                    <!-- Wires will be generated by JavaScript -->
+                <div id="serial-number" class="serial-number"></div>
+                <div id="modules-container">
+                    <!-- Modules will be generated here -->
                 </div>
-
                 <div id="status" class="status-display">STATUS: STANDBY</div>
-                
-                <div style="text-align: center; margin-top: 20px;">
-                    <button id="start-btn" onclick="armDevice()">ARM DEVICE</button>
-                </div>
             </div>
 
             <!-- Right Panel: The Rules -->
-            <div class="manual-panel content-menu">
-                <h3>TECHNICAL MANUAL: XR-7 SERIES</h3>
-                <p>Follow procedures precisely. Evaluate conditions and apply the <strong>first</strong> matching rule for the wire you must cut. Proceed to the next step and re-evaluate.</p>
-                <ul>
-                    <li><strong>IF</strong> there are 3 wires and none are yellow, <strong>CUT</strong> the second wire.</li>
-                    <li><strong>IF</strong> the last wire is white and there is at least one red wire, <strong>CUT</strong> the last wire.</li>
-                    <li><strong>IF</strong> there is exactly one blue wire and more than one red wire, <strong>CUT</strong> the blue wire.</li>
-                    <li><strong>IF</strong> there are more than two yellow wires, <strong>CUT</strong> the first yellow wire.</li>
-                    <li><strong>OTHERWISE</strong>, <strong>CUT</strong> the last red wire (if any) or the first wire if no red wires are present.</li>
-                </ul>
+            <div id="manual-panel" class="content-menu">
+                <!-- Manual for the selected series will be generated here -->
             </div>
         </div>
 
         <div style="text-align: center; margin-top: 20px;">
             <a href="../" class="button">> RETURN TO UTILITIES MENU</a>
+            <button id="reset-btn" class="hidden" onclick="resetGame()">RESTART SIM</button>
         </div>
     </div>
 
     <script>
-        const eod = {
-            timerEl: document.getElementById('timer'),
-            strikesEl: document.getElementById('strikes'),
-            wiresEl: document.getElementById('wires-container'),
-            statusEl: document.getElementById('status'),
-            startBtn: document.getElementById('start-btn'),
-            
-            timeLeft: 120,
-            maxStrikes: 2,
-            timerInterval: null,
-            isActive: false,
+        // --- DATA: BOMB SERIES DEFINITIONS ---
+        const BOMB_SERIES = [
+            {
+                name: "M1-T 'Tutor'",
+                difficulty: 'Training',
+                color: 'green',
+                baseTime: 300, // 5:00
+                baseStrikes: 3,
+                modules: ['wires'],
+                generate: (state) => {
+                    state.wires = {
+                        count: 4,
+                        colors: ['red', 'blue', 'yellow', 'white'],
+                        solved: false
+                    };
+                },
+                manual: `<h3>M1-T 'Tutor' Manual</h3><p>A simple 4-wire device. Cut the single correct wire to disarm.</p><ul>
+                    <li><strong>IF</strong> there is exactly one red wire, <strong>CUT</strong> the last wire.</li>
+                    <li><strong>IF</strong> there are more blue wires than yellow wires, <strong>CUT</strong> the first blue wire.</li>
+                    <li><strong>OTHERWISE</strong>, <strong>CUT</strong> the third wire.</li>
+                    </ul>`
+            },
+            {
+                name: "M4-S 'Scorpion'",
+                difficulty: 'Standard',
+                color: 'blue',
+                baseTime: 240, // 4:00
+                baseStrikes: 2,
+                modules: ['wires', 'keypad'],
+                generate: (state) => {
+                    state.wires = { count: 5, colors: ['red', 'blue', 'yellow', 'white', 'black'], steps: 2, solved: false };
+                    state.keypad = { codeLength: 4, solved: false };
+                },
+                manual: `<h3>M4-S 'Scorpion' Manual</h3><p>Requires sequential wire cuts and keypad code entry.</p>
+                    <h4>WIRES (2 CUTS)</h4><p>Apply first matching rule. Re-evaluate for next cut.</p><ul>
+                    <li><strong>IF</strong> the 3rd wire is yellow and there are no red wires, <strong>CUT</strong> the 1st wire.</li>
+                    <li><strong>IF</strong> there is exactly one white wire, <strong>CUT</strong> the white wire.</li>
+                    <li><strong>OTHERWISE</strong>, <strong>CUT</strong> the last wire.</li>
+                    </ul>
+                    <h4>KEYPAD (4 DIGITS)</h4><ul>
+                    <li>The first digit is the number of wires on the device.</li>
+                    <li>The second digit is the number of red wires.</li>
+                    <li>The sum of all digits is 12.</li>
+                    <li>No digit is repeated.</li>
+                    </ul>`
+            },
+            {
+                name: "M7-B 'Spectre'",
+                difficulty: 'Hard',
+                color: 'red',
+                baseTime: 180, // 3:00
+                baseStrikes: 2,
+                modules: ['wires', 'button'],
+                generate: (state) => {
+                    state.wires = { count: 6, colors: ['red', 'blue', 'yellow', 'white', 'black'], steps: 3, solved: false };
+                    state.button = { colors: ['red', 'blue', 'white', 'yellow'], labels: ['DETONATE', 'ABORT', 'HOLD', 'PRESS'], solved: false };
+                },
+                manual: `<h3>M7-B 'Spectre' Manual</h3><p>Features a volatile button module sensitive to device state.</p>
+                    <h4>WIRES (3 CUTS)</h4><p>Apply first matching rule. Re-evaluate for next cut.</p><ul>
+                    <li><strong>IF</strong> the serial number contains a '7', <strong>CUT</strong> any wire that is not red.</li>
+                    <li><strong>IF</strong> there are more than 3 black wires, <strong>CUT</strong> the 2nd black wire.</li>
+                    <li><strong>OTHERWISE</strong>, <strong>CUT</strong> the 4th wire.</li>
+                    </ul>
+                    <h4>BUTTON</h4><ul>
+                    <li><strong>IF</strong> the button is BLUE and says 'ABORT', <strong>PRESS AND HOLD</strong>.</li>
+                    <li><strong>IF</strong> there are more than 2 yellow wires and the button is RED, <strong>PRESS AND RELEASE</strong> immediately.</li>
+                    <li><strong>IF</strong> the button is WHITE, <strong>PRESS AND HOLD</strong>.</li>
+                    <li><strong>OTHERWISE</strong>, <strong>PRESS AND RELEASE</strong> immediately.</li>
+                    </ul><p><strong>IF HOLDING:</strong> Release when the timer has a '3' in any position.</p>`
+            },
+            // ... More bomb series can be added here following the same structure ...
+        ];
 
-            state: {
-                wires: [], // e.g., ['red', 'blue', 'white']
+        // --- GAME STATE ---
+        let game = {};
+
+        // --- SETUP LOGIC ---
+        function initializeSetup() {
+            const grid = document.getElementById('series-selection-grid');
+            grid.innerHTML = '';
+            BOMB_SERIES.forEach((series, index) => {
+                const btn = document.createElement('button');
+                btn.className = `series-btn ${series.color}`;
+                btn.innerHTML = `${series.name}<br><small>(${series.difficulty})</small>`;
+                btn.onclick = () => startGame(series);
+                grid.appendChild(btn);
+            });
+        }
+        
+        function startGame(series) {
+            const skill = parseInt(document.getElementById('demo-skill').value);
+            const roll = parseInt(document.getElementById('d100-roll').value);
+
+            if (isNaN(skill) || isNaN(roll)) {
+                alert('Please fill in your Demolitions skill and d100 roll.');
+                return;
+            }
+
+            // --- Reset and Initialize Game State ---
+            game = {
+                series: series,
+                timeLeft: series.baseTime,
+                maxStrikes: series.baseStrikes,
                 strikes: 0,
-                stepsToSolve: 0,
-                stepsCompleted: 0,
+                isActive: true,
+                modules: {}
+            };
+
+            // --- Calculate Difficulty Modifiers based on Roll ---
+            let statusText = '';
+            if (roll >= 96) { // Fumble
+                statusText = `FUMBLE (${roll}) - Panic sets in! Less time, one mistake is fatal.`;
+                game.timeLeft = Math.floor(series.baseTime * 0.7);
+                game.maxStrikes = 0;
+            } else if (roll > skill) { // Fail
+                statusText = `FAILURE (${roll}) - Unfamiliar configuration. Time pressure is on.`;
+                game.timeLeft = Math.floor(series.baseTime * 0.85);
+                game.maxStrikes = Math.max(0, series.baseStrikes - 1);
+            } else if (roll <= 5) { // Critical Success
+                statusText = `CRITICAL (${roll}) - You've seen this before. You have extra time and margin for error.`;
+                game.timeLeft = Math.floor(series.baseTime * 1.5);
+                game.maxStrikes = series.baseStrikes + 1;
+            } else { // Success
+                statusText = `SUCCESS (${roll}) - Standard procedure. Operating within expected parameters.`;
+                // No change to base parameters
             }
-        };
+            
+            // --- Generate Modules and UI ---
+            game.serial = generateSerial();
+            series.generate(game.modules);
+            randomizeModules();
 
-        const WIRE_COLORS = ['red', 'blue', 'yellow', 'white', 'black'];
+            document.getElementById('setup-view').classList.add('hidden');
+            document.getElementById('game-view').classList.remove('hidden');
+            document.getElementById('reset-btn').classList.remove('hidden');
 
-        function armDevice() {
-            // --- Reset State ---
-            clearInterval(eod.timerInterval);
-            eod.isActive = true;
-            eod.timeLeft = 120;
-            eod.state.strikes = 0;
-            eod.state.stepsCompleted = 0;
-            eod.startBtn.disabled = true;
+            document.getElementById('manual-panel').innerHTML = series.manual;
+            document.getElementById('status').textContent = statusText;
 
-            // --- Generate New Puzzle ---
-            const numWires = Math.floor(Math.random() * 3) + 3; // 3 to 5 wires
-            eod.state.wires = [];
-            for (let i = 0; i < numWires; i++) {
-                eod.state.wires.push(WIRE_COLORS[Math.floor(Math.random() * WIRE_COLORS.length)]);
-            }
-            eod.state.stepsToSolve = Math.floor(numWires / 2) + 1; // e.g., 5 wires = 3 steps
-
-            // --- Render UI ---
+            renderModules();
             updateDisplays();
-            renderWires();
-            eod.statusEl.textContent = 'STATUS: ARMED';
-            eod.statusEl.style.color = 'var(--accent-color)';
-
-            // --- Start Timer ---
-            eod.timerInterval = setInterval(updateTimer, 1000);
+            
+            game.timerInterval = setInterval(updateTimer, 1000);
         }
 
+        // --- GAME LOGIC ---
         function updateTimer() {
-            if (!eod.isActive) return;
-            eod.timeLeft--;
-            if (eod.timeLeft <= 0) {
-                eod.timeLeft = 0;
+            if (!game.isActive) return;
+            game.timeLeft--;
+            if (game.timeLeft <= 0) {
+                game.timeLeft = 0;
                 detonate();
             }
             updateDisplays();
         }
 
         function updateDisplays() {
-            const minutes = String(Math.floor(eod.timeLeft / 60)).padStart(2, '0');
-            const seconds = String(eod.timeLeft % 60).padStart(2, '0');
-            eod.timerEl.textContent = `${minutes}:${seconds}`;
-            eod.strikesEl.textContent = `STRIKES: ${eod.state.strikes}/${eod.maxStrikes}`;
+            const minutes = String(Math.floor(game.timeLeft / 60)).padStart(2, '0');
+            const seconds = String(game.timeLeft % 60).padStart(2, '0');
+            document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+            document.getElementById('strikes').textContent = `STRIKES: ${game.strikes}/${game.maxStrikes}`;
+            document.getElementById('serial-number').textContent = `S/N: ${game.serial}`;
         }
 
-        function renderWires() {
-            eod.wiresEl.innerHTML = '';
-            eod.state.wires.forEach((color, index) => {
-                const wireEl = document.createElement('div');
-                wireEl.className = 'wire';
-                wireEl.style.backgroundColor = color;
-                wireEl.onclick = () => cutWire(index);
-                eod.wiresEl.appendChild(wireEl);
-            });
+        function handleStrike() {
+            if (!game.isActive) return;
+            game.strikes++;
+            updateDisplays();
+            document.body.classList.add('flash');
+            setTimeout(() => document.body.classList.remove('flash'), 300);
+            if (game.strikes > game.maxStrikes) {
+                detonate();
+            }
         }
         
-        function calculateCorrectWire() {
-            const activeWires = [];
-            eod.wiresEl.childNodes.forEach((el, index) => {
-                if (!el.classList.contains('cut')) {
-                    activeWires.push({ color: eod.state.wires[index], index: index });
-                }
-            });
-
-            const wires = activeWires.map(w => w.color);
-            const countColor = (c) => wires.filter(color => color === c).length;
-            
-            // Rule 1
-            if (wires.length === 3 && countColor('yellow') === 0) return activeWires[1].index;
-            // Rule 2
-            if (wires[wires.length - 1] === 'white' && countColor('red') > 0) return activeWires[wires.length-1].index;
-            // Rule 3
-            if (countColor('blue') === 1 && countColor('red') > 1) return activeWires.find(w => w.color === 'blue').index;
-            // Rule 4
-            if (countColor('yellow') > 2) return activeWires.find(w => w.color === 'yellow').index;
-            // Default Rule
-            const lastRed = activeWires.slice().reverse().find(w => w.color === 'red');
-            if (lastRed) return lastRed.index;
-            
-            return activeWires[0].index;
-        }
-
-        function cutWire(index) {
-            if (!eod.isActive) return;
-
-            const wireEl = eod.wiresEl.childNodes[index];
-            if (wireEl.classList.contains('cut')) return;
-
-            const correctWireIndex = calculateCorrectWire();
-
-            if (index === correctWireIndex) {
-                // Correct Cut
-                wireEl.classList.add('cut');
-                eod.state.stepsCompleted++;
-                if (eod.state.stepsCompleted >= eod.state.stepsToSolve) {
-                    disarm();
-                }
-            } else {
-                // Incorrect Cut - Strike
-                eod.state.strikes++;
-                updateDisplays();
-                document.body.classList.add('flash');
-                setTimeout(() => document.body.classList.remove('flash'), 300);
-                if (eod.state.strikes > eod.maxStrikes) {
-                    detonate();
-                }
+        function checkWinCondition() {
+            const allSolved = Object.values(game.modules).every(m => m.solved);
+            if(allSolved) {
+                disarm();
             }
         }
 
         function detonate() {
-            eod.isActive = false;
-            clearInterval(eod.timerInterval);
-            eod.statusEl.textContent = 'STATUS: DETONATED';
-            eod.statusEl.style.color = 'var(--danger-color)';
-            eod.startBtn.disabled = false;
-            eod.startBtn.textContent = 'RESTART SIM';
+            game.isActive = false;
+            clearInterval(game.timerInterval);
+            document.getElementById('status').textContent = 'STATUS: DETONATED';
+            document.getElementById('status').style.color = 'var(--danger-color)';
         }
 
         function disarm() {
-            eod.isActive = false;
-            clearInterval(eod.timerInterval);
-            eod.statusEl.textContent = 'STATUS: DISARMED';
-            eod.statusEl.style.color = '#0f0'; // Bright green for success
-            eod.startBtn.disabled = false;
-            eod.startBtn.textContent = 'RESTART SIM';
+            game.isActive = false;
+            clearInterval(game.timerInterval);
+            document.getElementById('status').textContent = 'STATUS: DISARMED';
+            document.getElementById('status').style.color = '#0f0';
         }
 
-    </script>
+        function resetGame() {
+            clearInterval(game.timerInterval);
+            game = {};
+            document.getElementById('game-view').classList.add('hidden');
+            document.getElementById('reset-btn').classList.add('hidden');
+            document.getElementById('setup-view').classList.remove('hidden');
+        }
 
+        // --- MODULE GENERATION & RENDERING ---
+        function generateSerial() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let serial = '';
+            for (let i = 0; i < 6; i++) {
+                serial += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return serial;
+        }
+
+        function randomizeModules() {
+            // Wires
+            if (game.modules.wires) {
+                const w = game.modules.wires;
+                w.currentWires = [];
+                for (let i = 0; i < w.count; i++) {
+                    w.currentWires.push(w.colors[Math.floor(Math.random() * w.colors.length)]);
+                }
+            }
+            // Keypad
+            if (game.modules.keypad) {
+                // Keypad logic is rule-based, so code is deduced, not randomized here
+            }
+            // Button
+             if (game.modules.button) {
+                const b = game.modules.button;
+                b.currentColor = b.colors[Math.floor(Math.random() * b.colors.length)];
+                b.currentLabel = b.labels[Math.floor(Math.random() * b.labels.length)];
+            }
+        }
+
+        function renderModules() {
+            const container = document.getElementById('modules-container');
+            container.innerHTML = '';
+            
+            for (const moduleName in game.modules) {
+                const moduleData = game.modules[moduleName];
+                const moduleWrapper = document.createElement('div');
+                moduleWrapper.className = 'module';
+                moduleWrapper.id = `module-${moduleName}`;
+                
+                let contentHTML = '';
+                switch(moduleName) {
+                    case 'wires':
+                        contentHTML = `<div class="wires-container">
+                            ${moduleData.currentWires.map((color, index) => 
+                                `<div class="wire" style="background-color:${color}" onclick="cutWire(${index})"></div>`
+                            ).join('')}
+                        </div>`;
+                        break;
+                    case 'keypad':
+                        contentHTML = `<div class="keypad-display" id="keypad-display"></div>
+                                    <div class="keypad-grid">
+                                        ${[1,2,3,4,5,6,7,8,9,'C','0','S'].map(k => `<button onclick="pressKeypad('${k}')">${k}</button>`).join('')}
+                                    </div>`;
+                        break;
+                    case 'button':
+                         contentHTML = `<button id="big-button" class="big-button" style="background-color:${moduleData.currentColor}; color: #000;">${moduleData.currentLabel}</button>`;
+                        break;
+                }
+                
+                moduleWrapper.innerHTML = `
+                    <div class="module-header">${moduleName.toUpperCase()}</div>
+                    <div class="module-solved-light"></div>
+                    <div class="module-content">${contentHTML}</div>
+                `;
+                container.appendChild(moduleWrapper);
+            }
+        }
+        
+        // --- MODULE INTERACTION HANDLERS ---
+        // TODO: Add complex interaction logic for each module based on the manuals
+        function cutWire(index) {
+            // This is a placeholder for the complex wire-cutting logic for each series.
+            // A real implementation would have a function that reads the manual rules.
+            console.log(`Attempting to cut wire ${index}`);
+            // For now, let's just make the first wire solve the module for demo purposes
+            if(index === 0) {
+                game.modules.wires.solved = true;
+                document.querySelector('#module-wires .module-solved-light').classList.add('solved');
+                checkWinCondition();
+            } else {
+                handleStrike();
+            }
+        }
+
+        function pressKeypad(key) {
+             // Placeholder for keypad logic
+        }
+
+        // --- INITIALIZE ---
+        window.onload = initializeSetup;
+
+    </script>
 </body>
 </html>
