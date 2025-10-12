@@ -52,7 +52,7 @@
         #controls-interface { border-left: 1px solid var(--border-color); padding-left: 20px; }
         #tension-meter { display: flex; justify-content: space-between; align-items: center; width: 100%; height: 150px; background: #000; border: 1px solid var(--border-color); padding: 5px; box-sizing: border-box; }
         .tension-bar { flex-grow: 1; background-color: var(--accent-color); width: 2px; height: 100%; transform: scaleY(0.05); transition: transform 0.05s ease-out; }
-        #tension-meter-text { position: absolute; text-align: center; width: calc(50% - 45px); color: var(--danger-color); font-size: 1.2em; animation: blink 1s infinite; }
+        #tension-meter-text { display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; color: var(--danger-color); font-size: 1.2em; animation: blink 1s infinite; }
 
         #instruction-text { font-size: 1.2em; font-weight: bold; text-align: center; margin-top: 15px; min-height: 1.5em; }
         #fumble-warning-text { font-size: 1.2em; font-weight: bold; text-align: center; color: var(--danger-color); margin-top: 5px; min-height: 1.5em; animation: blink 0.5s infinite; }
@@ -166,9 +166,11 @@
             game = {
                 pinsToSet: parseInt(document.getElementById('lock-quality').value),
                 combination: [], pinStates: [], currentPinIndex: 0,
-                currentAngle: 0, currentDirection: 1, isCoolingDown: false,
+                currentAngle: 0, currentDirection: (Math.random() < 0.5 ? 1 : -1), 
+                isCoolingDown: false, lastCooldownCheck: Date.now(),
                 sweetSpotWidth: 2, attemptsLeft: Infinity, isActive: true,
-                enforceDirection: false, controlsSwapped: false, isFumble: false, isFailure: false
+                enforceDirection: false, controlsSwapped: false, isFumble: false, isFailure: false,
+                canSwap: false, lastSwapTime: Date.now()
             };
 
             const resultEl = document.getElementById('roll-result');
@@ -177,6 +179,7 @@
                 resultText = `FUMBLE (${roll}) - Unstable mechanism! Controls are unreliable and may invert. Direction is critical.`;
                 resultEl.style.borderColor = 'var(--danger-color)';
                 game.attemptsLeft = 2; game.enforceDirection = true; game.isFumble = true;
+                setTimeout(() => { game.canSwap = true; }, 20000); // 20-second initial delay for control swap
             } else if (roll > skill) {
                 resultText = `FAILURE (${roll}) - Worn tumblers. Meter may overheat. Direction must be precise.`;
                 resultEl.style.borderColor = 'var(--danger-color)';
@@ -192,7 +195,13 @@
             resultEl.textContent = resultText;
 
             generateCombination(); generateDialLabels(); generateTensionMeterBars();
-            if (roll <= 5) { document.getElementById('instruction-text').textContent = `First Number: ${game.combination[0]}`; }
+            
+            if (roll <= 5) {
+                document.getElementById('instruction-text').textContent = `First Number: ${game.combination[0]}`;
+                game.pinStates[0] = 'success';
+                game.currentPinIndex = 1;
+                game.currentDirection = -1; // Next pin requires opposite direction
+            }
             
             setupEventListeners();
             updateUI();
@@ -264,13 +273,13 @@
         function rotateDial(direction) {
             if (game.isCoolingDown || !game.isActive) return;
             
-            if (game.isFumble && Math.random() < 0.1) return; // 10% chance to ignore input
+            if (game.isFumble && Math.random() < 0.1) return;
             
             if (game.enforceDirection && direction !== game.currentDirection) { handleFailure(true); return; }
             
             if (game.controlsSwapped) direction *= -1;
             
-            game.currentAngle += direction * 0.5; // Rotation speed
+            game.currentAngle += direction * 0.5;
             updateUI();
         }
 
@@ -280,12 +289,12 @@
             const targetNum = game.combination[game.currentPinIndex];
             const diff = Math.min(Math.abs(currentNum - targetNum), 100 - Math.abs(currentNum - targetNum));
 
-            if (diff <= game.sweetSpotWidth) { // Success
+            if (diff <= game.sweetSpotWidth) {
                 game.pinStates[game.currentPinIndex] = 'success';
                 game.currentPinIndex++;
                 game.currentDirection *= -1;
                 if (game.currentPinIndex >= game.pinsToSet) { winGame(); }
-            } else { // Failure
+            } else {
                 handleFailure(false);
             }
             updateUI();
@@ -312,8 +321,18 @@
             if(!game.isActive) return;
             updateTensionMeter();
 
-            if (game.isFailure && !game.isCoolingDown && Math.random() < 0.005) triggerCooldown();
-            if (game.isFumble && !game.controlsSwapped && Math.random() < 0.008) triggerControlSwap();
+            const now = Date.now();
+            if (game.isFailure && !game.isCoolingDown && now - game.lastCooldownCheck > 1000) {
+                game.lastCooldownCheck = now;
+                if (Math.random() < 0.033) { // Approx. twice a minute
+                    triggerCooldown();
+                }
+            }
+            if (game.isFumble && game.canSwap && !game.controlsSwapped && now - game.lastSwapTime > 30000) {
+                if (Math.random() < 0.1) { // Chance to trigger if conditions are met
+                    triggerControlSwap();
+                }
+            }
 
             game.animationFrame = requestAnimationFrame(gameLoop);
         }
@@ -324,19 +343,27 @@
             setTimeout(() => {
                 game.isCoolingDown = false;
                 document.getElementById('set-pin-btn').disabled = false;
-            }, 5000 + Math.random() * 10000); // 5-15 seconds
+            }, 5000 + Math.random() * 5000); // 5-10 seconds
         }
 
         function triggerControlSwap() {
             const warningEl = document.getElementById('fumble-warning-text');
             warningEl.innerHTML = '&lt; ! &gt; SWAPPING CONTROLS &lt; ! &gt;';
             warningEl.classList.remove('hidden');
+            game.lastSwapTime = Date.now();
 
             setTimeout(() => {
                 warningEl.classList.add('hidden');
                 game.controlsSwapped = true;
-                setTimeout(() => { game.controlsSwapped = false; }, 2000 + Math.random() * 2000); // Swap lasts 2-4 seconds
-            }, 1000); // 1 second warning
+                document.getElementById('rotate-left-btn').textContent = '>';
+                document.getElementById('rotate-right-btn').textContent = '<';
+                
+                setTimeout(() => { 
+                    game.controlsSwapped = false; 
+                    document.getElementById('rotate-left-btn').textContent = '<';
+                    document.getElementById('rotate-right-btn').textContent = '>';
+                }, 2000 + Math.random() * 2000);
+            }, 1000);
         }
 
         function updateTensionMeter() {
@@ -356,7 +383,7 @@
             const signalStrength = Math.pow(proximity, 2);
 
             tensionBars.forEach((bar, index) => {
-                const noiseHeight = (Math.random() * 0.4) + 0.02; // Use game.noiseLevel later
+                const noiseHeight = (Math.random() * 0.4) + 0.02;
                 const barProximity = 1 - Math.abs(index - tensionBars.length / 2) / (tensionBars.length / 2);
                 const signalHeight = signalStrength * Math.pow(barProximity, 2);
                 bar.style.transform = `scaleY(${Math.max(noiseHeight, signalHeight)})`;
@@ -380,8 +407,12 @@
             }
             
             if(game.isActive) {
-                 const dir = game.currentDirection === 1 ? 'CLOCKWISE' : 'COUNTER-CLOCKWISE';
-                 document.getElementById('instruction-text').textContent = `ROTATE ${dir}`;
+                 if (game.enforceDirection) {
+                     const dir = game.currentDirection === 1 ? 'CLOCKWISE' : 'COUNTER-CLOCKWISE';
+                     document.getElementById('instruction-text').textContent = `ROTATE ${dir}`;
+                 } else {
+                     document.getElementById('instruction-text').textContent = '';
+                 }
             }
         }
 
