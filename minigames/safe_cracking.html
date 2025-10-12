@@ -38,8 +38,9 @@
         #game-view-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: center; }
         #lock-interface { text-align: center; }
         #lock-dial { width: 300px; height: 300px; border-radius: 50%; background: #000; border: 3px solid var(--border-color); position: relative; margin: 20px auto; cursor: ew-resize; display: flex; justify-content: center; align-items: center; }
-        #dial-marker { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 15px solid var(--accent-color); }
-        #dial-number { font-size: 4em; font-weight: bold; text-shadow: 0 0 8px var(--accent-color); }
+        #dial-marker { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 15px solid var(--accent-color); z-index: 10; }
+        #dial-number { font-size: 4em; font-weight: bold; text-shadow: 0 0 8px var(--accent-color); z-index: 5;}
+        .dial-tick-label { position: absolute; font-size: 14px; color: var(--accent-color); opacity: 0.7; }
         #pin-indicators { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; }
         .pin-light { width: 25px; height: 25px; border-radius: 50%; background: #333; border: 2px solid #111; transition: all 0.2s; }
         .pin-light.success { background: var(--success-color); box-shadow: 0 0 10px var(--success-color); }
@@ -96,6 +97,7 @@
                     <div id="lock-dial">
                         <div id="dial-marker"></div>
                         <div id="dial-number">00</div>
+                        <!-- Numbers will be injected here -->
                     </div>
                 </div>
                 <div id="controls-interface">
@@ -119,7 +121,6 @@
         let tensionCanvas, tensionCtx;
 
         function initializeSim() {
-            // Check for 5-minute permanent lock
             const perm_lock_time = localStorage.getItem('socom_safe_perm_lock');
             if (perm_lock_time) {
                 const time_diff = Date.now() - parseInt(perm_lock_time, 10);
@@ -127,13 +128,11 @@
                     forceShowFailure(true);
                     return;
                 } else {
-                    // If 5 mins have passed, clear all locks
                     localStorage.removeItem('socom_safe_perm_lock');
                     localStorage.removeItem('socom_safe_attempts');
                     localStorage.removeItem('socom_safe_lockout');
                 }
             }
-             // Check for soft lock (failed a run)
             const lockout = localStorage.getItem('socom_safe_lockout');
             if (lockout) {
                 forceShowFailure(false);
@@ -148,31 +147,21 @@
                 return;
             }
             
-            // --- UI and Canvas Setup ---
             document.getElementById('setup-view').classList.add('hidden');
             document.getElementById('game-view').classList.remove('hidden');
             document.getElementById('reset-btn').classList.remove('hidden');
 
             tensionCanvas = document.getElementById('tension-canvas');
             tensionCtx = tensionCanvas.getContext('2d');
-            // FIX: Set canvas resolution to match its display size
             tensionCanvas.width = tensionCanvas.clientWidth;
             tensionCanvas.height = tensionCanvas.clientHeight;
 
-
             game = {
                 pinsToSet: parseInt(document.getElementById('lock-quality').value),
-                combination: [],
-                pinStates: [],
-                currentPinIndex: 0,
-                currentRotation: 0,
-                currentDirection: 1, // 1 for clockwise, -1 for counter-clockwise
-                isDragging: false,
-                lastMouseX: 0,
-                noiseLevel: 0.1,
-                sweetSpotWidth: 2,
-                attemptsLeft: Infinity,
-                isActive: true,
+                combination: [], pinStates: [], currentPinIndex: 0,
+                currentRotation: 0, currentDirection: 1, isDragging: false,
+                lastMouseX: 0, noiseLevel: 0.1, sweetSpotWidth: 2,
+                attemptsLeft: Infinity, isActive: true,
             };
 
             const resultEl = document.getElementById('roll-result');
@@ -198,13 +187,33 @@
             resultEl.textContent = resultText;
 
             generateCombination();
-            if (roll <= 5) { // Critical success reveals first number
+            generateDialLabels();
+            if (roll <= 5) { 
                  document.getElementById('instruction-text').textContent = `First Number: ${game.combination[0]}`;
             }
             
             setupEventListeners();
             updateUI();
             game.animationFrame = requestAnimationFrame(gameLoop);
+        }
+        
+        function generateDialLabels() {
+            const dial = document.getElementById('lock-dial');
+            const radius = dial.offsetWidth / 2 * 0.85; // 85% of the way out
+            for (let i = 0; i < 10; i++) {
+                const num = i * 10;
+                const angle = (num / 100) * (2 * Math.PI) - (Math.PI / 2); // -90 deg to start at top
+                const x = radius * Math.cos(angle) + (dial.offsetWidth / 2);
+                const y = radius * Math.sin(angle) + (dial.offsetHeight / 2);
+                
+                const label = document.createElement('div');
+                label.className = 'dial-tick-label';
+                label.textContent = num;
+                label.style.left = `${x}px`;
+                label.style.top = `${y}px`;
+                label.style.transform = `translate(-50%, -50%)`;
+                dial.appendChild(label);
+            }
         }
         
         function generateCombination() {
@@ -229,7 +238,7 @@
             document.onmousemove = (e) => {
                 if (!game.isDragging || !game.isActive) return;
                 const deltaX = e.clientX - game.lastMouseX;
-                game.currentRotation += deltaX * 0.5 * game.currentDirection; // Sensitivity
+                game.currentRotation += deltaX * 0.5 * game.currentDirection;
                 game.lastMouseX = e.clientX;
                 updateUI();
             };
@@ -249,7 +258,7 @@
             if (diff <= game.sweetSpotWidth) { // Success
                 game.pinStates[game.currentPinIndex] = 'success';
                 game.currentPinIndex++;
-                game.currentDirection *= -1; // Reverse direction
+                game.currentDirection *= -1;
                 if (game.currentPinIndex >= game.pinsToSet) {
                     winGame();
                 }
@@ -265,16 +274,13 @@
             if (game.attemptsLeft !== Infinity) {
                 game.attemptsLeft--;
                 if (game.attemptsLeft <= 0) {
-                    loseGame(); // Fumble run failed, trigger soft lock
-                    return;
+                    loseGame(); return;
                 }
             }
             
-            setTimeout(() => { // Show red light briefly then reset
-                game.pinStates = [];
-                game.currentPinIndex = 0;
-                game.currentDirection = 1;
-                generateCombination();
+            setTimeout(() => {
+                game.pinStates = []; game.currentPinIndex = 0;
+                game.currentDirection = 1; generateCombination();
                 updateUI();
             }, 500);
         }
@@ -290,22 +296,24 @@
             const h = tensionCanvas.height;
             tensionCtx.clearRect(0, 0, w, h);
             tensionCtx.strokeStyle = 'var(--accent-color)';
-            tensionCtx.lineWidth = 2;
-            tensionCtx.beginPath();
             
             const currentNum = (Math.round(game.currentRotation) % 100 + 100) % 100;
             const targetNum = game.combination[game.currentPinIndex];
-            
             const proximity = Math.max(0, 1 - (Math.abs(currentNum - targetNum) / 15));
-            const signalStrength = Math.pow(proximity, 3) * (h * 0.4);
+            const signalStrength = Math.pow(proximity, 3);
 
-            for (let x = 0; x < w; x++) {
-                const randomNoise = (Math.random() - 0.5) * h * game.noiseLevel;
-                const y = h / 2 + randomNoise + (Math.sin(x/w * Math.PI * 4) * signalStrength);
-                if (x === 0) tensionCtx.moveTo(x, y);
-                else tensionCtx.lineTo(x, y);
+            for(let x=0; x < w; x+=4) {
+                const noiseHeight = (Math.random() * h * game.noiseLevel) + 2;
+                const signalHeight = signalStrength * (h * 0.8) * Math.sin((x/w) * Math.PI);
+                const totalHeight = Math.max(noiseHeight, signalHeight);
+                const y = h/2;
+                
+                tensionCtx.lineWidth = 2;
+                tensionCtx.beginPath();
+                tensionCtx.moveTo(x, y - totalHeight / 2);
+                tensionCtx.lineTo(x, y + totalHeight / 2);
+                tensionCtx.stroke();
             }
-            tensionCtx.stroke();
         }
 
         function updateUI() {
@@ -317,9 +325,7 @@
             for (let i = 0; i < game.pinsToSet; i++) {
                 const light = document.createElement('div');
                 light.className = 'pin-light';
-                if (game.pinStates[i]) {
-                    light.classList.add(game.pinStates[i]);
-                }
+                if (game.pinStates[i]) { light.classList.add(game.pinStates[i]); }
                 indicatorsContainer.appendChild(light);
             }
             
@@ -335,7 +341,6 @@
             document.getElementById('instruction-text').textContent = 'LOCK OPENED';
             document.getElementById('instruction-text').style.color = 'var(--success-color)';
             document.getElementById('set-pin-btn').disabled = true;
-            // Clear any locks if the player succeeds after failing a previous run
             localStorage.removeItem('socom_safe_lockout');
             localStorage.removeItem('socom_safe_attempts');
             localStorage.removeItem('socom_safe_perm_lock');
@@ -385,10 +390,7 @@
             document.getElementById('instruction-text').style.color = 'var(--danger-color)';
             document.getElementById('game-view-grid').style.opacity = '0.3';
             document.getElementById('set-pin-btn').disabled = true;
-            
-            // FIX: Don't disable the reset button, allow password entry
-            const resetButton = document.getElementById('reset-btn');
-            resetButton.disabled = isPermanent; // Only disable if the 5-min lock is active and hasn't expired
+            document.getElementById('reset-btn').disabled = isPermanent;
         }
 
         window.onload = initializeSim;
