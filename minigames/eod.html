@@ -138,7 +138,7 @@
             wires: {
                 name: "WIRES",
                 generate(game) {
-                    const numWires = 4 + Math.floor(Math.random() * 3); // 4-6 wires
+                    const numWires = 4 + Math.floor(Math.random() * 3);
                     const colors = ['red', 'blue', 'yellow', 'white', 'black'];
                     const currentWires = Array.from({ length: numWires }, () => colors[Math.floor(Math.random() * colors.length)]);
                     
@@ -146,26 +146,28 @@
                         { text: "IF there are no red wires, <strong>CUT</strong> the second wire.", test: (wires) => wires.filter(c => c === 'red').length === 0, action: () => 1 },
                         { text: "IF there is exactly one blue wire, <strong>CUT</strong> the last white wire.", test: (wires) => wires.filter(c => c === 'blue').length === 1, action: (wires) => wires.lastIndexOf('white') },
                         { text: "IF there are more yellow than white wires, <strong>CUT</strong> the first yellow wire.", test: (wires) => wires.filter(c=>c==='yellow').length > wires.filter(c=>c==='white').length, action: (wires) => wires.indexOf('yellow') },
-                        { text: "IF the last wire is black, <strong>CUT</strong> the fourth wire.", test: (wires) => wires[wires.length - 1] === 'black', action: () => 3 },
+                        { text: "IF the last wire is black, <strong>CUT</strong> the fourth wire.", test: (wires) => wires[wires.length - 1] === 'black' && wires.length >= 4, action: () => 3 },
                         { text: "OTHERWISE, <strong>CUT</strong> the last red wire.", test: () => true, action: (wires) => wires.lastIndexOf('red') },
                         { text: "OTHERWISE, <strong>CUT</strong> the first wire.", test: () => true, action: () => 0 }
                     ];
                     
-                    const chosenRules = [rulePool[0], rulePool[1], rulePool[2], rulePool[3], (Math.random() > 0.5 ? rulePool[4] : rulePool[5])];
+                    const shuffledRules = rulePool.filter(r => !r.text.startsWith("OTHERWISE")).sort(() => 0.5 - Math.random());
+                    const chosenRules = shuffledRules.slice(0, 3);
+                    chosenRules.push(Math.random() > 0.5 ? rulePool[4] : rulePool[5]);
 
                     return {
-                        data: { currentWires, solved: false, steps: 1, completedSteps: 0 },
+                        data: { currentWires, solved: false, steps: 1, completedSteps: 0, cutIndexes: [] },
                         manualHTML: `<h3>WIRES</h3><ul>${chosenRules.map(r => `<li>${r.text}</li>`).join('')}</ul>`,
                         logic: {
                             getCorrectWire: () => {
-                                const activeWires = game.modules.wires.data.currentWires.map((color, index) => ({ color, index })).filter(w => !w.cut);
+                                const activeWires = game.modules.wires.data.currentWires.map((color, index) => ({ color, index })).filter(w => !game.modules.wires.data.cutIndexes.includes(w.index));
                                 for (const rule of chosenRules) {
                                     if (rule.test(activeWires.map(w => w.color))) {
-                                        const targetIndex = rule.action(activeWires.map(w => w.color));
-                                        return targetIndex !== -1 && targetIndex < activeWires.length ? activeWires[targetIndex].index : -1;
+                                        const targetIndexInActive = rule.action(activeWires.map(w => w.color));
+                                        return targetIndexInActive !== -1 && targetIndexInActive < activeWires.length ? activeWires[targetIndexInActive].index : -1;
                                     }
                                 }
-                                return -1; // Should not happen with an otherwise clause
+                                return -1;
                             }
                         }
                     };
@@ -174,21 +176,22 @@
             keypad: {
                 name: "KEYPAD",
                 generate(game) {
-                    const codeLength = 4;
-                    let correctCode = "";
                     const rulePool = [
-                        { text: "The first digit is the number of <strong>BLACK</strong> wires.", getValue: () => (game.modules.wires ? game.modules.wires.data.currentWires.filter(c=>c==='black').length : 0) },
-                        { text: "The second digit is one more than the number of <strong>BLUE</strong> wires.", getValue: () => (game.modules.wires ? game.modules.wires.data.currentWires.filter(c=>c==='blue').length + 1 : 1) },
-                        { text: "The last digit is the number of strikes you start with.", getValue: () => game.maxStrikes },
-                        { text: "The third digit is the first numeric digit in the serial number.", getValue: () => parseInt(game.serial.match(/\d/)[0]) || 0 }
+                        { text: "The first digit is the number of starting strikes.", depends: null, getValue: () => game.maxStrikes },
+                        { text: "The second digit is the first number in the serial number.", depends: null, getValue: () => { const d = game.serial.match(/\d/); return d ? d[0] : 0; } },
+                        { text: "The third digit is the total number of modules on the device.", depends: null, getValue: () => Object.keys(game.modules).length },
+                        { text: "The last digit is the number of vowels in the serial number.", depends: null, getValue: () => (game.serial.match(/[AEIOU]/gi) || []).length },
+                        { text: "The first digit is the number of <strong>BLACK</strong> wires.", depends: 'wires', getValue: () => game.modules.wires.data.currentWires.filter(c=>c==='black').length },
+                        { text: "The second digit is one more than the number of <strong>BLUE</strong> wires.", depends: 'wires', getValue: () => game.modules.wires.data.currentWires.filter(c=>c==='blue').length + 1 },
                     ];
-                    const chosenRules = [rulePool[0], rulePool[1], rulePool[2], rulePool[3]]; // Using all for predictability
-                    correctCode = chosenRules.map(r => r.getValue()).join('').slice(0, codeLength);
+
+                    const validRules = rulePool.filter(r => r.depends === null || !!game.modules[r.depends]).sort(() => 0.5 - Math.random());
+                    const chosenRules = validRules.slice(0, 4);
+                    const correctCode = chosenRules.map(r => r.getValue()).join('');
 
                     return {
                         data: { display: "", correctCode, solved: false },
-                        manualHTML: `<h3>KEYPAD (${codeLength} DIGITS)</h3><ul>${chosenRules.map(r => `<li>${r.text}</li>`).join('')}</ul>`,
-                        logic: {}
+                        manualHTML: `<h3>KEYPAD (4 DIGITS)</h3><ul>${chosenRules.map(r => `<li>${r.text}</li>`).join('')}</ul>`,
                     };
                 }
             },
@@ -197,24 +200,27 @@
                 generate(game) {
                     const colors = ['red', 'blue', 'white', 'yellow'];
                     const labels = ['DETONATE', 'ABORT', 'HOLD', 'PRESS'];
-                    const currentColor = colors[Math.floor(Math.random() * colors.length)];
-                    const currentLabel = labels[Math.floor(Math.random() * labels.length)];
-                    const holdRuleDigit = Math.floor(Math.random() * 6) + 1; // 1-6
+                    const data = {
+                        currentColor: colors[Math.floor(Math.random() * colors.length)],
+                        currentLabel: labels[Math.floor(Math.random() * labels.length)],
+                        solved: false, isHeld: false
+                    };
+                    
+                    const rulePool = [
+                        { text: "<strong>IF</strong> the button is BLUE and says 'ABORT', <strong>PRESS AND HOLD</strong>.", test: () => data.currentColor === 'blue' && data.currentLabel === 'ABORT', action: 'hold' },
+                        { text: "<strong>IF</strong> the serial number contains a vowel, <strong>PRESS AND RELEASE</strong>.", test: () => /[AEIOU]/i.test(game.serial), action: 'release' },
+                        { text: "<strong>IF</strong> there are more than 2 <strong>RED</strong> wires, <strong>PRESS AND RELEASE</strong>.", depends: 'wires', test: () => game.modules.wires.data.currentWires.filter(c=>c==='red').length > 2, action: 'release' },
+                        { text: "<strong>OTHERWISE</strong>, <strong>PRESS AND HOLD</strong>.", test: () => true, action: 'hold' }
+                    ];
+                    
+                    const validRules = rulePool.filter(r => !r.depends || !!game.modules[r.depends]);
+                    const holdRuleDigit = Math.floor(Math.random() * 6) + 1;
 
                     return {
-                        data: { currentColor, currentLabel, solved: false, isHeld: false },
-                        manualHTML: `<h3>BUTTON</h3><ul>
-                            <li><strong>IF</strong> the button is BLUE and says 'ABORT', <strong>PRESS AND HOLD</strong>.</li>
-                            <li><strong>IF</strong> there are more than 2 yellow wires and the button is RED, <strong>PRESS AND RELEASE</strong>.</li>
-                            <li><strong>OTHERWISE</strong>, <strong>PRESS AND HOLD</strong>.</li>
-                            </ul><p><strong>IF HOLDING:</strong> Release when the timer has a '<strong>${holdRuleDigit}</strong>' in any position.</p>`,
+                        data,
+                        manualHTML: `<h3>BUTTON</h3><ul>${validRules.map(r => `<li>${r.text}</li>`).join('')}</ul><p><strong>IF HOLDING:</strong> Release when the timer has a '<strong>${holdRuleDigit}</strong>' in any position.</p>`,
                         logic: {
-                            getCorrectAction: () => {
-                                const yellowWires = game.modules.wires ? game.modules.wires.data.currentWires.filter(c=>c==='yellow').length : 0;
-                                if (currentColor === 'blue' && currentLabel === 'ABORT') return 'hold';
-                                if (yellowWires > 2 && currentColor === 'red') return 'release';
-                                return 'hold';
-                            },
+                            getCorrectAction: () => { for (const rule of validRules) { if (rule.test()) return rule.action; } },
                             getCorrectReleaseDigit: () => holdRuleDigit.toString()
                         }
                     };
@@ -245,8 +251,7 @@
 
             game = { series, timeLeft: series.baseTime, maxStrikes: series.baseStrikes, strikes: 0, isActive: true, modules: {} };
 
-            let statusText = '';
-            let statusClass = '';
+            let statusText = ''; let statusClass = '';
             if (roll >= 96) { statusText = `FUMBLE (${roll}) - Panic sets in! Less time, one mistake is fatal.`; statusClass='fail'; game.timeLeft = Math.floor(series.baseTime * 0.7); game.maxStrikes = 0; }
             else if (roll > skill) { statusText = `FAILURE (${roll}) - Unfamiliar configuration. Time pressure is on.`; statusClass='fail'; game.timeLeft = Math.floor(series.baseTime * 0.85); game.maxStrikes = Math.max(0, series.baseStrikes - 1); }
             else if (roll <= 5) { statusText = `CRITICAL (${roll}) - You've seen this before. Extra time and margin for error.`; statusClass='crit'; game.timeLeft = Math.floor(series.baseTime * 1.5); game.maxStrikes = series.baseStrikes + 1; }
@@ -254,13 +259,17 @@
             
             game.serial = Array.from({length: 6}, () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 36)]).join('');
             
-            const availableModules = [...series.modulePool];
+            const availableModules = [...series.modulePool].sort(() => 0.5 - Math.random());
+            const chosenModuleKeys = availableModules.slice(0, series.moduleCount);
+            
             let manualHTML = '';
-            for(let i = 0; i < series.moduleCount; i++) {
-                const moduleKey = availableModules.splice(Math.floor(Math.random() * availableModules.length), 1)[0];
-                const generatedModule = MODULE_GENERATORS[moduleKey].generate(game);
-                game.modules[moduleKey] = generatedModule;
-                manualHTML += generatedModule.manualHTML;
+            for(const key of chosenModuleKeys) {
+                game.modules[key] = MODULE_GENERATORS[key].generate(game);
+            }
+            // Re-generate to ensure all dependencies are met
+            for(const key of chosenModuleKeys) {
+                 game.modules[key] = MODULE_GENERATORS[key].generate(game);
+                 manualHTML += game.modules[key].manualHTML;
             }
             
             document.getElementById('setup-view').classList.add('hidden');
@@ -312,57 +321,59 @@
         
         // --- MODULE INTERACTION HANDLERS ---
         function cutWire(index) {
-            if (!game.isActive || game.modules.wires.data.solved) return;
+            const module = game.modules.wires;
+            if (!game.isActive || module.data.solved) return;
             const wireEl = document.querySelector(`#module-wires .wire:nth-child(${index + 1})`);
             if (wireEl.classList.contains('cut')) return;
 
-            const correctWireIndex = game.modules.wires.logic.getCorrectWire();
-            if (index === correctWireIndex) {
+            if (index === module.logic.getCorrectWire()) {
                 wireEl.classList.add('cut');
-                game.modules.wires.data.completedSteps++;
-                // In this simplified version, one cut solves it. Could be expanded to require more.
-                game.modules.wires.data.solved = true;
+                module.data.cutIndexes.push(index);
+                module.data.solved = true;
                 document.querySelector('#module-wires .module-solved-light').classList.add('solved');
                 checkWinCondition();
             } else { handleStrike(); }
         }
 
         function pressKeypad(key) {
-            if (!game.isActive || game.modules.keypad.data.solved) return;
-            const data = game.modules.keypad.data;
+            const module = game.modules.keypad;
+            if (!game.isActive || module.data.solved) return;
             const display = document.getElementById('keypad-display');
-            if (key === 'C') { data.display = ""; }
+            if (key === 'C') { module.data.display = ""; }
             else if (key === 'S') {
-                if(data.display === data.correctCode) {
-                    data.solved = true;
+                if(module.data.display === module.data.correctCode) {
+                    module.data.solved = true;
                     document.querySelector('#module-keypad .module-solved-light').classList.add('solved');
                     checkWinCondition();
                 } else { handleStrike(); }
             }
-            else if(data.display.length < data.correctCode.length) { data.display += key; }
-            display.textContent = data.display;
+            else if(module.data.display.length < module.data.correctCode.length) { module.data.display += key; }
+            display.textContent = module.data.display;
         }
 
         function pressBigButton() {
-            if (!game.isActive || game.modules.button.data.solved) return;
-            game.modules.button.data.isHeld = true;
+            const module = game.modules.button;
+            if (!game.isActive || module.data.solved) return;
+            module.data.isHeld = true;
         }
 
         function releaseBigButton() {
-            if (!game.isActive || !game.modules.button.data.isHeld) return;
-            game.modules.button.data.isHeld = false;
+            const module = game.modules.button;
+            if (!game.isActive || !module.data.isHeld) return;
+            module.data.isHeld = false;
 
-            const logic = game.modules.button.logic;
-            const correctAction = logic.getCorrectAction();
+            const correctAction = module.logic.getCorrectAction();
             const timerStr = document.getElementById('timer').textContent;
 
-            if (correctAction === 'hold' && timerStr.includes(logic.getCorrectReleaseDigit())) {
-                game.modules.button.data.solved = true;
-                document.querySelector('#module-button .module-solved-light').classList.add('solved');
-                checkWinCondition();
+            let success = false;
+            if (correctAction === 'hold' && timerStr.includes(module.logic.getCorrectReleaseDigit())) {
+                success = true;
             } else if (correctAction === 'release') {
-                // For 'release', any immediate release is correct. This could be timed for more complexity.
-                game.modules.button.data.solved = true;
+                success = true;
+            }
+            
+            if(success) {
+                module.data.solved = true;
                 document.querySelector('#module-button .module-solved-light').classList.add('solved');
                 checkWinCondition();
             } else { handleStrike(); }
