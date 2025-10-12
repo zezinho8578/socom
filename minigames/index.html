@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.O.C.O.M. // Intel Utilities</title>
+    <link rel="icon" type="image/png" href="https://www.socom.mil/SOF-ATL/PublishingImages/eSOF-Logo.png">
+    <style>
+        /* 
+         NOTE: This is a direct copy of the styles from your main index.html to ensure a consistent look and feel.
+         For a larger project, you would ideally move this CSS to a shared stylesheet.
+        */
+        @keyframes flicker { 0%, 100% { opacity: 0.95; } 50% { opacity: 1; } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        :root {
+            --bg-color: #050805; --scanline-color: rgba(0, 255, 85, 0.1); --text-color: #00ff55;
+            --accent-color: #00ff55; --border-color: #00521d; --input-bg: rgba(0, 31, 9, 0.95);
+            --danger-color: #ff4141; --danger-bg: rgba(255, 65, 65, 0.15); --container-bg: rgba(0,0,0,0.4);
+        }
+
+        /* You can add your other themes here (officer, navy, etc.) if you want them to apply on this page too */
+
+        body {
+            font-family: 'Courier New', Courier, monospace; margin: 0; background-color: var(--bg-color); color: var(--text-color);
+            text-shadow: 0 0 4px var(--accent-color); animation: flicker 0.15s infinite;
+        }
+        body::before {
+            content: " "; display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(0deg, var(--scanline-color) 1px, transparent 1px);
+            background-size: 100% 2px; z-index: 100; pointer-events: none;
+        }
+
+        .container { position: relative; max-width: 1400px; margin: 10px auto; padding: 10px; border: 1px solid var(--border-color); background: var(--container-bg); }
+        .header { display: flex; align-items: center; border-bottom: 1px solid var(--accent-color); padding-bottom: 5px; margin-bottom: 15px; }
+        .logo { max-width: 80px; margin-right: 15px; filter: grayscale(100%) brightness(200%) contrast(150%); }
+
+        h1 { font-size: 22px; text-transform: uppercase; }
+        h1::after { content: '_'; animation: blink 1s step-end infinite; }
+        h2 { font-size: 16px; margin-top: 10px; margin-bottom: 10px; text-transform: uppercase; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; }
+        
+        .main-menu { text-align: center; padding: 30px; border: 1px solid var(--border-color); margin: 20px; background: var(--input-bg); }
+
+        button, .button {
+            background: transparent; color: var(--accent-color); border: 1px solid var(--accent-color);
+            padding: 8px 15px; font-size: 14px; cursor: pointer; margin: 5px;
+            font-family: 'Courier New', Courier, monospace; text-transform: uppercase;
+            text-decoration: none; /* This is for the <a> tag */
+            display: inline-block; /* This is for the <a> tag */
+        }
+        button:hover, .button:hover { background: var(--accent-color); color: var(--bg-color); text-shadow: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header class="header">
+            <!-- Use a relative path from the 'minigames' folder up to the root, or an absolute path -->
+            <img src="../socom-logo.png" alt="SOCOM Logo" class="logo">
+            <h1>S.O.C.O.M. // INTEL UTILITIES</h1>
+        </header>
+        
+        <main>
+            <div class="main-menu">
+                <h2>SELECT UTILITY</h2>
+                
+                <p style="margin: 20px auto; max-width: 600px; opacity: 0.8;">
+                    Access mission-critical tools and field simulations. Unauthorized access is a federal offense.
+                </p>
+
+                <!-- Link to the Decryption Tool -->
+                <a href="decryption.html" class="button">> DECRYPTION TERMINAL</a>
+                
+                <!-- Link to the Bomb Defusal Simulation -->
+                <a href="eod.html" class="button">> EOD SIMULATION</a>
+
+                <div style="margin-top: 40px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                     <!-- This button takes the user back to the main character sheet application -->
+                    <a href="../" class="button">> RETURN TO MAIN ROSTER</a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Optional: If you want themes to work here, you'll need the theme-switching JS.
+        // For simplicity, this hub page can just use the default theme.
+        // If you want to sync themes, you would copy the theme functions from your main script.
+        function applySavedTheme() {
+            const savedTheme = localStorage.getItem('socom_theme');
+            if (savedTheme && savedTheme !== 'default') {
+                document.body.classList.add(savedTheme + '-theme');
+            }
+        }
+        window.onload = applySavedTheme;
+    </script>
+
+</body>
+</html>
