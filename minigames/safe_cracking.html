@@ -197,10 +197,8 @@
             generateCombination(); generateDialLabels(); generateTensionMeterBars();
             
             if (roll <= 5) {
-                document.getElementById('instruction-text').textContent = `First Number: ${game.combination[0]}`;
                 game.pinStates[0] = 'success';
                 game.currentPinIndex = 1;
-                game.currentDirection = -1; // Next pin requires opposite direction
             }
             
             setupEventListeners();
@@ -222,11 +220,12 @@
         
         function generateDialLabels() {
             const dial = document.getElementById('lock-dial');
+            if (dial.childElementCount > 2) return; // Already generated
             const radius = dial.offsetWidth / 2;
             for (let i = 0; i < 100; i++) {
                 const angleDeg = i * 3.6;
                 const angleRad = angleDeg * (Math.PI / 180);
-                if (i % 10 === 0) { // Major tick
+                if (i % 10 === 0) {
                     const labelRadius = radius * 0.75;
                     const x = labelRadius * Math.sin(angleRad) + radius;
                     const y = labelRadius * -Math.cos(angleRad) + radius;
@@ -236,7 +235,7 @@
                     label.style.left = `${x}px`;
                     label.style.top = `${y}px`;
                     dial.appendChild(label);
-                } else if (i % 5 === 0) { // Minor tick
+                } else if (i % 5 === 0) {
                     const tick = document.createElement('div');
                     const tickRadius = radius - 10;
                     const x = tickRadius * Math.sin(angleRad) + radius;
@@ -273,13 +272,16 @@
         function rotateDial(direction) {
             if (game.isCoolingDown || !game.isActive) return;
             
+            const actualRotationDirection = game.controlsSwapped ? -direction : direction;
+
+            if (game.enforceDirection && actualRotationDirection !== game.currentDirection) {
+                handleFailure(true);
+                return;
+            }
+            
             if (game.isFumble && Math.random() < 0.1) return;
-            
-            if (game.enforceDirection && direction !== game.currentDirection) { handleFailure(true); return; }
-            
-            if (game.controlsSwapped) direction *= -1;
-            
-            game.currentAngle += direction * 0.5;
+
+            game.currentAngle += actualRotationDirection * 0.5;
             updateUI();
         }
 
@@ -292,8 +294,10 @@
             if (diff <= game.sweetSpotWidth) {
                 game.pinStates[game.currentPinIndex] = 'success';
                 game.currentPinIndex++;
-                game.currentDirection *= -1;
-                if (game.currentPinIndex >= game.pinsToSet) { winGame(); }
+                game.currentDirection *= -1; // Change direction for the next pin
+                if (game.currentPinIndex >= game.pinsToSet) {
+                    winGame();
+                }
             } else {
                 handleFailure(false);
             }
@@ -303,14 +307,22 @@
         function handleFailure(instantReset) {
             game.pinStates[game.currentPinIndex] = 'fail';
             
-            if (game.attemptsLeft !== Infinity) {
+            if (game.isFumble) {
                 game.attemptsLeft--;
-                if (game.attemptsLeft <= 0) { loseGame(); return; }
+                if (game.attemptsLeft <= 0) {
+                    loseGame();
+                    return;
+                }
             }
             
             const reset = () => {
-                game.pinStates = []; game.currentPinIndex = 0;
-                game.currentDirection = 1; generateCombination();
+                game.pinStates = [];
+                game.currentPinIndex = 0;
+                game.currentDirection = (Math.random() < 0.5 ? 1 : -1);
+                generateCombination();
+                if (game.isFailure) { // On failure, restart from pin 0
+                     game.currentPinIndex = 0;
+                }
                 updateUI();
             };
             
@@ -324,12 +336,12 @@
             const now = Date.now();
             if (game.isFailure && !game.isCoolingDown && now - game.lastCooldownCheck > 1000) {
                 game.lastCooldownCheck = now;
-                if (Math.random() < 0.033) { // Approx. twice a minute
+                if (Math.random() < 0.033) {
                     triggerCooldown();
                 }
             }
             if (game.isFumble && game.canSwap && !game.controlsSwapped && now - game.lastSwapTime > 30000) {
-                if (Math.random() < 0.1) { // Chance to trigger if conditions are met
+                if (Math.random() < 0.1) {
                     triggerControlSwap();
                 }
             }
@@ -343,7 +355,7 @@
             setTimeout(() => {
                 game.isCoolingDown = false;
                 document.getElementById('set-pin-btn').disabled = false;
-            }, 5000 + Math.random() * 5000); // 5-10 seconds
+            }, 5000 + Math.random() * 5000);
         }
 
         function triggerControlSwap() {
@@ -362,7 +374,7 @@
                     game.controlsSwapped = false; 
                     document.getElementById('rotate-left-btn').textContent = '<';
                     document.getElementById('rotate-right-btn').textContent = '>';
-                }, 2000 + Math.random() * 2000);
+                }, 10000); // Swap lasts 10 seconds
             }, 1000);
         }
 
@@ -406,12 +418,16 @@
                 indicatorsContainer.appendChild(light);
             }
             
+            const instructionEl = document.getElementById('instruction-text');
             if(game.isActive) {
-                 if (game.enforceDirection) {
+                 if (game.isFailure || game.isFumble) {
                      const dir = game.currentDirection === 1 ? 'CLOCKWISE' : 'COUNTER-CLOCKWISE';
-                     document.getElementById('instruction-text').textContent = `ROTATE ${dir}`;
-                 } else {
-                     document.getElementById('instruction-text').textContent = '';
+                     instructionEl.textContent = `ROTATE ${dir}`;
+                 } else if (document.getElementById('d100-roll').value <= 5 && game.currentPinIndex === 1) {
+                    instructionEl.textContent = `First Number: ${game.combination[0]}`;
+                 } 
+                 else {
+                    instructionEl.textContent = '';
                  }
             }
         }
