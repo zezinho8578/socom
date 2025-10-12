@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.O.C.O.M. // Network Intrusion</title>
+    <link rel="icon" type="image/png" href="https://www.socom.mil/SOF-ATL/PublishingImages/eSOF-Logo.png">
+    <link rel="stylesheet" href="network_intrusion_style.css">
+</head>
+<body>
+
+    <div class="container">
+        <header class="header">
+            <img src="https://images.squarespace-cdn.com/content/v1/629e0596d168b365d297c6c4/cea70b06-895e-401c-9669-04fa59cfc5e6/socom-logo.png" alt="SOCOM Logo" class="logo">
+            <h1>S.O.C.O.M. // NETWORK INTRUSION</h1>
+        </header>
+
+        <!-- SETUP VIEW -->
+        <div id="setup-view">
+            <div class="content-menu">
+                <h2>PROCEDURAL SETUP</h2>
+                <div class="grid-3-col">
+                    <div>
+                        <label for="difficulty">NETWORK COMPLEXITY</label>
+                        <select id="difficulty">
+                            <option value="easy">LOW (5x5 Grid)</option>
+                            <option value="medium" selected>STANDARD (8x8 Grid)</option>
+                            <option value="hard">HIGH (12x12 Grid)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="hacking-skill">AGENT HACKING SKILL %</label>
+                        <input type="number" id="hacking-skill" min="0" max="100" placeholder="e.g., 65">
+                    </div>
+                    <div>
+                        <label for="d100-roll">D100 ROLL</label>
+                        <input type="number" id="d100-roll" min="1" max="100" placeholder="e.g., 34">
+                    </div>
+                </div>
+                 <div style="text-align: center; margin-top: 20px;">
+                    <button onclick="startIntrusion()">INITIATE INTRUSION</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- GAME VIEW -->
+        <div id="game-view" class="hidden">
+            <div class="game-header">
+                 <div class="trace-container">
+                    <label>SYSTEM TRACE PROGRESS</label>
+                    <div class="trace-bar-outer">
+                        <div id="trace-bar-inner"></div>
+                    </div>
+                </div>
+                <div id="status-display" class="status-display">STATUS: Establishing Uplink...</div>
+            </div>
+           
+            <div id="roll-result" class="status-message"></div>
+
+            <div id="grid-container"></div>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="https://socom.vercel.app/minigames/" class="button">> RETURN TO UTILITIES MENU</a>
+            <button id="reset-btn" class="hidden" onclick="window.location.reload()">RESTART SIM</button>
+        </div>
+    </div>
+
+    <script src="network_intrusion.js"></script>
+
+</body>
+</html>
