@@ -116,10 +116,10 @@
 
     <script>
         let game = {};
-        const tensionCanvas = document.getElementById('tension-canvas');
-        const tensionCtx = tensionCanvas.getContext('2d');
+        let tensionCanvas, tensionCtx;
 
         function initializeSim() {
+            // Check for 5-minute permanent lock
             const perm_lock_time = localStorage.getItem('socom_safe_perm_lock');
             if (perm_lock_time) {
                 const time_diff = Date.now() - parseInt(perm_lock_time, 10);
@@ -127,11 +127,14 @@
                     forceShowFailure(true);
                     return;
                 } else {
+                    // If 5 mins have passed, clear all locks
                     localStorage.removeItem('socom_safe_perm_lock');
                     localStorage.removeItem('socom_safe_attempts');
+                    localStorage.removeItem('socom_safe_lockout');
                 }
             }
-             const lockout = localStorage.getItem('socom_safe_lockout');
+             // Check for soft lock (failed a run)
+            const lockout = localStorage.getItem('socom_safe_lockout');
             if (lockout) {
                 forceShowFailure(false);
             }
@@ -144,6 +147,18 @@
                 alert('Please fill in your Mechanics skill and d100 roll.');
                 return;
             }
+            
+            // --- UI and Canvas Setup ---
+            document.getElementById('setup-view').classList.add('hidden');
+            document.getElementById('game-view').classList.remove('hidden');
+            document.getElementById('reset-btn').classList.remove('hidden');
+
+            tensionCanvas = document.getElementById('tension-canvas');
+            tensionCtx = tensionCanvas.getContext('2d');
+            // FIX: Set canvas resolution to match its display size
+            tensionCanvas.width = tensionCanvas.clientWidth;
+            tensionCanvas.height = tensionCanvas.clientHeight;
+
 
             game = {
                 pinsToSet: parseInt(document.getElementById('lock-quality').value),
@@ -163,7 +178,7 @@
             const resultEl = document.getElementById('roll-result');
             let resultText = '';
             if (roll >= 96) {
-                resultText = `FUMBLE (${roll}) - Booby-trapped mechanism! You have only two attempts before it locks permanently.`;
+                resultText = `FUMBLE (${roll}) - Booby-trapped mechanism! You have only two attempts before it locks.`;
                 resultEl.style.borderColor = 'var(--danger-color)';
                 game.attemptsLeft = 2;
             } else if (roll > skill) {
@@ -186,10 +201,6 @@
             if (roll <= 5) { // Critical success reveals first number
                  document.getElementById('instruction-text').textContent = `First Number: ${game.combination[0]}`;
             }
-
-            document.getElementById('setup-view').classList.add('hidden');
-            document.getElementById('game-view').classList.remove('hidden');
-            document.getElementById('reset-btn').classList.remove('hidden');
             
             setupEventListeners();
             updateUI();
@@ -223,7 +234,7 @@
                 updateUI();
             };
             document.onmouseup = () => {
-                if (!game.isActive) return;
+                if (!game.isDragging) return;
                 game.isDragging = false;
                 dial.style.cursor = 'ew-resize';
             };
@@ -250,23 +261,26 @@
 
         function handleFailure() {
             game.pinStates[game.currentPinIndex] = 'fail';
-            setTimeout(() => { // Show red light briefly
+            
+            if (game.attemptsLeft !== Infinity) {
+                game.attemptsLeft--;
+                if (game.attemptsLeft <= 0) {
+                    loseGame(); // Fumble run failed, trigger soft lock
+                    return;
+                }
+            }
+            
+            setTimeout(() => { // Show red light briefly then reset
                 game.pinStates = [];
                 game.currentPinIndex = 0;
                 game.currentDirection = 1;
                 generateCombination();
                 updateUI();
             }, 500);
-            
-            if (game.attemptsLeft !== Infinity) {
-                game.attemptsLeft--;
-                if (game.attemptsLeft <= 0) {
-                    loseGame(true); // Permanent failure
-                }
-            }
         }
         
         function gameLoop() {
+            if(!game.isActive) return;
             drawTensionMeter();
             game.animationFrame = requestAnimationFrame(gameLoop);
         }
@@ -282,7 +296,6 @@
             const currentNum = (Math.round(game.currentRotation) % 100 + 100) % 100;
             const targetNum = game.combination[game.currentPinIndex];
             
-            // Calculate how close we are to the sweet spot
             const proximity = Math.max(0, 1 - (Math.abs(currentNum - targetNum) / 15));
             const signalStrength = Math.pow(proximity, 3) * (h * 0.4);
 
@@ -296,11 +309,9 @@
         }
 
         function updateUI() {
-            // Update Dial Number
             const num = (Math.round(game.currentRotation) % 100 + 100) % 100;
             document.getElementById('dial-number').textContent = String(num).padStart(2, '0');
 
-            // Update Pin Indicators
             const indicatorsContainer = document.getElementById('pin-indicators');
             indicatorsContainer.innerHTML = '';
             for (let i = 0; i < game.pinsToSet; i++) {
@@ -312,7 +323,6 @@
                 indicatorsContainer.appendChild(light);
             }
             
-            // Update Instruction Text
             if(game.isActive) {
                  const dir = game.currentDirection === 1 ? 'CLOCKWISE' : 'COUNTER-CLOCKWISE';
                  document.getElementById('instruction-text').textContent = `ROTATE ${dir}`;
@@ -325,23 +335,21 @@
             document.getElementById('instruction-text').textContent = 'LOCK OPENED';
             document.getElementById('instruction-text').style.color = 'var(--success-color)';
             document.getElementById('set-pin-btn').disabled = true;
+            // Clear any locks if the player succeeds after failing a previous run
             localStorage.removeItem('socom_safe_lockout');
             localStorage.removeItem('socom_safe_attempts');
             localStorage.removeItem('socom_safe_perm_lock');
         }
 
-        function loseGame(permanent) {
+        function loseGame() {
             game.isActive = false;
             cancelAnimationFrame(game.animationFrame);
-            document.getElementById('instruction-text').textContent = 'MECHANISM JAMMED - ATTEMPTS FAILED';
+            document.getElementById('instruction-text').textContent = 'MECHANISM JAMMED - RESET REQUIRED';
             document.getElementById('instruction-text').style.color = 'var(--danger-color)';
             document.getElementById('set-pin-btn').disabled = true;
 
             localStorage.setItem('socom_safe_lockout', Date.now());
-            if (permanent) {
-                localStorage.setItem('socom_safe_perm_lock', Date.now());
-                forceShowFailure(true);
-            }
+            localStorage.setItem('socom_safe_attempts', '0');
         }
         
         function resetSim() {
@@ -354,7 +362,14 @@
                 localStorage.removeItem('socom_safe_perm_lock');
                 window.location.reload();
             } else {
+                let attempts = parseInt(localStorage.getItem('socom_safe_attempts') || '0', 10);
+                attempts++;
+                localStorage.setItem('socom_safe_attempts', attempts);
                 alert('ERROR: Invalid override code.');
+                if (attempts >= 2) {
+                    localStorage.setItem('socom_safe_perm_lock', Date.now());
+                    forceShowFailure(true);
+                }
             }
         }
         
@@ -365,11 +380,15 @@
 
             const text = isPermanent ? 'TERMINAL LOCKED' : 'MECHANISM JAMMED';
             document.getElementById('roll-result').textContent = 'SIMULATION FAILURE';
+            document.getElementById('roll-result').style.borderColor = 'var(--danger-color)';
             document.getElementById('instruction-text').textContent = text;
             document.getElementById('instruction-text').style.color = 'var(--danger-color)';
             document.getElementById('game-view-grid').style.opacity = '0.3';
             document.getElementById('set-pin-btn').disabled = true;
-            if(isPermanent) document.getElementById('reset-btn').disabled = true;
+            
+            // FIX: Don't disable the reset button, allow password entry
+            const resetButton = document.getElementById('reset-btn');
+            resetButton.disabled = isPermanent; // Only disable if the 5-min lock is active and hasn't expired
         }
 
         window.onload = initializeSim;
