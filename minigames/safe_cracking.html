@@ -37,17 +37,22 @@
         /* --- Game Specific Styles --- */
         #game-view-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: center; }
         #lock-interface { text-align: center; }
-        #lock-dial { width: 300px; height: 300px; border-radius: 50%; background: #000; border: 3px solid var(--border-color); position: relative; margin: 20px auto; cursor: ew-resize; display: flex; justify-content: center; align-items: center; }
-        #dial-marker { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 15px solid var(--accent-color); z-index: 10; }
-        #dial-number { font-size: 4em; font-weight: bold; text-shadow: 0 0 8px var(--accent-color); z-index: 5;}
-        .dial-tick-label { position: absolute; font-size: 14px; color: var(--accent-color); opacity: 0.7; }
+        #dial-container { width: 300px; height: 300px; position: relative; margin: 20px auto; cursor: ew-resize; }
+        #lock-dial { width: 100%; height: 100%; border-radius: 50%; background: #000; border: 3px solid var(--border-color); position: relative; display: flex; justify-content: center; align-items: center; }
+        #dial-marker { position: absolute; top: 0px; left: 50%; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 15px solid var(--accent-color); z-index: 10; transform-origin: 50% 150px; /* Moves pivot to center of dial */ }
+        #dial-number { font-size: 4em; font-weight: bold; text-shadow: 0 0 8px var(--accent-color); z-index: 5; }
+        .dial-tick-label { position: absolute; font-size: 14px; color: var(--accent-color); opacity: 0.7; transform: translate(-50%, -50%); }
+        .dial-tick-minor { position: absolute; background: var(--accent-color); opacity: 0.5; width: 1px; height: 10px; transform-origin: 50% 0; }
+        
         #pin-indicators { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; }
         .pin-light { width: 25px; height: 25px; border-radius: 50%; background: #333; border: 2px solid #111; transition: all 0.2s; }
         .pin-light.success { background: var(--success-color); box-shadow: 0 0 10px var(--success-color); }
         .pin-light.fail { background: var(--danger-color); box-shadow: 0 0 10px var(--danger-color); animation: flash-red-bg 0.3s; }
         
         #controls-interface { border-left: 1px solid var(--border-color); padding-left: 20px; }
-        #tension-canvas { width: 100%; height: 150px; background: #000; border: 1px solid var(--border-color); }
+        #tension-meter { display: flex; justify-content: space-between; align-items: center; width: 100%; height: 150px; background: #000; border: 1px solid var(--border-color); padding: 5px; box-sizing: border-box; }
+        .tension-bar { flex-grow: 1; background-color: var(--accent-color); width: 2px; height: 100%; transform: scaleY(0.05); transition: transform 0.05s ease-out; }
+        
         #instruction-text { font-size: 1.2em; font-weight: bold; text-align: center; margin-top: 15px; min-height: 1.5em; }
         #set-pin-btn { width: 100%; padding: 15px; font-size: 1.5em; margin-top: 15px; }
 
@@ -94,15 +99,17 @@
             <div id="game-view-grid">
                 <div id="lock-interface">
                     <div id="pin-indicators"></div>
-                    <div id="lock-dial">
+                    <div id="dial-container">
+                        <div id="lock-dial">
+                            <div id="dial-number">0</div>
+                            <!-- Numbers and ticks will be injected here -->
+                        </div>
                         <div id="dial-marker"></div>
-                        <div id="dial-number">00</div>
-                        <!-- Numbers will be injected here -->
                     </div>
                 </div>
                 <div id="controls-interface">
                     <h3>TENSION METER</h3>
-                    <canvas id="tension-canvas"></canvas>
+                    <div id="tension-meter"></div>
                     <h3 style="margin-top: 20px;">CONTROLS</h3>
                     <button id="set-pin-btn" onclick="setPin()">SET PIN</button>
                     <div id="instruction-text"></div>
@@ -118,15 +125,14 @@
 
     <script>
         let game = {};
-        let tensionCanvas, tensionCtx;
+        let tensionBars = [];
 
         function initializeSim() {
             const perm_lock_time = localStorage.getItem('socom_safe_perm_lock');
             if (perm_lock_time) {
                 const time_diff = Date.now() - parseInt(perm_lock_time, 10);
                 if (time_diff < 300000) { // 5 minutes
-                    forceShowFailure(true);
-                    return;
+                    forceShowFailure(true); return;
                 } else {
                     localStorage.removeItem('socom_safe_perm_lock');
                     localStorage.removeItem('socom_safe_attempts');
@@ -134,9 +140,7 @@
                 }
             }
             const lockout = localStorage.getItem('socom_safe_lockout');
-            if (lockout) {
-                forceShowFailure(false);
-            }
+            if (lockout) { forceShowFailure(false); }
         }
 
         function startCracking() {
@@ -151,15 +155,10 @@
             document.getElementById('game-view').classList.remove('hidden');
             document.getElementById('reset-btn').classList.remove('hidden');
 
-            tensionCanvas = document.getElementById('tension-canvas');
-            tensionCtx = tensionCanvas.getContext('2d');
-            tensionCanvas.width = tensionCanvas.clientWidth;
-            tensionCanvas.height = tensionCanvas.clientHeight;
-
             game = {
                 pinsToSet: parseInt(document.getElementById('lock-quality').value),
                 combination: [], pinStates: [], currentPinIndex: 0,
-                currentRotation: 0, currentDirection: 1, isDragging: false,
+                currentAngle: 0, currentDirection: 1, isDragging: false,
                 lastMouseX: 0, noiseLevel: 0.1, sweetSpotWidth: 2,
                 attemptsLeft: Infinity, isActive: true,
             };
@@ -188,6 +187,7 @@
 
             generateCombination();
             generateDialLabels();
+            generateTensionMeterBars();
             if (roll <= 5) { 
                  document.getElementById('instruction-text').textContent = `First Number: ${game.combination[0]}`;
             }
@@ -196,23 +196,43 @@
             updateUI();
             game.animationFrame = requestAnimationFrame(gameLoop);
         }
+
+        function generateTensionMeterBars() {
+            const meter = document.getElementById('tension-meter');
+            meter.innerHTML = '';
+            tensionBars = [];
+            for (let i = 0; i < 30; i++) { // 30 bars for a smooth look
+                const bar = document.createElement('div');
+                bar.className = 'tension-bar';
+                meter.appendChild(bar);
+                tensionBars.push(bar);
+            }
+        }
         
         function generateDialLabels() {
             const dial = document.getElementById('lock-dial');
-            const radius = dial.offsetWidth / 2 * 0.85; // 85% of the way out
-            for (let i = 0; i < 10; i++) {
-                const num = i * 10;
-                const angle = (num / 100) * (2 * Math.PI) - (Math.PI / 2); // -90 deg to start at top
-                const x = radius * Math.cos(angle) + (dial.offsetWidth / 2);
-                const y = radius * Math.sin(angle) + (dial.offsetHeight / 2);
-                
-                const label = document.createElement('div');
-                label.className = 'dial-tick-label';
-                label.textContent = num;
-                label.style.left = `${x}px`;
-                label.style.top = `${y}px`;
-                label.style.transform = `translate(-50%, -50%)`;
-                dial.appendChild(label);
+            const radius = dial.offsetWidth / 2;
+            for (let i = 0; i < 100; i++) {
+                const angleDeg = (i / 100) * 360;
+                const angleRad = angleDeg * (Math.PI / 180);
+                if (i % 10 === 0) { // Major tick
+                    const labelRadius = radius * 0.8;
+                    const x = labelRadius * Math.sin(angleRad) + radius;
+                    const y = labelRadius * -Math.cos(angleRad) + radius;
+                    const label = document.createElement('div');
+                    label.className = 'dial-tick-label';
+                    label.textContent = i;
+                    label.style.left = `${x}px`;
+                    label.style.top = `${y}px`;
+                    dial.appendChild(label);
+                } else if (i % 5 === 0) { // Minor tick
+                    const tick = document.createElement('div');
+                    tick.className = 'dial-tick-minor';
+                    tick.style.transform = `translateX(-50%) rotate(${angleDeg}deg)`;
+                    tick.style.left = `calc(50%)`;
+                    tick.style.top = `7px`; // Position near the edge
+                    dial.appendChild(tick);
+                }
             }
         }
         
@@ -220,48 +240,44 @@
             game.combination = [];
             for (let i = 0; i < game.pinsToSet; i++) {
                 let num;
-                do {
-                    num = Math.floor(Math.random() * 100);
+                do { num = Math.floor(Math.random() * 100);
                 } while (i > 0 && num === game.combination[i-1]);
                 game.combination.push(num);
             }
         }
         
         function setupEventListeners() {
-            const dial = document.getElementById('lock-dial');
-            dial.onmousedown = (e) => {
+            const dialContainer = document.getElementById('dial-container');
+            dialContainer.onmousedown = (e) => {
                 if (!game.isActive) return;
                 game.isDragging = true;
                 game.lastMouseX = e.clientX;
-                dial.style.cursor = 'grabbing';
+                dialContainer.style.cursor = 'grabbing';
             };
             document.onmousemove = (e) => {
                 if (!game.isDragging || !game.isActive) return;
                 const deltaX = e.clientX - game.lastMouseX;
-                game.currentRotation += deltaX * 0.5 * game.currentDirection;
+                game.currentAngle += deltaX * 0.5; // Sensitivity
                 game.lastMouseX = e.clientX;
                 updateUI();
             };
             document.onmouseup = () => {
                 if (!game.isDragging) return;
                 game.isDragging = false;
-                dial.style.cursor = 'ew-resize';
+                dialContainer.style.cursor = 'ew-resize';
             };
         }
 
         function setPin() {
             if (!game.isActive) return;
-            const currentNum = (Math.round(game.currentRotation) % 100 + 100) % 100;
+            const currentNum = Math.round(((game.currentAngle % 360 + 360) % 360) / 3.6) % 100;
             const targetNum = game.combination[game.currentPinIndex];
-            const diff = Math.abs(currentNum - targetNum);
+            const diff = Math.min(Math.abs(currentNum - targetNum), 100 - Math.abs(currentNum - targetNum));
 
             if (diff <= game.sweetSpotWidth) { // Success
                 game.pinStates[game.currentPinIndex] = 'success';
                 game.currentPinIndex++;
-                game.currentDirection *= -1;
-                if (game.currentPinIndex >= game.pinsToSet) {
-                    winGame();
-                }
+                if (game.currentPinIndex >= game.pinsToSet) { winGame(); }
             } else { // Failure
                 handleFailure();
             }
@@ -273,9 +289,7 @@
             
             if (game.attemptsLeft !== Infinity) {
                 game.attemptsLeft--;
-                if (game.attemptsLeft <= 0) {
-                    loseGame(); return;
-                }
+                if (game.attemptsLeft <= 0) { loseGame(); return; }
             }
             
             setTimeout(() => {
@@ -287,39 +301,36 @@
         
         function gameLoop() {
             if(!game.isActive) return;
-            drawTensionMeter();
+            updateTensionMeter();
             game.animationFrame = requestAnimationFrame(gameLoop);
         }
 
-        function drawTensionMeter() {
-            const w = tensionCanvas.width;
-            const h = tensionCanvas.height;
-            tensionCtx.clearRect(0, 0, w, h);
-            tensionCtx.strokeStyle = 'var(--accent-color)';
-            
-            const currentNum = (Math.round(game.currentRotation) % 100 + 100) % 100;
+        function updateTensionMeter() {
+            const currentNum = Math.round(((game.currentAngle % 360 + 360) % 360) / 3.6) % 100;
             const targetNum = game.combination[game.currentPinIndex];
-            const proximity = Math.max(0, 1 - (Math.abs(currentNum - targetNum) / 15));
+            const diff = Math.min(Math.abs(currentNum - targetNum), 100 - Math.abs(currentNum - targetNum));
+            const proximity = Math.max(0, 1 - (diff / 15));
             const signalStrength = Math.pow(proximity, 3);
 
-            for(let x=0; x < w; x+=4) {
-                const noiseHeight = (Math.random() * h * game.noiseLevel) + 2;
-                const signalHeight = signalStrength * (h * 0.8) * Math.sin((x/w) * Math.PI);
-                const totalHeight = Math.max(noiseHeight, signalHeight);
-                const y = h/2;
-                
-                tensionCtx.lineWidth = 2;
-                tensionCtx.beginPath();
-                tensionCtx.moveTo(x, y - totalHeight / 2);
-                tensionCtx.lineTo(x, y + totalHeight / 2);
-                tensionCtx.stroke();
-            }
+            tensionBars.forEach((bar, index) => {
+                const noiseHeight = (Math.random() * game.noiseLevel) + 0.02;
+                const barProximity = 1 - Math.abs(index - tensionBars.length / 2) / (tensionBars.length / 2);
+                const signalHeight = signalStrength * Math.pow(barProximity, 2);
+                bar.style.transform = `scaleY(${Math.max(noiseHeight, signalHeight)})`;
+            });
         }
 
         function updateUI() {
-            const num = (Math.round(game.currentRotation) % 100 + 100) % 100;
-            document.getElementById('dial-number').textContent = String(num).padStart(2, '0');
-
+            // Update marker rotation
+            const marker = document.getElementById('dial-marker');
+            const direction = game.currentDirection === 1 ? 1 : -1;
+            marker.style.transform = `translateX(-50%) rotate(${game.currentAngle * direction}deg)`;
+            
+            // Update number display
+            const num = Math.round(((game.currentAngle % 360 + 360) % 360) / 3.6) % 100;
+            document.getElementById('dial-number').textContent = num;
+            
+            // Update pin indicators
             const indicatorsContainer = document.getElementById('pin-indicators');
             indicatorsContainer.innerHTML = '';
             for (let i = 0; i < game.pinsToSet; i++) {
