@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.O.C.O.M. // EOD Simulation</title>
+    <link rel="icon" type="image/png" href="https://www.socom.mil/SOF-ATL/PublishingImages/eSOF-Logo.png">
+    <style>
+        /* Base styles copied from your main project for consistency */
+        @keyframes flicker { 0%, 100% { opacity: 0.95; } 50% { opacity: 1; } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes flash-red { 0%, 100% { background-color: var(--danger-bg); } 50% { background-color: var(--bg-color); } }
+
+        :root {
+            --bg-color: #050805; --scanline-color: rgba(0, 255, 85, 0.1); --text-color: #00ff55;
+            --accent-color: #00ff55; --border-color: #00521d; --input-bg: rgba(0, 31, 9, 0.95);
+            --danger-color: #ff4141; --danger-bg: rgba(255, 65, 65, 0.15); --container-bg: rgba(0,0,0,0.4);
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace; margin: 0; background-color: var(--bg-color); color: var(--text-color);
+            text-shadow: 0 0 4px var(--accent-color); animation: flicker 0.15s infinite;
+        }
+        body.flash { animation: flash-red 0.3s ease-in-out; }
+
+        .container { position: relative; max-width: 1200px; margin: 10px auto; padding: 10px; border: 1px solid var(--border-color); background: var(--container-bg); }
+        .header { display: flex; align-items: center; border-bottom: 1px solid var(--accent-color); padding-bottom: 5px; margin-bottom: 15px; }
+        .logo { max-width: 80px; margin-right: 15px; filter: grayscale(100%) brightness(200%) contrast(150%); }
+
+        h1 { font-size: 22px; text-transform: uppercase; }
+        h1::after { content: '_'; animation: blink 1s step-end infinite; }
+        h2 { font-size: 16px; margin-top: 10px; margin-bottom: 10px; text-transform: uppercase; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; }
+        
+        .content-menu { padding: 20px; border: 1px solid var(--border-color); margin: 20px 0; background: var(--input-bg); }
+        
+        button, .button {
+            background: transparent; color: var(--accent-color); border: 1px solid var(--accent-color);
+            padding: 8px 15px; font-size: 14px; cursor: pointer; margin: 5px;
+            font-family: 'Courier New', Courier, monospace; text-transform: uppercase;
+            text-decoration: none;
+        }
+        button:hover, .button:hover { background: var(--accent-color); color: var(--bg-color); text-shadow: none; }
+        button:disabled { cursor: not-allowed; opacity: 0.5; }
+
+        /* Minigame specific styles */
+        .eod-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; align-items: flex-start; }
+        .device-panel { border: 1px solid var(--border-color); padding: 15px; }
+        .device-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .timer-display { font-size: 2.5em; font-weight: bold; color: var(--danger-color); }
+        .strike-display { font-size: 1.5em; }
+        .wires-container { display: flex; justify-content: center; align-items: center; gap: 15px; padding: 20px 0; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); }
+        .wire {
+            width: 30px;
+            height: 150px;
+            border: 2px solid #111;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.1s;
+        }
+        .wire:hover { transform: scale(1.1); }
+        .wire.cut { background-color: #333 !important; height: 70px; align-self: flex-start; margin-top: 40px; cursor: not-allowed; }
+        .status-display { text-align: center; font-size: 1.5em; font-weight: bold; margin-top: 20px; }
+        
+        .manual-panel h3 { margin-top: 0; }
+        .manual-panel ul { list-style-type: none; padding-left: 0; }
+        .manual-panel li { background: rgba(0,0,0,0.2); border-left: 3px solid var(--border-color); padding: 10px; margin-bottom: 8px; }
+        .manual-panel li strong { color: var(--accent-color); }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header class="header">
+            <img src="https://images.squarespace-cdn.com/content/v1/629e0596d168b365d297c6c4/cea70b06-895e-401c-9669-04fa59cfc5e6/socom-logo.png" alt="SOCOM Logo" class="logo">
+            <h1>S.O.C.O.M. // EOD SIMULATION</h1>
+        </header>
+
+        <div class="eod-grid">
+            
+            <!-- Left Panel: The Interactive Device -->
+            <div class="device-panel">
+                <div class="device-header">
+                    <div id="timer" class="timer-display">02:00</div>
+                    <div id="strikes" class="strike-display">STRIKES: 0/2</div>
+                </div>
+
+                <div class="wires-container" id="wires-container">
+                    <!-- Wires will be generated by JavaScript -->
+                </div>
+
+                <div id="status" class="status-display">STATUS: STANDBY</div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button id="start-btn" onclick="armDevice()">ARM DEVICE</button>
+                </div>
+            </div>
+
+            <!-- Right Panel: The Rules -->
+            <div class="manual-panel content-menu">
+                <h3>TECHNICAL MANUAL: XR-7 SERIES</h3>
+                <p>Follow procedures precisely. Evaluate conditions and apply the <strong>first</strong> matching rule for the wire you must cut. Proceed to the next step and re-evaluate.</p>
+                <ul>
+                    <li><strong>IF</strong> there are 3 wires and none are yellow, <strong>CUT</strong> the second wire.</li>
+                    <li><strong>IF</strong> the last wire is white and there is at least one red wire, <strong>CUT</strong> the last wire.</li>
+                    <li><strong>IF</strong> there is exactly one blue wire and more than one red wire, <strong>CUT</strong> the blue wire.</li>
+                    <li><strong>IF</strong> there are more than two yellow wires, <strong>CUT</strong> the first yellow wire.</li>
+                    <li><strong>OTHERWISE</strong>, <strong>CUT</strong> the last red wire (if any) or the first wire if no red wires are present.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="../" class="button">> RETURN TO UTILITIES MENU</a>
+        </div>
+    </div>
+
+    <script>
+        const eod = {
+            timerEl: document.getElementById('timer'),
+            strikesEl: document.getElementById('strikes'),
+            wiresEl: document.getElementById('wires-container'),
+            statusEl: document.getElementById('status'),
+            startBtn: document.getElementById('start-btn'),
+            
+            timeLeft: 120,
+            maxStrikes: 2,
+            timerInterval: null,
+            isActive: false,
+
+            state: {
+                wires: [], // e.g., ['red', 'blue', 'white']
+                strikes: 0,
+                stepsToSolve: 0,
+                stepsCompleted: 0,
+            }
+        };
+
+        const WIRE_COLORS = ['red', 'blue', 'yellow', 'white', 'black'];
+
+        function armDevice() {
+            // --- Reset State ---
+            clearInterval(eod.timerInterval);
+            eod.isActive = true;
+            eod.timeLeft = 120;
+            eod.state.strikes = 0;
+            eod.state.stepsCompleted = 0;
+            eod.startBtn.disabled = true;
+
+            // --- Generate New Puzzle ---
+            const numWires = Math.floor(Math.random() * 3) + 3; // 3 to 5 wires
+            eod.state.wires = [];
+            for (let i = 0; i < numWires; i++) {
+                eod.state.wires.push(WIRE_COLORS[Math.floor(Math.random() * WIRE_COLORS.length)]);
+            }
+            eod.state.stepsToSolve = Math.floor(numWires / 2) + 1; // e.g., 5 wires = 3 steps
+
+            // --- Render UI ---
+            updateDisplays();
+            renderWires();
+            eod.statusEl.textContent = 'STATUS: ARMED';
+            eod.statusEl.style.color = 'var(--accent-color)';
+
+            // --- Start Timer ---
+            eod.timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function updateTimer() {
+            if (!eod.isActive) return;
+            eod.timeLeft--;
+            if (eod.timeLeft <= 0) {
+                eod.timeLeft = 0;
+                detonate();
+            }
+            updateDisplays();
+        }
+
+        function updateDisplays() {
+            const minutes = String(Math.floor(eod.timeLeft / 60)).padStart(2, '0');
+            const seconds = String(eod.timeLeft % 60).padStart(2, '0');
+            eod.timerEl.textContent = `${minutes}:${seconds}`;
+            eod.strikesEl.textContent = `STRIKES: ${eod.state.strikes}/${eod.maxStrikes}`;
+        }
+
+        function renderWires() {
+            eod.wiresEl.innerHTML = '';
+            eod.state.wires.forEach((color, index) => {
+                const wireEl = document.createElement('div');
+                wireEl.className = 'wire';
+                wireEl.style.backgroundColor = color;
+                wireEl.onclick = () => cutWire(index);
+                eod.wiresEl.appendChild(wireEl);
+            });
+        }
+        
+        function calculateCorrectWire() {
+            const activeWires = [];
+            eod.wiresEl.childNodes.forEach((el, index) => {
+                if (!el.classList.contains('cut')) {
+                    activeWires.push({ color: eod.state.wires[index], index: index });
+                }
+            });
+
+            const wires = activeWires.map(w => w.color);
+            const countColor = (c) => wires.filter(color => color === c).length;
+            
+            // Rule 1
+            if (wires.length === 3 && countColor('yellow') === 0) return activeWires[1].index;
+            // Rule 2
+            if (wires[wires.length - 1] === 'white' && countColor('red') > 0) return activeWires[wires.length-1].index;
+            // Rule 3
+            if (countColor('blue') === 1 && countColor('red') > 1) return activeWires.find(w => w.color === 'blue').index;
+            // Rule 4
+            if (countColor('yellow') > 2) return activeWires.find(w => w.color === 'yellow').index;
+            // Default Rule
+            const lastRed = activeWires.slice().reverse().find(w => w.color === 'red');
+            if (lastRed) return lastRed.index;
+            
+            return activeWires[0].index;
+        }
+
+        function cutWire(index) {
+            if (!eod.isActive) return;
+
+            const wireEl = eod.wiresEl.childNodes[index];
+            if (wireEl.classList.contains('cut')) return;
+
+            const correctWireIndex = calculateCorrectWire();
+
+            if (index === correctWireIndex) {
+                // Correct Cut
+                wireEl.classList.add('cut');
+                eod.state.stepsCompleted++;
+                if (eod.state.stepsCompleted >= eod.state.stepsToSolve) {
+                    disarm();
+                }
+            } else {
+                // Incorrect Cut - Strike
+                eod.state.strikes++;
+                updateDisplays();
+                document.body.classList.add('flash');
+                setTimeout(() => document.body.classList.remove('flash'), 300);
+                if (eod.state.strikes > eod.maxStrikes) {
+                    detonate();
+                }
+            }
+        }
+
+        function detonate() {
+            eod.isActive = false;
+            clearInterval(eod.timerInterval);
+            eod.statusEl.textContent = 'STATUS: DETONATED';
+            eod.statusEl.style.color = 'var(--danger-color)';
+            eod.startBtn.disabled = false;
+            eod.startBtn.textContent = 'RESTART SIM';
+        }
+
+        function disarm() {
+            eod.isActive = false;
+            clearInterval(eod.timerInterval);
+            eod.statusEl.textContent = 'STATUS: DISARMED';
+            eod.statusEl.style.color = '#0f0'; // Bright green for success
+            eod.startBtn.disabled = false;
+            eod.startBtn.textContent = 'RESTART SIM';
+        }
+
+    </script>
+
+</body>
+</html>
