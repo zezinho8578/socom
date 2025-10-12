@@ -68,8 +68,8 @@ function updateDisplays() {
 }
 function handleStrike() { if (!game.isActive) return; game.strikes++; updateDisplays(); document.body.classList.add('flash'); setTimeout(() => document.body.classList.remove('flash'), 300); if (game.strikes > game.maxStrikes) { detonate(); } }
 function checkWinCondition() { if (Object.values(game.modules).every(m => m.data.solved)) { disarm(); } }
-function detonate() { game.isActive = false; clearInterval(game.timerInterval); document.getElementById('status').textContent = 'STATUS: DETONATED'; document.getElementById('status').style.color = 'var(--danger-color)'; }
-function disarm() { game.isActive = false; clearInterval(game.timerInterval); document.getElementById('status').textContent = 'STATUS: DISARMED'; document.getElementById('status').style.color = 'var(--success-color)'; }
+function detonate() { game.isActive = false; clearInterval(game.timerInterval); document.getElementById('status').textContent = 'STATUS: DETONATED'; document.getElementById('status').style.color = 'var(--danger-color)'; document.body.style.backgroundColor = 'var(--danger-color)'; }
+function disarm() { game.isActive = false; clearInterval(game.timerInterval); document.getElementById('status').textContent = 'STATUS: DISARMED'; document.getElementById('status').style.color = 'var(--success-color)'; document.getElementById('timer').style.color = 'var(--success-color)'; }
 function resetGame() { clearInterval(game.timerInterval); game = {}; document.getElementById('game-view').classList.add('hidden'); document.getElementById('reset-btn').classList.add('hidden'); document.getElementById('setup-view').classList.remove('hidden'); }
 
 // --- MODULE RENDERING ---
