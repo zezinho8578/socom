@@ -1,194 +1,134 @@
 [
   {
-    "month": 8,
-    "day": 1,
-    "event": "1943 - The U.S. Navy patrol torpedo boat PT-109, commanded by Lieutenant (junior grade) John F. Kennedy, is rammed and sunk by the Japanese destroyer Amagiri off the Solomon Islands.",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/USS_PT-109_on_board_SS_Joseph_Stanton_%28cropped%29.jpg/1920px-USS_PT-109_on_board_SS_Joseph_Stanton_%28cropped%29.jpg"
-  },
-  {
-    "month": 8,
-    "day": 2,
-    "event": "1990 - Iraq invades Kuwait, leading to the beginning of the Persian Gulf War. The U.S. would launch Operation Desert Shield five days later to defend Saudi Arabia.",
-    "image_url": "https://www.rudaw.net/s3/rudaw.net/ContentFiles/632442Image1.jpg?version=4492864"
-  },
-  {
-    "month": 8,
-    "day": 3,
-    "event": "1958 - The U.S. nuclear submarine USS Nautilus completes the first-ever undersea voyage to the geographic North Pole, a significant Cold War achievement.",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/d9/USS_Nautilus_SSN-571_-_0857101.jpg"
-  },
-  {
-    "month": 8,
-    "day": 4,
-    "event": "1790 - The U.S. Coast Guard is founded as the Revenue-Marine by Secretary of the Treasury Alexander Hamilton, making it the oldest continuous seagoing service of the United States.",
-    "image_url": "https://media.defense.gov/2019/Dec/05/2002220545/-1/-1/0/191205-G-G0000-666.JPG"
-  },
-  {
-    "month": 8,
-    "day": 5,
-    "event": "1864 - During the Battle of Mobile Bay, Union Admiral David Farragut famously orders, 'Damn the torpedoes, full speed ahead!' leading to a decisive victory for the Union Navy.",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/99/USS_Hartford_%281858%29.jpg"
-  },
-  {
-    "month": 8,
-    "day": 6,
-    "event": "1945 - The B-29 bomber 'Enola Gay' of the U.S. Army Air Forces drops the atomic bomb 'Little Boy' on the city of Hiroshima, Japan, in an effort to end World War II.",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/B-29_Enola_Gay_w_Crews.jpg/1024px-B-29_Enola_Gay_w_Crews.jpg"
-  },
-  {
-    "month": 8,
-    "day": 7,
-    "event": "1782 - General George Washington establishes the Badge of Military Merit to honor soldiers for 'any singularly meritorious action.' It is the direct predecessor of the modern Purple Heart.",
-    "image_url": "https://www.identifymedals.com/wp-content/uploads/2019/02/medals_american_pre-ww1__Badge-of-Military-Merit.jpg"
-  },
-  {
-    "month": 8,
-    "day": 8,
-    "event": "1918 - The Battle of Amiens begins, marking the start of the Hundred Days Offensive, the Allied counterattack that would ultimately lead to the end of World War I.",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/9f/8th_August_1918_%28Will_Longstaff%29.jpg"
-  },
-  {
-    "month": 8,
-    "day": 9,
-    "event": "1945 - The B-29 bomber 'Bockscar' drops the atomic bomb 'Fat Man' on the city of Nagasaki, Japan. Japan would announce its surrender six days later.",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/98/Bockscar_050809-F-1234P-003.jpg"
-  },
-  {
-    "month": 8,
-    "day": 10,
-    "event": "1949 - The National Security Act Amendments of 1949 are signed, transforming the National Military Establishment into the modern, centralized Department of Defense.",
-    "image_url": "https://ghostsofdc.org/wp-content/uploads/sites/7/2015/09/SHORPY_5a45397u.jpg"
-  },
-  {
-    "month": 8,
+    "month": 10,
     "day": 11,
-    "event": "1972 - The last U.S. ground combat unit, the Third Battalion, Twenty-First Infantry, departs from South Vietnam, ending years of direct American military engagement.",
-    "image_url": "https://www.army.mil/e2/images/rv7/vietnamwar/timeline/lg_silverbayonet.jpg"
+    "event": "1776 - During the American Revolution, the Battle of Valcour Island begins on Lake Champlain. Although a tactical defeat for the Americans under Benedict Arnold, the engagement delays the British advance, contributing to their eventual defeat at Saratoga the following year.",
+    "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSIhXEqloWL5jDMOwoupLw2T7Ms-yNr29rmQw&s"
   },
   {
-    "month": 8,
+    "month": 10,
     "day": 12,
-    "event": "1981 - IBM introduces the Personal Computer (PC), a technology that would revolutionize everything from civilian life to military command, control, and intelligence operations.",
-    "image_url": "https://preview.redd.it/the-ibm-personal-computer-5150-v0-4uu357x9kcxc1.jpeg?auto=webp&s=c18863a687641e51e6891d4dd9b634fba9f5f40c"
+    "event": "1812 - The Battle of Queenston Heights is fought in the War of 1812. It is the first major land battle of the war and results in a British victory, thwarting an American attempt to invade Canada.",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Push_on%2C_brave_York_volunteers%28large%29.jpg"
   },
   {
-    "month": 8,
+    "month": 10,
     "day": 13,
-    "event": "1942 - The 'Manhattan Project' is formally established to develop the atomic bomb, a top-secret endeavor combining the efforts of U.S., British, and Canadian scientists.",
-    "image_url": "https://www.nps.gov/mapr/learn/historyculture/images/CP1-scientists.jpg"
+    "event": "1775 - The Continental Congress authorizes the procurement of two armed vessels, marking the establishment of the United States Navy.",
+    "image_url": "https://res.cloudinary.com/aenetworks/image/upload/c_fill,w_1200,h_630,g_auto/dpr_auto/f_auto/q_auto:eco/v1/continental-congress-gettyimages-1889581"
   },
   {
-    "month": 8,
+    "month": 10,
     "day": 14,
-    "event": "1945 - President Harry S. Truman announces Japan's unconditional surrender, effectively ending World War II. The day becomes known as Victory over Japan Day, or V-J Day.",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/8/87/Kissing_the_War_Goodbye.jpg"
+    "event": "1962 - A U.S. Air Force U-2 spy plane flying over Cuba photographs the construction of Soviet medium-range ballistic missile sites, precipitating the Cuban Missile Crisis.",
+    "image_url": "https://www.airforcemag.com/app/uploads/2021/07/0821_Ploky_U2_MRBM_launch_site.jpg"
   },
   {
-    "month": 8,
+    "month": 10,
     "day": 15,
-    "event": "1940 - The first official parachute jump of the U.S. Army's Parachute Test Platoon at Fort Benning, Georgia, marks the birth of U.S. military airborne forces.",
-    "image_url": "https://nebula.wsimg.com/6cbc26fa38ba57945e6878802d6807ce?AccessKeyId=94A41B6465F0652C915E&disposition=0&alloworigin=1"
+    "event": "1965 - The first public burning of a draft card in the United States to protest the Vietnam War takes place. David J. Miller, a Catholic pacifist, burns his card at a rally in New York City.",
+    "image_url": "https://www.peoplesworld.org/wp-content/uploads/2016/08/endwarvietnam510.jpg"
   },
   {
-    "month": 8,
+    "month": 10,
     "day": 16,
-    "event": "1944 - Operation Dragoon, the Allied invasion of Southern France, begins with a massive amphibious and airborne assault involving the U.S. Seventh Army.",
-    "image_url": "https://www.nationalww2museum.org/sites/default/files/styles/wide_medium/public/2020-08/COVER%20PHOTO%20Dragoon%20-%20Tyler%20Bamford.jpeg"
+    "event": "1964 - The People's Republic of China detonates its first atomic bomb, becoming the fifth nuclear power in the world.",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/db/1965-01_1964%E5%B9%B4_%E9%A6%96%E6%AC%A1%E5%8E%9F%E5%AD%90%E5%BC%B9%E7%88%86%E7%82%B83.jpg"
   },
   {
-    "month": 8,
+    "month": 10,
     "day": 17,
-    "event": "1942 - U.S. Marines from the 2nd Raider Battalion conduct a daring 'hit-and-run' raid on Makin Atoll in the Pacific, an early special operations mission of WWII.",
-    "image_url": "https://cloudfront-us-east-1.images.arcpublishing.com/archetype/IQRSLHRU6BD7XCENFKZ4VSWWII.jpg"
+    "event": "1777 - British General John Burgoyne surrenders his army to American forces at Saratoga, New York, a major turning point in the American Revolutionary War.",
+    "image_url": "https://www.battlefields.org/sites/default/files/styles/squarish_webp/public/surrender-of-gen-burgoyne.jpg.webp?itok=WBOlpuIW"
   },
   {
-    "month": 8,
+    "month": 10,
     "day": 18,
-    "event": "1965 - Operation Starlite begins in Vietnam. It is the first major offensive conducted purely by U.S. ground forces, marking a significant escalation of American involvement.",
-    "image_url": "https://static.wikia.nocookie.net/totalwar-ar/images/3/33/Operation_Starlite.png/revision/latest/thumbnail/width/360/height/360?cb=20190714190524"
+    "event": "1944 - Soviet forces enter Czechoslovakia during World War II, beginning the country's liberation from German occupation.",
+    "image_url": "https://cdn.theatlantic.com/media/img/photo/2018/08/photos-50-years-since-a-soviet-inva/p01_RTR21C2T-1/original.jpg"
   },
   {
-    "month": 8,
+    "month": 10,
     "day": 19,
-    "event": "1981 - Two U.S. Navy F-14 Tomcats shoot down two Libyan Su-22 fighter jets over the Gulf of Sidra, after the Libyan aircraft fired upon the American planes in international airspace.",
-    "image_url": "https://theaviationgeekclub.com/wp-content/uploads/2023/04/MiG-23-F-14.jpg"
+    "event": "1781 - British General Lord Cornwallis surrenders to General George Washington at Yorktown, Virginia, effectively ending the American Revolutionary War.",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Surrender_of_Lord_Cornwallis.jpg/1200px-Surrender_of_Lord_Cornwallis.jpg"
   },
   {
-    "month": 8,
+    "month": 10,
     "day": 20,
-    "event": "1998 - The U.S. military launches cruise missile strikes (Operation Infinite Reach) against al-Qaeda camps in Afghanistan in retaliation for the bombings of U.S. embassies in Africa.",
-    "image_url": "https://static.wikia.nocookie.net/totalwar-ar/images/a/ae/Operation_Infinite_Reach.jpg/revision/latest?cb=20181125184645"
+    "event": "1944 - U.S. forces under General Douglas MacArthur land on the island of Leyte in the Philippines, beginning the campaign to liberate the islands from Japanese occupation.",
+    "image_url": "https://www.nationalww2museum.org/sites/default/files/2024-10/Douglas_MacArthur_lands_Leyte1%20%281%29.jpg"
   },
   {
-    "month": 8,
+    "month": 10,
     "day": 21,
-    "event": "1959 - Hawaii is admitted as the 50th U.S. state. Its strategic location is home to the headquarters of the U.S. Indo-Pacific Command and the Pacific Fleet.",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/c/c3/USS_Arizona_Memorial_%28aerial_view%29.jpg"
+    "event": "1797 - The U.S. Navy frigate USS Constitution, famously known as 'Old Ironsides,' is launched in Boston.",
+    "image_url": "https://ussconstitutionmuseum.org/wp-content/uploads/2018/09/296-1_001.jpg"
   },
   {
-    "month": 8,
+    "month": 10,
     "day": 22,
-    "event": "1977 - The first flight of the U.S. Army's YAH-64, the prototype for the AH-64 Apache attack helicopter, takes place. The Apache would become a dominant force on the battlefield.",
-    "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQHJXcjRUrCv3A40_xG80WUm1bifE_E7LThNA&s"
+    "event": "1962 - President John F. Kennedy announces a naval 'quarantine' of Cuba in response to the discovery of Soviet missile bases, marking the public beginning of the Cuban Missile Crisis.",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/30/President_Kennedy_-_signing_Cuba_Quarantine_Proclamation.jpg"
   },
   {
-    "month": 8,
+    "month": 10,
     "day": 23,
-    "event": "1996 - Osama bin Laden issues his first fatwa, a 'Declaration of War against the Americans Occupying the Land of the Two Holy Places,' setting the stage for future attacks.",
-    "image_url": "https://static.independent.co.uk/2020/11/03/16/bin-laden-1993.jpg"
+    "event": "1983 - A suicide truck bomber destroys the U.S. Marine barracks in Beirut, Lebanon, killing 241 American servicemen.",
+    "image_url": "https://2017-2021.state.gov/wp-content/uploads/2020/01/Lebanon-Bombing-1983.jpg"
   },
   {
-    "month": 8,
+    "month": 10,
     "day": 24,
-    "event": "1814 - During the War of 1812, British forces capture Washington, D.C., and set fire to numerous public buildings, including the White House and the Capitol Building.",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/9c/British_Burning_Washington.jpg"
+    "event": "1944 - The Battle of Leyte Gulf, the largest naval battle in history, begins in the Philippines. The battle involves hundreds of ships and results in a decisive Allied victory.",
+    "image_url": "https://warfarehistorynetwork.com/wp-content/uploads/2024/06/M-Sum24-Leyte-2.jpg"
   },
   {
-    "month": 8,
+    "month": 10,
     "day": 25,
-    "event": "1944 - Allied forces, including the French 2nd Armored Division and the U.S. 4th Infantry Division, liberate the city of Paris from German occupation.",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Crowds_of_French_patriots_line_the_Champs_Elysees-edit2.jpg/1024px-Crowds_of_French_patriots_line_the_Champs_Elysees-edit2.jpg"
+    "event": "1983 - The United States invades the Caribbean island of Grenada in Operation Urgent Fury, following a military coup that overthrew the government.",
+    "image_url": "https://www.defensemedianetwork.com/wp-content/uploads/2013/05/C-Company-Operation-Urgent-Fury-ftd.jpg"
   },
   {
-    "month": 8,
+    "month": 10,
     "day": 26,
-    "event": "1992 - The U.S. begins enforcing a no-fly zone over southern Iraq (Operation Southern Watch) to protect populations from Saddam Hussein's regime.",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/36/F-16s_Southern_Watch.jpg"
+    "event": "1942 - The Battle of the Santa Cruz Islands, a major naval engagement between the U.S. and Japan, takes place in the waters of the Solomon Islands during World War II.",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/4/48/USS_Enterprise_%28CV-6%29_under_attack_by_dive_bombers_during_the_Battle_of_Santa_Cruz_Islands_on_26_October_1942_%2880-G-20989%29.jpg"
   },
   {
-    "month": 8,
+    "month": 10,
     "day": 27,
-    "event": "1962 - The U.S. launches the Mariner 2 space probe, the first successful robotic interplanetary probe. Its technology laid the groundwork for modern satellite reconnaissance.",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/90/Mariner_2.jpg"
+    "event": "1941 - In a Navy Day radio address, President Franklin D. Roosevelt declares that 'America has been attacked' by German U-boats, signaling a shift in the nation's stance on entering World War II.",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/8/85/FDR-September-11-1941.jpg"
   },
   {
-    "month": 8,
+    "month": 10,
     "day": 28,
-    "event": "1963 - Martin Luther King Jr. delivers his 'I Have a Dream' speech. Many veterans of the armed forces were key participants and provided security for the Civil Rights Movement.",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Martin_Luther_King_Jr_National_Historic_Site_%2836233249121%29.jpg/960px-Martin_Luther_King_Jr_National_Historic_Site_%2836233249121%29.jpg"
+    "event": "1962 - The Cuban Missile Crisis ends as Soviet Premier Nikita Khrushchev announces that the USSR will dismantle its missile bases in Cuba in exchange for a U.S. pledge not to invade the island.",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/d1/Nikita_Khrushchev_1962_%28cropped%29.jpg"
   },
   {
-    "month": 8,
+    "month": 10,
     "day": 29,
-    "event": "2005 - Hurricane Katrina makes landfall, leading to one of the largest domestic deployments of the U.S. National Guard and active-duty military in American history for disaster relief.",
-    "image_url": "https://www.nationalguard.mil/Portals/31/Features/2015/Katrina/250715-A-YG824-001.jpg"
+    "event": "1956 - The Suez Crisis begins with Israel's invasion of the Sinai Peninsula, followed by British and French intervention.",
+    "image_url": "https://res.cloudinary.com/aenetworks/image/upload/v1737386389/gettyimages-104415335.jpg"
   },
   {
-    "month": 8,
+    "month": 10,
     "day": 30,
-    "event": "1963 - The Moscow-Washington hotline, a direct communication link between the leaders of the U.S. and the Soviet Union, becomes operational to prevent accidental nuclear war.",
-    "image_url": "https://gdb.voanews.com/bd2e74a0-b00d-4c2f-915b-25e352dd111b_cx0_cy11_cw0_w1080_h608.jpg"
+    "event": "1953 - President Dwight D. Eisenhower formally approves National Security Council Paper No. 162/2, which codifies the U.S. policy of containment and reliance on nuclear weapons to deter Soviet aggression.",
+    "image_url": "https://images.squarespace-cdn.com/content/v1/5497331ae4b0148a6141bd47/1603690841456-164L3JAJLCQNR6NUJM6N/73-2704.tif.jpg?format=1500w"
   },
   {
-    "month": 8,
+    "month": 10,
     "day": 31,
-    "event": "2021 - The final U.S. military planes depart from Kabul, officially ending the 20-year War in Afghanistan and concluding the largest non-combatant evacuation in U.S. history.",
-    "image_url": "https://media-cldnry.s-nbcnews.com/image/upload/newscms/2021_35/3502611/210830-afghanistan-last-soldier-leaves-kabul-ac-848p.jpg"
+    "event": "1968 - President Lyndon B. Johnson announces a complete halt to all air, naval, and artillery bombardment of North Vietnam, effective November 1.",
+    "image_url": "https://media.wnyc.org/i/1860/1242/l/80/1/AP_6810310497.jpg"
   },
   {
-    "month": 9,
+    "month": 11,
     "day": 1,
-    "event": "1939 - Germany invades Poland, initiating World War II in Europe. This event would ultimately draw the United States into the largest and deadliest conflict in human history.",
-    "image_url": "https://www.nationalww2museum.org/sites/default/files/2023-10/Defilada_wojsk_niemieckich_w_Warszawie_%282-105%29.jpg"
+    "event": "1952 - The United States detonates the first hydrogen bomb, codenamed 'Ivy Mike,' at Enewetak Atoll in the Marshall Islands.",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/3d/IvyMike2.jpg"
   }
 ]
