@@ -8,7 +8,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // --- 1. Create the visual overlay ---
     const overlay = document.createElement('div');
-    overlay.textContent = 'PRACTICE MODE';
+    overlay.textContent = 'PRACTICE';
     Object.assign(overlay.style, {
         position: 'fixed',
         top: '50%',
@@ -16,7 +16,7 @@ window.addEventListener('DOMContentLoaded', () => {
         transform: 'translate(-50%, -50%) rotate(-15deg)',
         fontSize: '10vw',
         fontWeight: 'bold',
-        color: 'rgba(255, 65, 65, 0.25)',
+        color: 'rgba(255, 65, 65, 0.10)',
         zIndex: '9999',
         pointerEvents: 'none', // Allows clicking through the overlay
         textShadow: '0 0 10px rgba(0,0,0,0.5)'
