@@ -63,6 +63,11 @@
         <main>
             <div class="main-menu">
                 <h2>SELECT UTILITY</h2>
+
+                <div style="margin-bottom: 20px; padding: 10px; border: 1px solid var(--border-color);">
+                    <button onclick="togglePracticeMode()">TOGGLE PRACTICE MODE</button>
+                    <p style="margin: 5px 0 0 0;">STATUS: <span id="practice-mode-status" style="font-weight: bold;"></span></p>
+                </div>
                 
                 <p style="margin: 20px auto; max-width: 600px; opacity: 0.8;">
                     Access mission-critical tools and field simulations. Unauthorized access is a federal offense.
@@ -92,16 +97,41 @@
     </div>
 
     <script>
-        // Optional: If you want themes to work here, you'll need the theme-switching JS.
-        // For simplicity, this hub page can just use the default theme.
-        // If you want to sync themes, you would copy the theme functions from your main script.
+        // --- THEME UTILITY ---
         function applySavedTheme() {
             const savedTheme = localStorage.getItem('socom_theme');
             if (savedTheme && savedTheme !== 'default') {
                 document.body.classList.add(savedTheme + '-theme');
             }
         }
-        window.onload = applySavedTheme;
+
+        // --- PRACTICE MODE UTILITY ---
+        function updatePracticeModeStatus() {
+            const statusEl = document.getElementById('practice-mode-status');
+            if (localStorage.getItem('socom_practice_mode') === 'true') {
+                statusEl.textContent = 'ACTIVE';
+                statusEl.style.color = 'var(--success-color)';
+            } else {
+                statusEl.textContent = 'INACTIVE';
+                statusEl.style.color = 'var(--danger-color)';
+            }
+        }
+
+        function togglePracticeMode() {
+            if (localStorage.getItem('socom_practice_mode') === 'true') {
+                localStorage.removeItem('socom_practice_mode');
+            } else {
+                localStorage.setItem('socom_practice_mode', 'true');
+            }
+            updatePracticeModeStatus();
+        }
+        
+        // --- INITIALIZE ON PAGE LOAD ---
+        // Use DOMContentLoaded to run scripts after the page structure is ready.
+        window.addEventListener('DOMContentLoaded', () => {
+            applySavedTheme();
+            updatePracticeModeStatus();
+        });
     </script>
 
 </body>
