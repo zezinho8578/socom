@@ -8,7 +8,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // --- 1. Create the visual overlay ---
     const overlay = document.createElement('div');
-    overlay.textContent = 'PRACTICE';
+    overlay.textContent = 'P R A C T I C E';
     Object.assign(overlay.style, {
         position: 'fixed',
         top: '50%',
