@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.O.C.O.M. // Long-Range Marksmanship</title>
+    <link rel="icon" type="image/png" href="https://www.socom.mil/SOF-ATL/PublishingImages/eSOF-Logo.png">
+    <style>
+        /* Base styles from main project */
+        @keyframes flicker { 0%, 100% { opacity: 0.95; } 50% { opacity: 1; } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes pulse-red { 0%, 100% { color: #ff4141; text-shadow: 0 0 10px #ff4141; } 50% { color: #ff8a8a; text-shadow: 0 0 5px #ff4141; } }
+
+        :root {
+            --bg-color: #050805; --text-color: #00ff55; --accent-color: #00ff55;
+            --border-color: #00521d; --input-bg: rgba(0, 31, 9, 0.95);
+            --danger-color: #ff4141; --container-bg: rgba(0,0,0,0.4);
+            --success-color: #0f0;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace; margin: 0; background-color: var(--bg-color);
+            color: var(--text-color); text-shadow: 0 0 4px var(--accent-color); animation: flicker 0.15s infinite;
+            overflow: hidden; /* Prevent scrollbars */
+        }
+        .container { max-width: 1200px; margin: 10px auto; padding: 10px; border: 1px solid var(--border-color); background: var(--container-bg); }
+        .header { display: flex; align-items: center; border-bottom: 1px solid var(--accent-color); padding-bottom: 5px; margin-bottom: 15px; }
+        .logo { max-width: 80px; margin-right: 15px; filter: grayscale(100%) brightness(200%) contrast(150%); }
+        h1 { font-size: 22px; text-transform: uppercase; } h1::after { content: '_'; animation: blink 1s step-end infinite; }
+        h2, h3 { text-transform: uppercase; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; margin-top: 20px; }
+        .content-menu { padding: 20px; border: 1px solid var(--border-color); margin: 20px 0; background: var(--input-bg); }
+        button, .button { background: transparent; color: var(--accent-color); border: 1px solid var(--accent-color); padding: 8px 15px; font-size: 14px; cursor: pointer; margin: 5px; font-family: 'Courier New', Courier, monospace; text-transform: uppercase; text-decoration: none; }
+        button:hover, .button:hover { background: var(--accent-color); color: var(--bg-color); text-shadow: none; }
+        input, select { width: 100%; padding: 6px; box-sizing: border-box; background-color: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); font-family: 'Courier New', Courier, monospace; }
+        label { font-weight: bold; display: block; margin-bottom: 4px; color: var(--accent-color); font-size: 14px; }
+        .hidden { display: none !important; }
+        .grid-3-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+        /* --- Game Specific Styles --- */
+        #game-view-container { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
+        #scope-view-container { border: 1px solid var(--border-color); background: #000; position: relative; cursor: crosshair; aspect-ratio: 16/9; }
+        #scope-canvas { display: block; width: 100%; height: 100%; }
+
+        #hud-panel { border: 1px solid var(--border-color); padding: 15px; }
+        #hud-panel h3 { margin-top: 0; }
+        .hud-item { margin-bottom: 15px; }
+        .hud-item label { font-size: 12px; opacity: 0.8; }
+        .hud-item div { font-size: 1.2em; font-weight: bold; letter-spacing: 1px; }
+
+        #breath-bar-outer { background: #000; border: 1px solid var(--border-color); padding: 2px; }
+        #breath-bar-inner { height: 10px; background: var(--accent-color); width: 100%; transition: width 0.1s linear; }
+
+        #fumble-timer {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            font-size: 4em; font-weight: bold; animation: pulse-red 1s infinite;
+        }
+
+        #results-view { text-align: center; }
+        #results-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; align-items: center; margin-top: 20px; }
+        #hit-display-canvas { background: #000; border: 1px solid var(--border-color); max-width: 300px; margin: auto; }
+        #hit-report { text-align: left; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header class="header">
+            <img src="https://images.squarespace-cdn.com/content/v1/629e0596d168b365d297c6c4/cea70b06-895e-401c-9669-04fa59cfc5e6/socom-logo.png" alt="SOCOM Logo" class="logo">
+            <h1>S.O.C.O.M. // LONG-RANGE MARKSMANSHIP</h1>
+        </header>
+
+        <!-- SETUP VIEW -->
+        <div id="setup-view">
+            <div class="content-menu">
+                <h2>MISSION BRIEFING // BALLISTICS DATA</h2>
+                <div class="grid-3-col">
+                    <div>
+                        <label for="range">TARGET RANGE (m)</label>
+                        <input type="number" id="range" min="100" max="2000" value="800">
+                    </div>
+                    <div>
+                        <label for="wind-speed">WIND SPEED (kph)</label>
+                        <input type="number" id="wind-speed" min="0" max="50" value="15">
+                    </div>
+                    <div>
+                        <label for="wind-dir">WIND DIRECTION</label>
+                        <select id="wind-dir">
+                            <option value="L">FROM LEFT</option>
+                            <option value="R">FROM RIGHT</option>
+                            <option value="H">HEADWIND</option>
+                            <option value="T">TAILWIND</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid-2-col" style="margin-top: 20px;">
+                     <div>
+                        <label for="caliber">WEAPON CALIBER</label>
+                        <select id="caliber">
+                            <option value="7.62">7.62x51mm (Standard)</option>
+                            <option value="338">.338 Lapua (Heavy)</option>
+                            <option value="50">.50 BMG (Anti-Materiel)</option>
+                        </select>
+                    </div>
+                     <div>
+                        <label for="target-movement">TARGET STATUS</label>
+                        <select id="target-movement">
+                            <option value="static">STATIC</option>
+                            <option value="walking">WALKING</option>
+                            <option value="running">RUNNING</option>
+                        </select>
+                    </div>
+                </div>
+                <hr style="border-color: var(--border-color); margin: 20px 0;">
+                <div class="grid-2-col">
+                     <div>
+                        <label for="firearms-skill">AGENT FIREARMS SKILL %</label>
+                        <input type="number" id="firearms-skill" min="0" max="100" placeholder="e.g., 60">
+                    </div>
+                    <div>
+                        <label for="d100-roll">D100 ROLL</label>
+                        <input type="number" id="d100-roll" min="1" max="100" placeholder="e.g., 45">
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <button onclick="startSimulation()">ACQUIRE TARGET</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- GAME VIEW -->
+        <div id="game-view" class="hidden">
+            <div id="game-view-container">
+                <div id="scope-view-container">
+                    <canvas id="scope-canvas"></canvas>
+                    <div id="fumble-timer" class="hidden"></div>
+                </div>
+                <div id="hud-panel">
+                    <h3>SYSTEMS ONLINE</h3>
+                    <div class="hud-item">
+                        <label>FIRE CONTROL SOLUTION</label>
+                        <div id="solution-display">CALCULATING...</div>
+                    </div>
+                    <div class="hud-item">
+                        <label>CURRENT AIM OFFSET (H/V)</label>
+                        <div id="offset-display">0.0 / 0.0</div>
+                    </div>
+                    <div class="hud-item">
+                        <label>BREATH CONTROL (HOLD [L-SHIFT])</label>
+                        <div id="breath-bar-outer"><div id="breath-bar-inner"></div></div>
+                    </div>
+                    <div class="hud-item">
+                        <label>STATUS</label>
+                        <div id="status-display">AWAITING ENGAGEMENT_</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- RESULTS VIEW -->
+        <div id="results-view" class="hidden">
+            <h2>AFTER ACTION REPORT</h2>
+            <div id="results-grid">
+                <canvas id="hit-display-canvas" width="300" height="500"></canvas>
+                <div id="hit-report">
+                    <h3>IMPACT ANALYSIS</h3>
+                    <div class="hud-item">
+                        <label>HIT PROXIMITY</label>
+                        <div id="report-proximity"></div>
+                    </div>
+                     <div class="hud-item">
+                        <label>IMPACT REGION</label>
+                        <div id="report-region-common"></div>
+                    </div>
+                    <div class="hud-item">
+                        <label>ANATOMICAL DESIGNATION</label>
+                        <div id="report-region-sci"></div>
+                    </div>
+                    <div class="hud-item">
+                        <label>WOUND DEPTH ASSESSMENT</label>
+                        <div id="report-depth"></div>
+                    </div>
+                    <div class="hud-item">
+                        <label>TERMINAL EFFECT</label>
+                        <div id="report-effect"></div>
+                    </div>
+                </div>
+            </div>
+            <button onclick="window.location.reload()" style="margin-top: 20px;">RESTART SIMULATION</button>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="https://socom.vercel.app/minigames/" class="button">> RETURN TO UTILITIES MENU</a>
+        </div>
+    </div>
+
+    <script>
+        let game = {};
+        const canvas = document.getElementById('scope-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // --- CALIBER & HIT DATA ---
+        const CALIBERS = {
+            '7.62': { name: '7.62x51mm', stability: 1.0, windFactor: 1.2, dropFactor: 1.1, power: 100 },
+            '338': { name: '.338 Lapua', stability: 1.2, windFactor: 0.8, dropFactor: 0.9, power: 150 },
+            '50': { name: '.50 BMG', stability: 1.5, windFactor: 0.5, dropFactor: 0.7, power: 250 }
+        };
+
+        const HIT_ZONES = [
+            { threshold: 10, common: "Head (Cranial)", sci: "Regio Cranialis", effect: "INSTANTANEOUS LETHALITY" },
+            { threshold: 25, common: "Thorax (Upper Torso)", sci: "Regio Thoracica", effect: "CRITICAL TRAUMA. IMMEDIATE INCAPACITATION." },
+            { threshold: 40, common: "Abdomen (Lower Torso)", sci: "Regio Abdominalis", effect: "SEVERE TRAUMA. RAPID INCAPACITATION." },
+            { threshold: 70, common: "Upper Limb", sci: "Regio Brachialis", effect: "MAJOR TRAUMA. COMBAT INEFFECTIVE." },
+            { threshold: 100, common: "Lower Limb", sci: "Regio Cruralis", effect: "SIGNIFICANT TRAUMA. MOBILITY COMPROMISED." },
+            { threshold: 150, common: "Grazing Hit", sci: "N/A", effect: "SUPERFICIAL TRAUMA. TARGET LIKELY STILL MOBILE." },
+            { threshold: Infinity, common: "MISS", sci: "N/A", effect: "TARGET UNHARMED. POSITION COMPROMISED." }
+        ];
+
+        function startSimulation() {
+            // --- 1. GATHER DATA ---
+            const inputs = {
+                range: parseInt(document.getElementById('range').value),
+                windSpeed: parseInt(document.getElementById('wind-speed').value),
+                windDir: document.getElementById('wind-dir').value,
+                caliber: document.getElementById('caliber').value,
+                movement: document.getElementById('target-movement').value,
+                skill: parseInt(document.getElementById('firearms-skill').value),
+                roll: parseInt(document.getElementById('d100-roll').value)
+            };
+            if (isNaN(inputs.skill) || isNaN(inputs.roll)) {
+                alert('Please fill in Firearms Skill and d100 Roll.');
+                return;
+            }
+
+            const caliberData = CALIBERS[inputs.caliber];
+
+            // --- 2. CALCULATE SHOT SOLUTION (The "correct" answer) ---
+            let elevation = (inputs.range / 100) * caliberData.dropFactor; // Simple drop model
+            let windage = 0;
+            if (inputs.windDir === 'L') windage = (inputs.windSpeed / 5) * caliberData.windFactor;
+            if (inputs.windDir === 'R') windage = -(inputs.windSpeed / 5) * caliberData.windFactor;
+            // Head/Tail winds affect elevation slightly
+            if (inputs.windDir === 'H') elevation *= 1.1;
+            if (inputs.windDir === 'T') elevation *= 0.9;
+            
+            let lead = 0;
+            if (inputs.movement === 'walking') lead = 5;
+            if (inputs.movement === 'running') lead = 12;
+            windage += lead;
+
+            // --- 3. SKILL CHECK & DIFFICULTY MODIFIERS ---
+            let swayMultiplier = caliberData.stability;
+            let showGhostReticle = false;
+            if (roll >= 96) { // Fumble
+                swayMultiplier *= 2.5;
+                startFumbleTimer();
+            } else if (roll > inputs.skill) { // Failure
+                swayMultiplier *= 1.5;
+            } else if (roll <= 5) { // Critical
+                swayMultiplier *= 0.5;
+                showGhostReticle = true;
+            }
+
+            // --- 4. INITIALIZE GAME STATE ---
+            game = {
+                isActive: true,
+                solution: { elevation, windage },
+                playerAim: { x: 0, y: 0 }, // Represents player's compensation
+                sway: { x: 0, y: 0, angle: 0 },
+                target: { x: canvas.width / 2, y: canvas.height / 2, speed: 0 },
+                breath: 100,
+                isHoldingBreath: false,
+                swayMultiplier,
+                showGhostReticle,
+                caliberData,
+                inputs,
+                lastFrameTime: performance.now(),
+            };
+            if (inputs.movement === 'walking') game.target.speed = 15; // pixels per second
+            if (inputs.movement === 'running') game.target.speed = 40;
+
+            document.getElementById('solution-display').textContent = `H: ${windage.toFixed(1)} / V: ${elevation.toFixed(1)}`;
+
+            // --- 5. START GAME ---
+            document.getElementById('setup-view').classList.add('hidden');
+            document.getElementById('game-view').classList.remove('hidden');
+            
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('mousedown', handleFire);
+            document.addEventListener('keydown', handleKeyDown);
+            document.addEventListener('keyup', handleKeyUp);
+
+            requestAnimationFrame(updateLoop);
+        }
+
+        // --- GAME LOOP & UPDATES ---
+        function updateLoop(timestamp) {
+            if (!game.isActive) return;
+            const deltaTime = (timestamp - game.lastFrameTime) / 1000; // time in seconds
+            game.lastFrameTime = timestamp;
+
+            updateSway(timestamp);
+            updateBreath(deltaTime);
+            updateTarget(deltaTime);
+            
+            draw();
+
+            requestAnimationFrame(updateLoop);
+        }
+
+        function updateSway(timestamp) {
+            let baseSway = 50 * game.swayMultiplier;
+            if (game.isHoldingBreath) {
+                const breathFactor = 0.1 + (game.breath / 100) * 0.9; // Less effective as breath runs out
+                baseSway *= 0.2 * breathFactor;
+            }
+            game.sway.angle += 0.02;
+            game.sway.x = Math.cos(game.sway.angle) * baseSway;
+            game.sway.y = Math.sin(game.sway.angle * 2) * (baseSway / 2); // Figure-eight
+        }
+
+        function updateBreath(deltaTime) {
+            if (game.isHoldingBreath) {
+                game.breath = Math.max(0, game.breath - 20 * deltaTime); // Depletes in 5 seconds
+            } else {
+                game.breath = Math.min(100, game.breath + 10 * deltaTime); // Regenerates in 10 seconds
+            }
+            document.getElementById('breath-bar-inner').style.width = `${game.breath}%`;
+        }
+        
+        function updateTarget(deltaTime) {
+            game.target.x += game.target.speed * deltaTime;
+            if (game.target.x > canvas.width + 50) game.target.x = -50; // Loop target
+        }
+
+        // --- DRAWING ---
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Calculate total offset (player aim + sway)
+            const viewOffsetX = -game.playerAim.x + game.sway.x;
+            const viewOffsetY = -game.playerAim.y + game.sway.y;
+            
+            ctx.save();
+            ctx.translate(viewOffsetX, viewOffsetY);
+            
+            // Draw background elements and target
+            drawTarget();
+            
+            ctx.restore();
+
+            // Draw scope overlay (vignette)
+            drawVignette();
+
+            // Draw reticle (always in the center of the screen)
+            drawReticle();
+            
+            // Draw ghost reticle if applicable
+            if (game.showGhostReticle) {
+                drawGhostReticle();
+            }
+        }
+        
+        function drawTarget() {
+            ctx.fillStyle = game.inputs.movement === 'static' ? '#ccc' : '#f5c542';
+            ctx.beginPath();
+            // Simple silhouette
+            ctx.arc(game.target.x, game.target.y, 8, 0, Math.PI * 2); // Head
+            ctx.fillRect(game.target.x - 12, game.target.y + 8, 24, 40); // Body
+            ctx.fill();
+        }
+
+        function drawVignette() {
+            const gradient = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, canvas.width / 2.5, canvas.width / 2, canvas.height / 2, canvas.width / 2);
+            gradient.addColorStop(0, 'rgba(0,0,0,0)');
+            gradient.addColorStop(1, 'rgba(0,0,0,1)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 20;
+            ctx.strokeRect(0,0,canvas.width,canvas.height);
+        }
+
+        function drawReticle() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+            ctx.lineWidth = 2;
+            // Main lines
+            ctx.beginPath();
+            ctx.moveTo(centerX, 0); ctx.lineTo(centerX, canvas.height);
+            ctx.moveTo(0, centerY); ctx.lineTo(canvas.width, centerY);
+            ctx.stroke();
+
+            // Mil-dots (each represents 10 units of offset)
+            for (let i = 1; i <= 10; i++) {
+                ctx.beginPath();
+                ctx.arc(centerX + i * 10, centerY, 1.5, 0, Math.PI * 2);
+                ctx.arc(centerX - i * 10, centerY, 1.5, 0, Math.PI * 2);
+                ctx.arc(centerX, centerY + i * 10, 1.5, 0, Math.PI * 2);
+                ctx.arc(centerX, centerY - i * 10, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function drawGhostReticle() {
+             const centerX = canvas.width / 2;
+             const centerY = canvas.height / 2;
+             const ghostX = centerX + game.solution.windage;
+             const ghostY = centerY + game.solution.elevation;
+             ctx.strokeStyle = 'rgba(0, 255, 85, 0.5)';
+             ctx.lineWidth = 1;
+             ctx.beginPath();
+             ctx.moveTo(ghostX-5, ghostY); ctx.lineTo(ghostX+5, ghostY);
+             ctx.moveTo(ghostX, ghostY-5); ctx.lineTo(ghostX, ghostY+5);
+             ctx.stroke();
+        }
+
+        // --- EVENT HANDLERS ---
+        function handleMouseMove(e) {
+            if (!game.isActive) return;
+            const rect = canvas.getBoundingClientRect();
+            // Player aim is the inverse of the mouse position from center
+            game.playerAim.x = (e.clientX - rect.left - canvas.width / 2);
+            game.playerAim.y = (e.clientY - rect.top - canvas.height / 2);
+            document.getElementById('offset-display').textContent = `${(game.playerAim.x).toFixed(1)} / ${(game.playerAim.y).toFixed(1)}`;
+        }
+
+        function handleFire() {
+            if (!game.isActive) return;
+            game.isActive = false;
+
+            // Calculate error between player aim and required solution
+            const errorX = Math.abs(game.playerAim.x - game.solution.windage);
+            const errorY = Math.abs(game.playerAim.y - game.solution.elevation);
+            const totalError = Math.sqrt(errorX * errorX + errorY * errorY);
+            
+            showResults(totalError);
+        }
+        
+        function handleKeyDown(e) { if (e.key === 'Shift') game.isHoldingBreath = true; }
+        function handleKeyUp(e) { if (e.key === 'Shift') game.isHoldingBreath = false; }
+        
+        function startFumbleTimer() {
+            const timerEl = document.getElementById('fumble-timer');
+            timerEl.classList.remove('hidden');
+            let timeLeft = 10;
+            timerEl.textContent = timeLeft;
+            const interval = setInterval(() => {
+                timeLeft--;
+                timerEl.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    if (game.isActive) {
+                        game.isActive = false;
+                        showResults(Infinity); // Automatic miss
+                    }
+                }
+            }, 1000);
+        }
+
+        // --- RESULTS ---
+        function showResults(error) {
+            document.getElementById('game-view').classList.add('hidden');
+            document.getElementById('results-view').classList.remove('hidden');
+
+            const hitZone = HIT_ZONES.find(zone => error <= zone.threshold);
+            const depth = Math.max(0, game.caliberData.power - error).toFixed(0);
+            
+            let depthDesc = "N/A";
+            if (hitZone.common !== 'MISS') {
+                if (depth > 200) depthDesc = "CATASTROPHIC PENETRATION";
+                else if (depth > 100) depthDesc = "DEEP PENETRATION";
+                else if (depth > 50) depthDesc = "SIGNIFICANT PENETRATION";
+                else depthDesc = "SUPERFICIAL";
+            }
+            
+            document.getElementById('report-proximity').textContent = `${error.toFixed(1)}px from center`;
+            document.getElementById('report-region-common').textContent = hitZone.common;
+            document.getElementById('report-region-sci').textContent = hitZone.sci;
+            document.getElementById('report-depth').textContent = depthDesc;
+            document.getElementById('report-effect').textContent = hitZone.effect;
+            
+            drawHitReport(error, hitZone.common);
+        }
+        
+        function drawHitReport(error, zone) {
+            const rCanvas = document.getElementById('hit-display-canvas');
+            const rCtx = rCanvas.getContext('2d');
+            rCtx.clearRect(0, 0, rCanvas.width, rCanvas.height);
+
+            // Draw silhouette
+            rCtx.strokeStyle = 'var(--accent-color)';
+            rCtx.lineWidth = 2;
+            rCtx.beginPath();
+            rCtx.arc(150, 70, 40, 0, Math.PI * 2); // Head
+            rCtx.moveTo(150, 110); rCtx.lineTo(150, 280); // Torso
+            rCtx.moveTo(150, 140); rCtx.lineTo(80, 250); // Left arm
+            rCtx.moveTo(150, 140); rCtx.lineTo(220, 250); // Right arm
+            rCtx.moveTo(150, 280); rCtx.lineTo(100, 450); // Left leg
+            rCtx.moveTo(150, 280); rCtx.lineTo(200, 450); // Right leg
+            rCtx.stroke();
+            
+            if (zone !== 'MISS') {
+                let hitX = 150; let hitY = 180;
+                if (zone.includes("Head")) hitY = 70;
+                if (zone.includes("Abdomen")) hitY = 240;
+                if (zone.includes("Upper Limb")) { hitX = 100; hitY = 180; }
+                if (zone.includes("Lower Limb")) { hitX = 120; hitY = 350; }
+                
+                // Add random offset based on error
+                const randomAngle = Math.random() * Math.PI * 2;
+                hitX += Math.cos(randomAngle) * Math.min(error, 50);
+                hitY += Math.sin(randomAngle) * Math.min(error, 50);
+
+                rCtx.fillStyle = 'var(--danger-color)';
+                rCtx.beginPath();
+                rCtx.arc(hitX, hitY, 5, 0, Math.PI * 2);
+                rCtx.fill();
+            }
+        }
+
+        // --- UTILITY ---
+        function resizeCanvas() {
+            const container = document.getElementById('scope-view-container');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+
+    </script>
+</body>
+</html>
