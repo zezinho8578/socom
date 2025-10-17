@@ -1,141 +1,76 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S.O.C.O.M. // Intel Utilities</title>
-    <link rel="icon" type="image/png" href="https://www.socom.mil/SOF-ATL/PublishingImages/eSOF-Logo.png">
-    <style>
-        /* 
-         NOTE: This is a direct copy of the styles from your main index.html to ensure a consistent look and feel.
-         For a larger project, you would ideally move this CSS to a shared stylesheet.
-        */
-        @keyframes flicker { 0%, 100% { opacity: 0.95; } 50% { opacity: 1; } }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+<!-- START: THEME AND STYLE BLOCK (Add to every minigame page) -->
+<style>
+    @keyframes flicker { 0%, 100% { opacity: 0.95; } 50% { opacity: 1; } }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-        :root {
-            --bg-color: #050805; --scanline-color: rgba(0, 255, 85, 0.1); --text-color: #00ff55;
-            --accent-color: #00ff55; --border-color: #00521d; --input-bg: rgba(0, 31, 9, 0.95);
-            --danger-color: #ff4141; --danger-bg: rgba(255, 65, 65, 0.15); --container-bg: rgba(0,0,0,0.4);
+    :root {
+        --bg-color: #050805; --scanline-color: rgba(0, 255, 85, 0.1); --text-color: #00ff55;
+        --accent-color: #00ff55; --border-color: #00521d; --input-bg: rgba(0, 31, 9, 0.95);
+        --danger-color: #ff4141; --danger-bg: rgba(255, 65, 65, 0.15); --container-bg: rgba(0,0,0,0.4);
+        --success-color: #00ff55;
+    }
+
+    body.officer-theme {
+        --bg-color: #1a160d; --scanline-color: rgba(255, 196, 0, 0.1); --text-color: #ffc400;
+        --accent-color: #ffc400; --border-color: #6d530e; --input-bg: rgba(43, 34, 13, 0.95);
+        --container-bg: rgba(10, 8, 3, 0.4); --success-color: #ffc400;
+    }
+    body.navy-theme {
+        --bg-color: #0a1128; --text-color: #7bceff; --accent-color: #7bceff; 
+        --border-color: #00306b; --input-bg: rgba(20, 39, 87, 0.95); --container-bg: rgba(4, 7, 15, 0.4);
+        --success-color: #7bceff;
+    }
+    body.marines-theme {
+        --bg-color: #1a0b0b; --text-color: #ff5252; --accent-color: #ff5252; 
+        --border-color: #6a0d0d; --input-bg: rgba(64, 13, 13, 0.95); --container-bg: rgba(10, 3, 3, 0.4);
+        --success-color: #ff5252;
+    }
+    body.airforce-theme {
+        --bg-color: #1d1d1f; --text-color: #d1d1d6; --accent-color: #d1d1d6; 
+        --border-color: #424245; --input-bg: rgba(50, 50, 56, 0.95); --container-bg: rgba(11, 11, 12, 0.4);
+        --success-color: #d1d1d6;
+    }
+    body.intelligence-theme {
+        --bg-color: #000000; --text-color: #ffffff; --accent-color: #ffffff;
+        --border-color: #555555; --input-bg: rgba(40, 40, 40, 0.95); --container-bg: rgba(10, 10, 10, 0.4);
+        --success-color: #ffffff;
+    }
+    body.plain-theme {
+        font-family: Arial, Helvetica, sans-serif;
+        --bg-color: #ffffff; --text-color: #000000; --accent-color: #005fcc;
+        --border-color: #cccccc; --input-bg: #f9f9f9; --danger-color: #dc3545;
+        --container-bg: rgba(248,248,248,0.8); --success-color: #28a745;
+        text-shadow: none; animation: none;
+    }
+
+    body {
+        font-family: 'Courier New', Courier, monospace; margin: 0; background-color: var(--bg-color); color: var(--text-color);
+        text-shadow: 0 0 4px var(--accent-color); animation: flicker 0.15s infinite;
+    }
+    body::before {
+        content: " "; display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-image: linear-gradient(0deg, var(--scanline-color) 1px, transparent 1px);
+        background-size: 100% 2px; z-index: 100; pointer-events: none;
+    }
+    
+    /* You can add other base styles for your minigames here */
+    button, .button {
+        background: transparent; color: var(--accent-color); border: 1px solid var(--accent-color);
+        padding: 8px 15px; font-size: 14px; cursor: pointer; margin: 5px;
+        font-family: 'Courier New', Courier, monospace; text-transform: uppercase;
+    }
+    button:hover, .button:hover { background: var(--accent-color); color: var(--bg-color); text-shadow: none; }
+</style>
+
+<script>
+    function applySavedTheme() {
+        const savedTheme = localStorage.getItem('socom_theme');
+        document.body.className = ''; // Clear existing themes first
+        if (savedTheme && savedTheme !== 'default') {
+            document.body.classList.add(savedTheme + '-theme');
         }
-
-        /* You can add your other themes here (officer, navy, etc.) if you want them to apply on this page too */
-
-        body {
-            font-family: 'Courier New', Courier, monospace; margin: 0; background-color: var(--bg-color); color: var(--text-color);
-            text-shadow: 0 0 4px var(--accent-color); animation: flicker 0.15s infinite;
-        }
-        body::before {
-            content: " "; display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: linear-gradient(0deg, var(--scanline-color) 1px, transparent 1px);
-            background-size: 100% 2px; z-index: 100; pointer-events: none;
-        }
-
-        .container { position: relative; max-width: 1400px; margin: 10px auto; padding: 10px; border: 1px solid var(--border-color); background: var(--container-bg); }
-        .header { display: flex; align-items: center; border-bottom: 1px solid var(--accent-color); padding-bottom: 5px; margin-bottom: 15px; }
-        .logo { max-width: 80px; margin-right: 15px; filter: grayscale(100%) brightness(200%) contrast(150%); }
-
-        h1 { font-size: 22px; text-transform: uppercase; }
-        h1::after { content: '_'; animation: blink 1s step-end infinite; }
-        h2 { font-size: 16px; margin-top: 10px; margin-bottom: 10px; text-transform: uppercase; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; }
-        
-        .main-menu { text-align: center; padding: 30px; border: 1px solid var(--border-color); margin: 20px; background: var(--input-bg); }
-
-        button, .button {
-            background: transparent; color: var(--accent-color); border: 1px solid var(--accent-color);
-            padding: 8px 15px; font-size: 14px; cursor: pointer; margin: 5px;
-            font-family: 'Courier New', Courier, monospace; text-transform: uppercase;
-            text-decoration: none; /* This is for the <a> tag */
-            display: inline-block; /* This is for the <a> tag */
-        }
-        button:hover, .button:hover { background: var(--accent-color); color: var(--bg-color); text-shadow: none; }
-    </style>
-</head>
-<body>
-
-    <div class="container">
-        <header class="header">
-            <!-- Use a relative path from the 'minigames' folder up to the root, or an absolute path -->
-            <img src="https://images.squarespace-cdn.com/content/v1/629e0596d168b365d297c6c4/cea70b06-895e-401c-9669-04fa59cfc5e6/socom-logo.png" alt="SOCOM Logo" class="logo">
-            <h1>S.O.C.O.M. // INTEL UTILITIES</h1>
-        </header>
-        
-        <main>
-            <div class="main-menu">
-                <h2>SELECT UTILITY</h2>
-
-                <div style="margin-bottom: 20px; padding: 10px; border: 1px solid var(--border-color);">
-                    <button onclick="togglePracticeMode()">TOGGLE PRACTICE MODE</button>
-                    <p style="margin: 5px 0 0 0;">STATUS: <span id="practice-mode-status" style="font-weight: bold;"></span></p>
-                </div>
-                
-                <p style="margin: 20px auto; max-width: 600px; opacity: 0.8;">
-                    Access mission-critical tools and field simulations. Unauthorized access is a federal offense.
-                </p>
-
-                <!-- Link to the Decryption Tool -->
-                <a href="decryption.html" class="button">> DECRYPTION TERMINAL</a>
-                
-                <!-- Link to the Bomb Defusal Simulation -->
-                <a href="eod.html" class="button">> EOD SIMULATION</a>
-
-                <!-- Link to the Network Intrusion Simulation -->
-                <a href="network_intrusion.html" class="button">> NETWORK INTRUSION</a>
-
-                 <!-- Link to the Triangulation Simulation -->
-                <a href="signal_triangulation.html" class="button">> SIGNAL TRIANGULATION</a>
-
-                  <!-- Link to the Marksmanship Simulation -->
-                <a href="sniper.html" class="button">> MARKSMANSHIP SIMULATION</a>
-
-                <!-- Link to the Safe Cracking Simulation -->
-                <a href="safe_cracking.html" class="button">> SAFE CRACKING SIM</a>
-
-                <div style="margin-top: 40px; border-top: 1px solid var(--border-color); padding-top: 20px;">
-                     <!-- This button takes the user back to the main character sheet application -->
-                    <a href="../" class="button">> RETURN TO MAIN ROSTER</a>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <script>
-        // --- THEME UTILITY ---
-        function applySavedTheme() {
-            const savedTheme = localStorage.getItem('socom_theme');
-            if (savedTheme && savedTheme !== 'default') {
-                document.body.classList.add(savedTheme + '-theme');
-            }
-        }
-
-        // --- PRACTICE MODE UTILITY ---
-        function updatePracticeModeStatus() {
-            const statusEl = document.getElementById('practice-mode-status');
-            if (localStorage.getItem('socom_practice_mode') === 'true') {
-                statusEl.textContent = 'ACTIVE';
-                statusEl.style.color = 'var(--success-color)';
-            } else {
-                statusEl.textContent = 'INACTIVE';
-                statusEl.style.color = 'var(--danger-color)';
-            }
-        }
-
-        function togglePracticeMode() {
-            if (localStorage.getItem('socom_practice_mode') === 'true') {
-                localStorage.removeItem('socom_practice_mode');
-            } else {
-                localStorage.setItem('socom_practice_mode', 'true');
-            }
-            updatePracticeModeStatus();
-        }
-        
-        // --- INITIALIZE ON PAGE LOAD ---
-        // Use DOMContentLoaded to run scripts after the page structure is ready.
-        window.addEventListener('DOMContentLoaded', () => {
-            applySavedTheme();
-            updatePracticeModeStatus();
-        });
-    </script>
-
-</body>
-</html>
+    }
+    // Apply the theme as soon as the page structure is loaded
+    window.addEventListener('DOMContentLoaded', applySavedTheme);
+</script>
+<!-- END: THEME AND STYLE BLOCK -->
