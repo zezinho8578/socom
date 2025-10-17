@@ -45,7 +45,7 @@
         }
         body.plain-theme .logo { filter: none; }
         body.plain-theme h1::after { animation: none; content: ''; }
-        body.plain-theme button:hover { text-shadow: none; }
+        body.plain-theme button:hover, body.plain-theme .button:hover { text-shadow: none; }
         body.plain-theme::before { background: none; }
         body.plain-theme .themed-link { color: var(--accent-color); filter: none; }
         body.plain-theme #app-tooltip { text-shadow: none; }
@@ -90,7 +90,7 @@
             padding: 8px 15px; font-size: 14px; cursor: pointer; margin: 5px;
             font-family: 'Courier New', Courier, monospace; text-transform: uppercase;
         }
-        body.plain-theme button { font-family: Arial, Helvetica, sans-serif; }
+        body.plain-theme button, body.plain-theme .button { font-family: Arial, Helvetica, sans-serif; }
         button:hover, .button:hover { background: var(--accent-color); color: var(--bg-color); text-shadow: none; }
         button:disabled { cursor: not-allowed; opacity: 0.5; }
 
