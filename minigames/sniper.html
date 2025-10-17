@@ -53,8 +53,8 @@ body { font-family: 'Courier New', Courier, monospace; margin: 0; background-col
     #dope-card {
         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
         width: 400px; background: var(--input-bg); border: 1px solid var(--accent-color);
-        padding: 15px; box-sizing: border-box; pointer-events: none;
-        font-size: 0.9em;
+        padding: 15px; box-sizing: border-box;
+        font-size: 0.9em; z-index: 10;
     }
     #dope-card table { width: 100%; border-collapse: collapse; }
     #dope-card th, #dope-card td { border: 1px dotted var(--border-color); padding: 4px; text-align: center; }
@@ -115,7 +115,23 @@ body { font-family: 'Courier New', Courier, monospace; margin: 0; background-col
                 </div>
                 <div><label for="shot-count">SHOTS</label><input type="number" id="shot-count" min="1" max="10" value="1"></div>
             </div>
-            <div style="text-align: center; margin-top: 20px;"><button onclick="initGame()">BEGIN ENGAGEMENT</button></div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button onclick="toggleTutorial()">HOW TO PLAY</button>
+                <button onclick="initGame()">BEGIN ENGAGEMENT</button>
+            </div>
+        </div>
+        <div id="tutorial-view" class="content-menu hidden" style="margin-top: 15px; text-align: left;">
+            <h2>QUICK START GUIDE</h2>
+            <p>Your goal is to accurately hit the target by compensating for bullet drop, wind, and target movement.</p>
+            <ul style="padding-left: 20px;">
+                <li style="margin-bottom: 10px;"><strong>THE RETICLE:</strong> Your scope uses a MIL-dot reticle. Each number (1, 2, 3...) represents that many MILS from the center. The smaller hashes are half-MILS (0.5, 1.5, 2.5...). You use these markings to adjust your aim.</li>
+                <li style="margin-bottom: 10px;"><strong>THE DOPE CARD:</strong> Once the engagement begins, click the [DOPE CARD] button. This is your cheat sheet for the current conditions. It gives you the correct firing solution in MILS.</li>
+                <li style="margin-bottom: 10px;"><strong>ELEV (ELEVATION):</strong> This is for bullet drop. If the card says <strong>ELEV: 6.2 MILS UP</strong>, you must aim higher. Find the '6' and the first small hash below it on the vertical line of your reticle and place that point on your target.</li>
+                <li style="margin-bottom: 10px;"><strong>WIND:</strong> This is for wind deflection. If the card says <strong>WIND: 2.1 MILS LEFT</strong>, the wind is pushing your bullet to the right, so you must aim 2.1 MILS to the left of the target. Use the horizontal line on your reticle.</li>
+                <li style="margin-bottom: 10px;"><strong>LEAD:</strong> For moving targets. If the card says <strong>LEAD: 1.5 MILS</strong>, and the target is moving right, you must aim 1.5 MILS ahead of the target to the right.</li>
+                <li style="margin-bottom: 10px;"><strong>HOLD BREATH:</strong> Press and hold the <strong>[SPACEBAR]</strong> to steady your aim. Your breath is limited, so use it wisely.</li>
+            </ul>
+            <div style="text-align: center;"><button onclick="toggleTutorial()">CLOSE</button></div>
         </div>
     </div>
 
@@ -139,7 +155,7 @@ body { font-family: 'Courier New', Courier, monospace; margin: 0; background-col
             </div>
         </div>
         <div id="dope-card" class="hidden">
-            <h3 style="text-align:center; margin:0 0 10px 0;">BALLISTICS DATA</h3>
+            <h3 id="dope-card-header" style="text-align:center; margin:0 0 10px 0; cursor: move; user-select: none;">BALLISTICS DATA</h3>
             <p><strong>FIRING SOLUTION:</strong> ELEV: <span id="dope-elev">--</span> | WIND: <span id="dope-wind">--</span> | LEAD: <span id="dope-lead">--</span></p>
             <table><thead><tr><th>RANGE</th><th>ELEV (MILS)</th><th>WIND (MILS)</th></tr></thead><tbody id="dope-table-body"></tbody></table>
         </div>
@@ -207,6 +223,10 @@ body { font-family: 'Courier New', Courier, monospace; margin: 0; background-col
         }
     }
     
+    function toggleTutorial() {
+        document.getElementById('tutorial-view').classList.toggle('hidden');
+    }
+
     document.addEventListener('DOMContentLoaded', updateMaxRange);
 
     class SniperGame {
@@ -323,7 +343,16 @@ body { font-family: 'Courier New', Courier, monospace; margin: 0; background-col
             document.getElementById('dope-lead').textContent = this.params.movement === 'stationary' ? 'N/A' : `${Math.abs(leadMils).toFixed(1)} MILS`;
         }
 
-        toggleDopeCard = () => { document.getElementById('dope-card').classList.toggle('hidden'); }
+        toggleDopeCard = () => {
+            const card = document.getElementById('dope-card');
+            card.classList.toggle('hidden');
+            // If we are showing the card, reset its position to the center
+            if (!card.classList.contains('hidden')) {
+                card.style.left = '50%';
+                card.style.top = '50%';
+                card.style.transform = 'translate(-50%, -50%)';
+            }
+        }
 
         gameLoop = () => { if (!this.isActive) return; this.update(); this.draw(); this.animationFrameId = requestAnimationFrame(this.gameLoop); }
 
@@ -350,10 +379,17 @@ body { font-family: 'Courier New', Courier, monospace; margin: 0; background-col
 
             if (this.params.movement !== 'stationary') {
                 this.target.pos.x += this.target.vel.x; this.target.pos.y += this.target.vel.y;
-                const center = this.canvas.width / 2;
-                if (this.target.pos.x > center + this.target.patrolLimit || this.target.pos.x < center - this.target.patrolLimit) {
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+                const verticalPatrolLimit = 50;
+                
+                if (this.target.pos.x > centerX + this.target.patrolLimit || this.target.pos.x < centerX - this.target.patrolLimit) {
                     this.target.vel.x *= -1;
                 }
+                if (this.target.pos.y > centerY + verticalPatrolLimit || this.target.pos.y < centerY - verticalPatrolLimit) {
+                    this.target.vel.y *= -1;
+                }
+                
                 if (this.params.movement === 'tier3') {
                     this.target.stateTimer--;
                     if (this.target.stateTimer <= 0) {
@@ -633,6 +669,34 @@ body { font-family: 'Courier New', Courier, monospace; margin: 0; background-col
             movement: document.getElementById('target-movement').value,
             heartRate: parseInt(document.getElementById('heart-rate').value)
         });
+    }
+
+    // Draggable DOPE Card Logic
+    const dopeCard = document.getElementById('dope-card');
+    const dopeCardHeader = document.getElementById('dope-card-header');
+    let isDragging = false;
+    let offsetX, offsetY;
+    dopeCardHeader.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        isDragging = true;
+        const rect = dopeCard.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+        dopeCard.style.transform = 'none';
+        dopeCard.style.left = `${rect.left}px`;
+        dopeCard.style.top = `${rect.top}px`;
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    });
+    function onMouseMove(e) {
+        if (!isDragging) return;
+        dopeCard.style.left = `${e.clientX - offsetX}px`;
+        dopeCard.style.top = `${e.clientY - offsetY}px`;
+    }
+    function onMouseUp() {
+        isDragging = false;
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
     }
 </script>
 </body>
