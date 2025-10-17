@@ -27,7 +27,6 @@ body { font-family: 'Courier New', Courier, monospace; margin: 0; background-col
     label { font-weight: bold; display: block; margin-bottom: 4px; color: var(--accent-color); font-size: 14px; }
     .hidden { display: none !important; }
     .grid-7-col { display: grid; grid-template-columns: repeat(7, 1fr); gap: 20px; }
-    .bottom-controls { text-align: center; margin-top: 20px; }
     
     #game-view { border: 1px solid var(--accent-color); position: relative; overflow: hidden; }
     #scope-canvas { display: block; width: 100%; aspect-ratio: 16/9; background-color: #111; cursor: none; }
@@ -75,55 +74,33 @@ body { font-family: 'Courier New', Courier, monospace; margin: 0; background-col
         position: fixed; display: none; background: rgba(5, 8, 5, 0.9); border: 1px solid var(--border-color);
         padding: 10px; font-size: 0.9em; pointer-events: none; z-index: 100;
     }
-    .mobile-controls-container {
-        position: absolute; bottom: 10px; left: 10px; width: calc(100% - 20px);
-        display: flex; justify-content: space-between; align-items: flex-end;
-        pointer-events: auto;
-    }
-    .mobile-btn { padding: 15px; border-radius: 50%; opacity: 0.6; width: 80px; height: 80px; font-size: 1.1em; }
     
+    /* NEW: Mobile Warning Overlay */
     #mobile-warning-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.8); z-index: 200; display: flex;
-        justify-content: center; align-items: center;
-    }
-
-    /* --- MOBILE RESPONSIVE STYLES --- */
-    @media (max-width: 900px) {
-        .header .logo { display: none; }
-        h1 { font-size: 18px; }
-        .container { padding: 5px; margin: 5px; }
-
-        .grid-7-col { grid-template-columns: repeat(2, 1fr); }
-        #report-grid { grid-template-columns: 1fr; }
-        
-        .hud-label { font-size: 0.8em; }
-        .hud-value { font-size: 1.1em; }
-
-        .bottom-controls .button, .bottom-controls button {
-            display: block; width: 100%; box-sizing: border-box; margin: 5px 0;
-        }
-
-        #dope-card { width: 95%; max-height: 80%; overflow-y: auto; }
+        background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 200;
+        padding: 15px; box-sizing: border-box;
     }
 </style>
 </head>
 <body>
+
+<div id="mobile-warning-overlay" class="hidden">
+    <div class="content-menu" style="max-width: 500px; text-align: center;">
+        <h2>SIMULATION INCOMPATIBLE</h2>
+        <p style="line-height: 1.6;">This long-range marksmanship simulation requires a larger screen and the precision of a mouse for an optimal experience.</p>
+        <p style="line-height: 1.6;">Please access this utility on a desktop or laptop computer.</p>
+        <a href="https://socom.vercel.app/minigames/" class="button" style="margin-top: 15px;">> RETURN TO UTILITIES MENU</a>
+    </div>
+</div>
+
 <div class="container">
 <header class="header">
-<img src="https://images.squarespace-cdn.com/content/v1/629e0596d168b365d297c6c4/cea70b06-895e-401c-969-04fa59cfc5e6/socom-logo.png" alt="SOCOM Logo" class="logo">
+<img src="https://images.squarespace-cdn.com/content/v1/629e0596d168b365d297c6c4/cea70b06-895e-401c-9669-04fa59cfc5e6/socom-logo.png" alt="SOCOM Logo" class="logo">
 <h1>S.O.C.O.M. // LONG-RANGE MARKSMANSHIP</h1>
 </header>
 <!-- SETUP VIEW -->
     <div id="setup-view">
-        <div id="mobile-warning-overlay" class="hidden">
-            <div class="content-menu" style="max-width: 400px; text-align: center;">
-                <h2>MOBILE CONTROLS ACTIVE</h2>
-                <p>This simulation is best experienced on PC with a mouse and keyboard.</p>
-                <p>On mobile, use the on-screen buttons to fire and hold breath. Drag on the scope view to aim.</p>
-                <button onclick="document.getElementById('mobile-warning-overlay').classList.add('hidden')">CONTINUE</button>
-            </div>
-        </div>
         <div class="content-menu">
             <h2>ENGAGEMENT PARAMETERS</h2>
             <div class="grid-7-col">
@@ -169,7 +146,7 @@ body { font-family: 'Courier New', Courier, monospace; margin: 0; background-col
                 <li style="margin-bottom: 10px;"><strong>ELEV (ELEVATION):</strong> This is for bullet drop. If the card says <strong>ELEV: 6.2 MILS UP</strong>, you must aim higher. Find the '6' and the first small hash below it on the vertical line of your reticle and place that point on your target.</li>
                 <li style="margin-bottom: 10px;"><strong>WIND:</strong> This is for wind deflection. If the card says <strong>WIND: 2.1 MILS LEFT</strong>, the wind is pushing your bullet to the right, so you must aim 2.1 MILS to the left of the target. Use the horizontal line on your reticle.</li>
                 <li style="margin-bottom: 10px;"><strong>LEAD:</strong> For moving targets. If the card says <strong>LEAD: 1.5 MILS</strong>, and the target is moving right, you must aim 1.5 MILS ahead of the target to the right.</li>
-                <li style="margin-bottom: 10px;"><strong>HOLD BREATH:</strong> Press and hold the <strong>[SPACEBAR]</strong> (or on-screen button on mobile) to steady your aim. Your breath is limited, so use it wisely.</li>
+                <li style="margin-bottom: 10px;"><strong>HOLD BREATH:</strong> Press and hold the <strong>[SPACEBAR]</strong> to steady your aim. Your breath is limited, so use it wisely.</li>
             </ul>
             <div style="text-align: center;"><button onclick="toggleTutorial()">CLOSE</button></div>
         </div>
@@ -181,8 +158,7 @@ body { font-family: 'Courier New', Courier, monospace; margin: 0; background-col
         <div id="hud-display">
             <div class="hud-item hud-top-left"><span class="hud-label">WIND / DIR</span><br><span class="hud-value" id="hud-wind">--</span></div>
             <div class="hud-item hud-top-right"><span class="hud-label">RANGE / CAL</span><br><span class="hud-value" id="hud-range">--</span></div>
-            <!-- PC-SPECIFIC HUD ITEMS -->
-            <div class="hud-item hud-bottom-left" id="pc-breath-hud">
+            <div class="hud-item hud-bottom-left">
                 <span class="hud-label">HOLD BREATH [SPACE]</span><br>
                 <div id="breath-bar-container"><div id="breath-bar"></div></div>
                 <div style="display: flex; align-items: center; margin-top: 5px;">
@@ -190,12 +166,6 @@ body { font-family: 'Courier New', Courier, monospace; margin: 0; background-col
                     <canvas id="heart-rate-monitor"></canvas>
                 </div>
             </div>
-            <!-- MOBILE-SPECIFIC HUD ITEMS -->
-            <div class="mobile-controls-container hidden" id="mobile-controls">
-                <button id="mobile-breath-btn" class="mobile-btn">HOLD BREATH</button>
-                <button id="mobile-fire-btn" class="mobile-btn">FIRE</button>
-            </div>
-
             <div class="hud-item hud-bottom-right">
                  <button id="dope-card-toggle" onclick="sniperGame.toggleDopeCard()">DOPE CARD</button><br>
                 <span class="hud-label">STATUS</span><br><span class="hud-value" id="hud-status">STANDBY</span>
@@ -240,7 +210,7 @@ body { font-family: 'Courier New', Courier, monospace; margin: 0; background-col
             </div>
         </div>
     </div>
-    <div class="bottom-controls">
+    <div style="text-align: center; margin-top: 20px;">
         <a href="https://socom.vercel.app/minigames/" class="button">> RETURN TO UTILITIES MENU</a>
         <button id="reset-btn" class="hidden" onclick="window.location.reload()">NEW SIMULATION</button>
     </div>
@@ -263,31 +233,33 @@ body { font-family: 'Courier New', Courier, monospace; margin: 0; background-col
         const distanceInput = document.getElementById('distance');
         const selectedCaliber = caliberSelect.value;
         const newMaxRange = caliberData[selectedCaliber].maxRange;
+
         distanceInput.max = newMaxRange;
-        if (parseInt(distanceInput.value) > newMaxRange) { distanceInput.value = newMaxRange; }
+        if (parseInt(distanceInput.value) > newMaxRange) {
+            distanceInput.value = newMaxRange;
+        }
     }
     
-    function toggleTutorial() { document.getElementById('tutorial-view').classList.toggle('hidden'); }
-
-    // --- MOBILE WARNING ---
-    const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-    let mobileWarningShown = false;
-    if (isMobile) {
-        document.getElementById('setup-view').addEventListener('click', () => {
-            if (!mobileWarningShown) {
-                document.getElementById('mobile-warning-overlay').classList.remove('hidden');
-                mobileWarningShown = true;
-            }
-        }, { once: true });
+    function toggleTutorial() {
+        document.getElementById('tutorial-view').classList.toggle('hidden');
     }
 
-    document.addEventListener('DOMContentLoaded', updateMaxRange);
+    document.addEventListener('DOMContentLoaded', () => {
+        const MOBILE_BREAKPOINT = 768; // Common tablet portrait width
+
+        if (window.innerWidth < MOBILE_BREAKPOINT || window.innerHeight < 600) {
+            document.getElementById('mobile-warning-overlay').classList.remove('hidden');
+            document.querySelector('.container').classList.add('hidden'); // Hide the main game content
+        } else {
+            updateMaxRange(); // Only run normal setup if on desktop
+        }
+    });
 
     class SniperGame {
         constructor(canvasId) {
             this.canvas = document.getElementById(canvasId); this.ctx = this.canvas.getContext('2d');
             this.tooltip = document.getElementById('shot-tooltip');
-            this.isActive = false;
+            this.animationFrameId = null; this.isActive = false;
             this.params = {}; this.mousePos = { x: 0, y: 0 }; this.reticlePos = { x: 0, y: 0 };
             this.sway = { x: 0, y: 0, angle: Math.random() * 10 };
             this.breath = { max: 100, current: 100, isHolding: false, cooldown: 0 };
@@ -299,7 +271,6 @@ body { font-family: 'Courier New', Courier, monospace; margin: 0; background-col
             this.shotTraces = [];
             this.target = { pos: { x: 0, y: 0 }, vel: { x: 0, y: 0 }, patrolLimit: 150, state: 'move', stateTimer: 0 };
             this.dopeData = [];
-            this.touchState = { isDragging: false, startX: 0, startY: 0, startReticleX: 0, startReticleY: 0 };
 
             this.targetSVG = new Image();
             this.targetSVG.src = `data:image/svg+xml;utf8,<svg viewBox="0 0 100 250" xmlns="http://www.w3.org/2000/svg"><g fill="%23D9453B"><rect x="38" y="0" width="24" height="25" rx="12"/><rect x="42" y="25" width="16" height="10"/><rect x="25" y="35" width="50" height="15"/><rect x="30" y="50" width="40" height="30"/><rect x="32" y="80" width="36" height="30"/><rect x="30" y="110" width="40" height="10"/><rect x="15" y="35" width="10" height="90"/><rect x="75" y="35" width="10" height="90"/><rect x="30" y="120" width="15" height="120"/><rect x="55" y="120" width="15" height="120"/></g></svg>`;
@@ -309,14 +280,22 @@ body { font-family: 'Courier New', Courier, monospace; margin: 0; background-col
             this.windModels = { calm: { mult: [0, 0], name: "CALM" }, cross_lr: { mult: [1, 0], name: "CROSSWIND L > R" }, cross_rl: { mult: [-1, 0], name: "CROSSWIND R > L" }, headwind: { mult: [0, 0.5], name: "HEADWIND" }, tailwind: { mult: [0, -0.4], name: "TAILWIND" }, q_head_lr: { mult: [0.7, 0.3], name: "QUARTERING HEADWIND L>R" }, q_head_rl: { mult: [-0.7, 0.3], name: "QUARTERING HEADWIND R>L" }, q_tail_lr: { mult: [0.7, -0.2], name: "QUARTERING TAILWIND L>R" }, q_tail_rl: { mult: [-0.7, -0.2], name: "QUARTERING TAILWIND R>L" } };
             
             this.hitboxes = [
-                { name: "Cranium",         rect: { x: 40, y: 2,  w: 20, h: 12 }, severity: 100 }, { name: "Spinal Column",   rect: { x: 47, y: 28, w: 6,  h: 90 }, severity: 100 },
-                { name: "Heart",           rect: { x: 44, y: 58, w: 12, h: 15 }, severity: 95 }, { name: "Neck/Throat",     rect: { x: 43, y: 26, w: 14, h: 12 }, severity: 90 },
-                { name: "Lungs",           rect: { x: 32, y: 52, w: 36, h: 26 }, severity: 70 }, { name: "Liver",           rect: { x: 34, y: 82, w: 16, h: 13 }, severity: 65 },
-                { name: "Stomach/Spleen",  rect: { x: 50, y: 82, w: 16, h: 13 }, severity: 60 }, { name: "Pelvis",          rect: { x: 30, y: 110,w: 40, h: 10 }, severity: 55 },
-                { name: "Intestines",      rect: { x: 34, y: 95, w: 32, h: 15 }, severity: 50 }, { name: "Femoral Artery (L)", rect: { x: 35, y: 120,w: 5, h: 20 }, severity: 85 },
-                { name: "Femoral Artery (R)", rect: { x: 60, y: 120,w: 5, h: 20 }, severity: 85 }, { name: "Upper Torso",     rect: { x: 25, y: 35, w: 50, h: 45 }, severity: 40 },
-                { name: "Lower Torso",     rect: { x: 32, y: 80, w: 36, h: 30 }, severity: 35 }, { name: "Left Arm",        rect: { x: 15, y: 35, w: 10, h: 90 }, severity: 20 },
-                { name: "Right Arm",       rect: { x: 75, y: 35, w: 10, h: 90 }, severity: 20 }, { name: "Left Leg",        rect: { x: 30, y: 120,w: 15, h: 120}, severity: 25 },
+                { name: "Cranium",         rect: { x: 40, y: 2,  w: 20, h: 12 }, severity: 100 },
+                { name: "Spinal Column",   rect: { x: 47, y: 28, w: 6,  h: 90 }, severity: 100 },
+                { name: "Heart",           rect: { x: 44, y: 58, w: 12, h: 15 }, severity: 95 },
+                { name: "Neck/Throat",     rect: { x: 43, y: 26, w: 14, h: 12 }, severity: 90 },
+                { name: "Lungs",           rect: { x: 32, y: 52, w: 36, h: 26 }, severity: 70 },
+                { name: "Liver",           rect: { x: 34, y: 82, w: 16, h: 13 }, severity: 65 },
+                { name: "Stomach/Spleen",  rect: { x: 50, y: 82, w: 16, h: 13 }, severity: 60 },
+                { name: "Pelvis",          rect: { x: 30, y: 110,w: 40, h: 10 }, severity: 55 },
+                { name: "Intestines",      rect: { x: 34, y: 95, w: 32, h: 15 }, severity: 50 },
+                { name: "Femoral Artery (L)", rect: { x: 35, y: 120,w: 5, h: 20 }, severity: 85 },
+                { name: "Femoral Artery (R)", rect: { x: 60, y: 120,w: 5, h: 20 }, severity: 85 },
+                { name: "Upper Torso",     rect: { x: 25, y: 35, w: 50, h: 45 }, severity: 40 },
+                { name: "Lower Torso",     rect: { x: 32, y: 80, w: 36, h: 30 }, severity: 35 },
+                { name: "Left Arm",        rect: { x: 15, y: 35, w: 10, h: 90 }, severity: 20 },
+                { name: "Right Arm",       rect: { x: 75, y: 35, w: 10, h: 90 }, severity: 20 },
+                { name: "Left Leg",        rect: { x: 30, y: 120,w: 15, h: 120}, severity: 25 },
                 { name: "Right Leg",       rect: { x: 55, y: 120,w: 15, h: 120}, severity: 25 },
             ];
         }
@@ -325,27 +304,26 @@ body { font-family: 'Courier New', Courier, monospace; margin: 0; background-col
             this.params = params; this.isActive = true;
             this.shotsTotal = this.params.shots; this.shotsTaken = 0; this.impacts = []; this.shotReports = [];
             this.resizeCanvas(); this.setupEventListeners(); this.updateHud();
-            const timeOfFlight = this.params.distance / caliberData[this.params.caliber].muzzleVelocity;
+            
             const windMultiplier = (this.params.windSpeed / 3.6) * 0.2;
+            const timeOfFlight = this.params.distance / caliberData[this.params.caliber].muzzleVelocity;
             this.windOffsetX = timeOfFlight * windMultiplier * this.params.windDir.mult[0] * 200;
             this.windOffsetY = timeOfFlight * windMultiplier * this.params.windDir.mult[1] * 200;
             this.dropOffset = 0.5 * 9.8 * (timeOfFlight ** 2) * 5;
             this.swayMagnitude = 5 + (this.params.distance / 200);
+
             this.heartRate.bpm = this.params.heartRate;
             this.heartRate.interval = 60000 / this.heartRate.bpm;
             this.heartRate.lastBeat = performance.now();
+
             this.target.pos = { x: this.canvas.width / 2, y: this.canvas.height / 2 };
-            this.reticlePos = { x: this.canvas.width / 2, y: this.canvas.height / 2 };
             this.setTargetMovement(this.params.movement);
+
             this.generateDopeCardData();
             if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
             this.gameLoop();
-
-            if (isMobile) {
-                document.getElementById('pc-breath-hud').classList.add('hidden');
-                document.getElementById('mobile-controls').classList.remove('hidden');
-            }
         }
+
         setTargetMovement(tier) {
             this.target.stateTimer = Math.random() * 300 + 120;
             const baseSpeed = 0.5;
@@ -353,60 +331,90 @@ body { font-family: 'Courier New', Courier, monospace; margin: 0; background-col
                 case 'tier1': this.target.vel = { x: baseSpeed, y: 0 }; break;
                 case 'tier2': this.target.vel = { x: baseSpeed * 1.5, y: Math.random() > 0.5 ? 0.2 : -0.2 }; break;
                 case 'tier3': this.target.vel = { x: baseSpeed * 2, y: 0 }; this.target.state = 'stop'; break;
-                default: this.target.vel = { x: 0, y: 0 }; break;
+                case 'stationary': default: this.target.vel = { x: 0, y: 0 }; break;
             }
         }
+
         generateDopeCardData() {
             this.dopeData = [];
             const maxRange = caliberData[this.params.caliber].maxRange;
             for (let range = 100; range <= maxRange; range += 100) {
                 const tof = range / caliberData[this.params.caliber].muzzleVelocity;
-                const dropMils = ((0.5 * 9.8 * (tof ** 2)) / range) * 1000;
-                const windMils = (((this.params.windSpeed / 3.6) * 0.2 * tof) / range) * 1000;
+                const dropMeters = 0.5 * 9.8 * (tof ** 2);
+                const dropMils = (dropMeters / range) * 1000;
+                
+                const windDriftMeters = ((this.params.windSpeed / 3.6) * 0.2) * tof;
+                const windMils = (windDriftMeters / range) * 1000;
+                
                 this.dopeData.push({ range, elev: dropMils.toFixed(1), wind: windMils.toFixed(1) });
             }
             this.updateDopeCardDisplay();
         }
+
         updateDopeCardDisplay() {
-            document.getElementById('dope-table-body').innerHTML = this.dopeData.map(d => `<tr><td>${d.range}m</td><td>${d.elev}</td><td>${d.wind}</td></tr>`).join('');
+            const tableBody = document.getElementById('dope-table-body');
+            tableBody.innerHTML = this.dopeData.map(d => `<tr><td>${d.range}m</td><td>${d.elev}</td><td>${d.wind}</td></tr>`).join('');
+            
             const pixelsPerMil = 40;
             const dropMils = this.dropOffset / pixelsPerMil;
             const windMils = this.windOffsetX / pixelsPerMil;
+            
+            const targetSpeedPixelsPerFrame = Math.sqrt(this.target.vel.x ** 2 + this.target.vel.y ** 2);
             const timeOfFlight = this.params.distance / caliberData[this.params.caliber].muzzleVelocity;
-            const leadPixels = Math.sqrt(this.target.vel.x ** 2 + this.target.vel.y ** 2) * timeOfFlight * 60;
+            const leadPixels = targetSpeedPixelsPerFrame * timeOfFlight * 60;
             const leadMils = leadPixels / pixelsPerMil;
+
             document.getElementById('dope-elev').textContent = `${dropMils.toFixed(1)} MILS UP`;
             document.getElementById('dope-wind').textContent = `${Math.abs(windMils).toFixed(1)} MILS ${windMils > 0 ? 'LEFT' : 'RIGHT'}`;
             document.getElementById('dope-lead').textContent = this.params.movement === 'stationary' ? 'N/A' : `${Math.abs(leadMils).toFixed(1)} MILS`;
         }
+
         toggleDopeCard = () => {
             const card = document.getElementById('dope-card');
             card.classList.toggle('hidden');
-            if (!card.classList.contains('hidden')) { card.style.left = '50%'; card.style.top = '50%'; card.style.transform = 'translate(-50%, -50%)'; }
+            if (!card.classList.contains('hidden')) {
+                card.style.left = '50%';
+                card.style.top = '50%';
+                card.style.transform = 'translate(-50%, -50%)';
+            }
         }
-        gameLoop = () => { if (!this.isActive) return; this.update(); this.draw(); requestAnimationFrame(this.gameLoop); }
+
+        gameLoop = () => { if (!this.isActive) return; this.update(); this.draw(); this.animationFrameId = requestAnimationFrame(this.gameLoop); }
+
         update() {
-            if (this.breath.isHolding) { this.breath.current = Math.max(0, this.breath.current - 0.11); if (this.breath.current === 0) { this.breath.isHolding = false; this.breath.cooldown = 100; } }
-            else { this.breath.current = Math.min(this.breath.max, this.breath.current + 0.5); this.breath.cooldown = Math.max(0, this.breath.cooldown - 1); }
+            if (this.breath.isHolding) { this.breath.current = Math.max(0, this.breath.current - 0.11); if (this.breath.current === 0) { this.breath.isHolding = false; this.breath.cooldown = 100; } } else { this.breath.current = Math.min(this.breath.max, this.breath.current + 0.5); this.breath.cooldown = Math.max(0, this.breath.cooldown - 1); }
             document.getElementById('breath-bar').style.width = `${this.breath.current}%`;
             
-            const timeSinceBeat = performance.now() - this.heartRate.lastBeat;
-            if (timeSinceBeat < this.heartRate.interval) this.heartRate.phase = timeSinceBeat / this.heartRate.interval;
-            else { this.heartRate.lastBeat = performance.now(); this.heartRate.phase = 0; }
+            const now = performance.now();
+            const timeSinceBeat = now - this.heartRate.lastBeat;
+            if (timeSinceBeat < this.heartRate.interval) {
+                this.heartRate.phase = timeSinceBeat / this.heartRate.interval;
+            } else {
+                this.heartRate.lastBeat = now;
+                this.heartRate.phase = 0;
+            }
             this.drawHeartRate();
-            
+
             let currentSway = this.swayMagnitude;
             if (this.breath.isHolding) currentSway *= 0.1; if (this.breath.cooldown > 0) currentSway *= 3;
-            this.sway.angle += 0.02;
-            const finalSwayX = Math.cos(this.sway.angle) * currentSway;
-            const finalSwayY = Math.sin(this.sway.angle * 2) * currentSway * 0.7;
-            this.reticlePos.x = this.mousePos.x + finalSwayX; this.reticlePos.y = this.mousePos.y + finalSwayY;
+            this.sway.angle += 0.02; 
+            this.sway.x = Math.cos(this.sway.angle) * currentSway;
+            this.sway.y = Math.sin(this.sway.angle * 2) * currentSway * 0.7;
+            this.reticlePos.x = this.mousePos.x + this.sway.x; this.reticlePos.y = this.mousePos.y + this.sway.y;
 
             if (this.params.movement !== 'stationary') {
                 this.target.pos.x += this.target.vel.x; this.target.pos.y += this.target.vel.y;
-                const centerX = this.canvas.width / 2, centerY = this.canvas.height / 2;
-                if (this.target.pos.x > centerX + this.target.patrolLimit || this.target.pos.x < centerX - this.target.patrolLimit) this.target.vel.x *= -1;
-                if (this.target.pos.y > centerY + 50 || this.target.pos.y < centerY - 50) this.target.vel.y *= -1;
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+                const verticalPatrolLimit = 50;
+                
+                if (this.target.pos.x > centerX + this.target.patrolLimit || this.target.pos.x < centerX - this.target.patrolLimit) {
+                    this.target.vel.x *= -1;
+                }
+                if (this.target.pos.y > centerY + verticalPatrolLimit || this.target.pos.y < centerY - verticalPatrolLimit) {
+                    this.target.vel.y *= -1;
+                }
+                
                 if (this.params.movement === 'tier3') {
                     this.target.stateTimer--;
                     if (this.target.stateTimer <= 0) {
@@ -416,11 +424,19 @@ body { font-family: 'Courier New', Courier, monospace; margin: 0; background-col
                     }
                 }
             }
-            this.shotTraces = this.shotTraces.filter(t => --t.life > 0);
+
+            this.shotTraces = this.shotTraces.filter(t => { t.life--; return t.life > 0; });
         }
+
         calculateEKG(phase) {
-            return 0.5 * Math.exp(-150 * (phase - 0.15)**2) - 0.4 * Math.exp(-250 * (phase - 0.25)**2) + 4.0 * Math.exp(-400 * (phase - 0.3)**2) - 1.0 * Math.exp(-300 * (phase - 0.35)**2) + 0.8 * Math.exp(-60 * (phase - 0.55)**2);
+            const p = 0.5 * Math.exp(-150 * (phase - 0.15)**2);
+            const q = -0.4 * Math.exp(-250 * (phase - 0.25)**2);
+            const r = 4.0 * Math.exp(-400 * (phase - 0.3)**2);
+            const s = -1.0 * Math.exp(-300 * (phase - 0.35)**2);
+            const t = 0.8 * Math.exp(-60 * (phase - 0.55)**2);
+            return p + q + r + s + t;
         }
+
         draw() {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             this.ctx.save();
@@ -430,150 +446,230 @@ body { font-family: 'Courier New', Courier, monospace; margin: 0; background-col
             this.ctx.restore();
             this.drawScopeOverlay(); this.drawReticle();
         }
+
         drawTarget() {
-            const scale = Math.max(0.1, 200 / this.params.distance), w = 100 * scale, h = 250 * scale;
+            const scale = Math.max(0.1, 200 / this.params.distance);
+            const w = 100 * scale; const h = 250 * scale;
             this.ctx.drawImage(this.targetSVG, this.target.pos.x - w / 2, this.target.pos.y - h / 2, w, h);
         }
+
         drawImpactMarker = (impact) => {
-            this.ctx.strokeStyle = this.colors.danger; this.ctx.lineWidth = 2; const size = 10; this.ctx.beginPath();
+            this.ctx.strokeStyle = this.colors.danger; this.ctx.lineWidth = 2;
+            const size = 10; this.ctx.beginPath();
             this.ctx.moveTo(impact.x - size, impact.y - size); this.ctx.lineTo(impact.x + size, impact.y + size);
             this.ctx.moveTo(impact.x + size, impact.y - size); this.ctx.lineTo(impact.x - size, impact.y + size);
             this.ctx.stroke();
         }
+        
         drawShotTrace = (trace) => {
-            this.ctx.beginPath(); this.ctx.moveTo(this.canvas.width / 2, this.canvas.height / 2);
+            this.ctx.beginPath();
+            this.ctx.moveTo(this.canvas.width / 2, this.canvas.height / 2);
             this.ctx.quadraticCurveTo(trace.midX, trace.midY, trace.endX, trace.endY);
-            this.ctx.strokeStyle = `rgba(255, 230, 150, ${trace.life / 90})`; this.ctx.lineWidth = 2; this.ctx.stroke();
+            this.ctx.strokeStyle = `rgba(255, 230, 150, ${trace.life / 90})`;
+            this.ctx.lineWidth = 2;
+            this.ctx.stroke();
         }
+
         drawReticle() {
-            const x = this.reticlePos.x, y = this.reticlePos.y, milSize = 40; 
+            const x = this.reticlePos.x; const y = this.reticlePos.y;
+            const milSize = 40; 
             this.ctx.strokeStyle = this.colors.accent; this.ctx.lineWidth = 1; this.ctx.fillStyle = this.colors.accent;
             this.ctx.font = '10px Courier New'; this.ctx.textAlign = 'center'; this.ctx.textBaseline = 'middle';
-            this.ctx.beginPath(); this.ctx.moveTo(x - milSize * 5.5, y); this.ctx.lineTo(x + milSize * 5.5, y);
-            this.ctx.moveTo(x, y - milSize * 5.5); this.ctx.lineTo(x, y + milSize * 5.5); this.ctx.stroke();
+            
+            this.ctx.beginPath();
+            this.ctx.moveTo(x - milSize * 5.5, y); this.ctx.lineTo(x + milSize * 5.5, y);
+            this.ctx.moveTo(x, y - milSize * 5.5); this.ctx.lineTo(x, y + milSize * 5.5);
+            this.ctx.stroke();
+
             for (let i = 0.5; i <= 5; i += 0.5) {
-                const isFullMil = i % 1 === 0, hashSize = isFullMil ? 6 : 3;
+                const isFullMil = i % 1 === 0;
+                const hashSize = isFullMil ? 6 : 3;
+
                 this.ctx.beginPath();
-                this.ctx.moveTo(x - milSize * i, y - hashSize); this.ctx.lineTo(x - milSize * i, y + hashSize); this.ctx.moveTo(x + milSize * i, y - hashSize); this.ctx.lineTo(x + milSize * i, y + hashSize);
-                this.ctx.moveTo(x - hashSize, y - milSize * i); this.ctx.lineTo(x + hashSize, y - milSize * i); this.ctx.moveTo(x - hashSize, y + milSize * i); this.ctx.lineTo(x + hashSize, y + milSize * i);
+                this.ctx.moveTo(x - milSize * i, y - hashSize); this.ctx.lineTo(x - milSize * i, y + hashSize);
+                this.ctx.moveTo(x + milSize * i, y - hashSize); this.ctx.lineTo(x + milSize * i, y + hashSize);
+                this.ctx.moveTo(x - hashSize, y - milSize * i); this.ctx.lineTo(x + hashSize, y - milSize * i);
+                this.ctx.moveTo(x - hashSize, y + milSize * i); this.ctx.lineTo(x + hashSize, y + milSize * i);
                 this.ctx.stroke();
+
                 if (isFullMil) {
-                    this.ctx.fillText(i, x + 12, y + milSize * i); this.ctx.fillText(i, x + 12, y - milSize * i);
-                    this.ctx.fillText(i, x + milSize * i, y + 12); this.ctx.fillText(i, x - milSize * i, y + 12);
+                    this.ctx.fillText(i, x + 12, y + milSize * i);
+                    this.ctx.fillText(i, x + 12, y - milSize * i);
+                    this.ctx.fillText(i, x + milSize * i, y + 12);
+                    this.ctx.fillText(i, x - milSize * i, y + 12);
                 }
             }
         }
+        
         drawScopeOverlay() {
-            this.ctx.fillStyle = 'black'; this.ctx.beginPath(); const r = Math.min(this.canvas.width, this.canvas.height) * 1.2;
-            this.ctx.arc(this.canvas.width/2, this.canvas.height/2, r, 0, 7); this.ctx.rect(this.canvas.width, 0, -this.canvas.width, this.canvas.height); this.ctx.fill();
+            this.ctx.fillStyle = 'black'; this.ctx.beginPath();
+            const centerX = this.canvas.width / 2; const centerY = this.canvas.height / 2;
+            const radius = Math.min(centerX, centerY) * 1.2;
+            this.ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI); this.ctx.rect(this.canvas.width, 0, -this.canvas.width, this.canvas.height);
+            this.ctx.fill();
         }
+
         drawHeartRate() {
-            const pulse = this.calculateEKG(this.heartRate.phase);
-            this.heartRate.history.push(pulse);
-            if (this.heartRate.history.length > this.hrCanvas.width) this.heartRate.history.shift();
-            this.hrCtx.clearRect(0, 0, this.hrCanvas.width, this.hrCanvas.height); this.hrCtx.beginPath();
-            this.hrCtx.strokeStyle = this.colors.accent; this.hrCtx.lineWidth = 1.5;
-            this.hrCtx.moveTo(0, this.hrCanvas.height / 1.5);
-            this.heartRate.history.forEach((val, i) => { this.hrCtx.lineTo(i, (this.hrCanvas.height / 1.5) - (val * 2)); }); this.hrCtx.stroke();
+            const currentPulse = this.calculateEKG(this.heartRate.phase);
+            this.heartRate.history.push(currentPulse);
+            if (this.heartRate.history.length > this.hrCanvas.width) { this.heartRate.history.shift(); }
+            this.hrCtx.clearRect(0, 0, this.hrCanvas.width, this.hrCanvas.height);
+            this.hrCtx.beginPath();
+            this.hrCtx.strokeStyle = this.colors.accent;
+            this.hrCtx.lineWidth = 1.5;
+            const h = this.hrCanvas.height;
+            this.hrCtx.moveTo(0, h / 1.5);
+            this.heartRate.history.forEach((val, i) => { this.hrCtx.lineTo(i, (h / 1.5) - (val * 2)); });
+            this.hrCtx.stroke();
         }
+
         fireShot() {
-            if (this.shotsTaken >= this.shotsTotal) return; this.shotsTaken++;
-            const tof = this.params.distance / caliberData[this.params.caliber].muzzleVelocity;
-            const predTargetPos = { x: this.target.pos.x + this.target.vel.x * tof * 60, y: this.target.pos.y + this.target.vel.y * tof * 60 };
-            const correctAim = { x: predTargetPos.x - this.windOffsetX, y: predTargetPos.y - this.dropOffset + this.windOffsetY };
-            const impact = { x: predTargetPos.x + (this.reticlePos.x - correctAim.x), y: predTargetPos.y + (this.reticlePos.y - correctAim.y) };
+            if (this.shotsTaken >= this.shotsTotal) return;
+            this.shotsTaken++;
+            
+            const timeOfFlight = this.params.distance / caliberData[this.params.caliber].muzzleVelocity;
+            const predictedTargetPos = {
+                x: this.target.pos.x + this.target.vel.x * timeOfFlight * 60,
+                y: this.target.pos.y + this.target.vel.y * timeOfFlight * 60
+            };
+            
+            const correctAimPoint = { 
+                x: predictedTargetPos.x - this.windOffsetX, 
+                y: predictedTargetPos.y - this.dropOffset + this.windOffsetY 
+            };
+            
+            const errorX = this.reticlePos.x - correctAimPoint.x;
+            const errorY = this.reticlePos.y - correctAimPoint.y;
+            const impact = { x: predictedTargetPos.x + errorX, y: predictedTargetPos.y + errorY };
             this.impacts.push(impact);
-            this.shotTraces.push({ endX: impact.x, endY: impact.y, midX: (this.canvas.width/2 + impact.x)/2, midY: (this.canvas.height/2 + impact.y)/2 - this.dropOffset/2, life: 90 });
-            const scale = Math.max(0.1, 200 / this.params.distance), w = 100 * scale, h = 250 * scale;
-            const targetLeft = this.target.pos.x - w / 2, targetTop = this.target.pos.y - h / 2;
-            let reportDetails = { isHit: false, impactX: impact.x };
+            
+            this.shotTraces.push({
+                endX: impact.x, endY: impact.y,
+                midX: (this.canvas.width/2 + impact.x)/2, midY: (this.canvas.height/2 + impact.y)/2 - this.dropOffset/2,
+                life: 90
+            });
+
+            const scale = Math.max(0.1, 200 / this.params.distance);
+            const w = 100 * scale; const h = 250 * scale;
+            const targetLeft = this.target.pos.x - w / 2; const targetTop = this.target.pos.y - h / 2;
+
+            let reportDetails;
             if (impact.x >= targetLeft && impact.x <= targetLeft + w && impact.y >= targetTop && impact.y <= targetTop + h) {
-                reportDetails = { isHit: true, localPercentX: (impact.x - targetLeft) / w, localPercentY: (impact.y - targetTop) / h, impactX: impact.x };
+                const localX = impact.x - targetLeft; const localY = impact.y - targetTop;
+                reportDetails = { isHit: true, localPercentX: localX / w, localPercentY: localY / h, impactX: impact.x };
+            } else {
+                reportDetails = { isHit: false, impactX: impact.x };
             }
             this.shotReports.push(this.analyzeHit(reportDetails));
             this.updateHud();
-            if (this.shotsTaken >= this.shotsTotal) { this.isActive = false; setTimeout(() => this.generateReport(), 1000); }
+
+            if (this.shotsTaken >= this.shotsTotal) {
+                this.isActive = false;
+                setTimeout(() => this.generateReport(), 1000);
+            }
         }
+        
         analyzeHit(details) {
             let zone = "Miss", result = "TARGET UNHARMED", depth = 0, survivalChance = "N/A", survivedRoll = true;
             if (details.isHit) {
-                const hitX = details.localPercentX * 100, hitY = details.localPercentY * 250, caliberMod = caliberData[this.params.caliber].modifier;
+                const hitX = details.localPercentX * 100;
+                const hitY = details.localPercentY * 250;
+                const caliberMod = caliberData[this.params.caliber].modifier;
+                let hitDetected = false;
                 for (const hitbox of this.hitboxes) {
                     const r = hitbox.rect;
                     if (hitX >= r.x && hitX <= r.x + r.w && hitY >= r.y && hitY <= r.y + r.h) {
                         zone = hitbox.name;
                         const finalTrauma = hitbox.severity * caliberMod;
                         survivalChance = Math.max(0, 100 - finalTrauma);
-                        survivedRoll = Math.random() * 100 < survivalChance;
+                        const roll = Math.random() * 100;
+                        survivedRoll = roll < survivalChance;
                         if (!survivedRoll) { result = "TARGET NEUTRALIZED"; }
-                        else if (finalTrauma > 80) result = "TARGET CRITICALLY WOUNDED";
-                        else if (finalTrauma > 50) result = "TARGET SIGNIFICANTLY WOUNDED";
-                        else result = "TARGET WOUNDED";
+                        else {
+                            if (finalTrauma > 80) result = "TARGET CRITICALLY WOUNDED";
+                            else if (finalTrauma > 50) result = "TARGET SIGNIFICANTLY WOUNDED";
+                            else result = "TARGET WOUNDED";
+                        }
+                        hitDetected = true;
                         break;
                     }
                 }
-                if (zone === "Miss") { zone = "Flesh Wound"; result = "TARGET WOUNDED"; survivalChance = 95.0; }
-                depth = (caliberData[this.params.caliber].muzzleVelocity / 10) + Math.random() * 20 - 10;
+                if (!hitDetected) { zone = "Flesh Wound"; result = "TARGET WOUNDED"; survivalChance = 95.0; }
+                const caliberPenetration = { "5.56mm": 80, "7.62mm": 120, ".308": 125, "6.5mm": 140, ".338": 180, ".50": 300 };
+                depth = caliberPenetration[this.params.caliber] + Math.random() * 20 - 10;
             }
-            return { zone, result, depth, horizontalDev: details.impactX - this.target.pos.x, details, survivalChance, survivedRoll };
+            const horizontalDev = details.impactX - (this.target.pos.x);
+            return { zone, result, depth, horizontalDev, details, survivalChance, survivedRoll };
         }
+
         generateReport() {
-            document.getElementById('game-view').classList.add('hidden'); document.getElementById('report-view').classList.remove('hidden');
-            const shotListContainer = document.getElementById('shot-list'); shotListContainer.innerHTML = '';
+            document.getElementById('game-view').classList.add('hidden');
+            document.getElementById('report-view').classList.remove('hidden');
+            const shotListContainer = document.getElementById('shot-list');
+            shotListContainer.innerHTML = '';
             this.shotReports.forEach((shot, index) => {
                 const p = document.createElement('p');
                 p.innerHTML = `SHOT ${index + 1}: <strong style="color: ${shot.result === 'TARGET NEUTRALIZED' ? this.colors.success : (shot.zone === 'Miss' ? this.colors.danger : this.colors.warning)}">${shot.zone} - [${shot.result}]</strong>`;
-                p.addEventListener('mousemove', (e) => this.showTooltip(index, e)); p.addEventListener('mouseout', this.hideTooltip);
+                p.addEventListener('mousemove', (e) => this.showTooltip(index, e));
+                p.addEventListener('mouseout', () => this.hideTooltip());
                 shotListContainer.appendChild(p);
             });
-            const finalShot = this.shotReports.at(-1);
+            const finalShot = this.shotReports[this.shotReports.length - 1];
             document.getElementById('report-zone').textContent = finalShot.zone;
             document.getElementById('report-survival').textContent = typeof finalShot.survivalChance === 'number' ? `${finalShot.survivalChance.toFixed(1)}%` : "N/A";
             document.getElementById('report-depth').textContent = finalShot.details.isHit ? `${finalShot.depth.toFixed(1)} mm` : "N/A";
             document.getElementById('report-ballistics').textContent = `Projectile: ${this.params.caliber}. Impact vector shows ${Math.abs(finalShot.horizontalDev).toFixed(2)}px horizontal deviation.`;
             document.getElementById('report-conditions').textContent = `${this.params.distance}m | ${this.params.windSpeed} KPH ${this.params.windDir.name} | ${this.params.caliber}`;
             let finalAssessment = "TARGET MISSED";
-            if (this.shotReports.some(s => !s.survivedRoll)) finalAssessment = "TARGET NEUTRALIZED";
+            if (this.shotReports.some(s => !s.survivedRoll)) { finalAssessment = "TARGET NEUTRALIZED"; }
             else {
-                if (this.shotReports.some(s => s.result.includes("CRITICALLY"))) finalAssessment = "TARGET CRITICALLY WOUNDED";
-                else if (this.shotReports.some(s => s.result.includes("SIGNIFICANTLY"))) finalAssessment = "TARGET SIGNIFICANTLY WOUNDED";
-                else if (this.shotReports.some(s => s.result.includes("WOUNDED"))) finalAssessment = "TARGET WOUNDED";
+                const woundLevels = this.shotReports.map(s => s.result);
+                if (woundLevels.includes("TARGET CRITICALLY WOUNDED")) finalAssessment = "TARGET CRITICALLY WOUNDED";
+                else if (woundLevels.includes("TARGET SIGNIFICANTLY WOUNDED")) finalAssessment = "TARGET SIGNIFICANTLY WOUNDED";
+                else if (woundLevels.includes("TARGET WOUNDED")) finalAssessment = "TARGET WOUNDED";
             }
-            const resultEl = document.getElementById('report-result');
-            resultEl.textContent = finalAssessment;
-            resultEl.style.color = finalAssessment === "TARGET NEUTRALIZED" ? this.colors.success : (finalAssessment === 'TARGET MISSED' ? this.colors.danger : this.colors.warning);
+            document.getElementById('report-result').textContent = finalAssessment;
+            document.getElementById('report-result').style.color = finalAssessment === "TARGET NEUTRALIZED" ? this.colors.success : (finalAssessment === 'TARGET MISSED' ? this.colors.danger : this.colors.warning);
             if (finalShot.details.isHit) {
-                const marker = document.getElementById('hit-marker');
-                marker.style.left = `${finalShot.details.localPercentX * 100}%`; marker.style.top = `${finalShot.details.localPercentY * 100}%`;
-                marker.classList.remove('hidden');
+                const hitMarker = document.getElementById('hit-marker');
+                const markerX = finalShot.details.localPercentX * 100;
+                const markerY = finalShot.details.localPercentY * 100;
+                hitMarker.style.left = `${markerX}%`; hitMarker.style.top = `${markerY}%`;
+                hitMarker.classList.remove('hidden');
             }
         }
+        
         showTooltip = (index, event) => {
             const shot = this.shotReports[index];
-            this.tooltip.innerHTML = `<strong>Zone:</strong> ${shot.zone}<br><strong>Survival Chance:</strong> ${typeof shot.survivalChance === 'number' ? shot.survivalChance.toFixed(1) + '%' : 'N/A'}<br><strong>Result:</strong> ${shot.survivedRoll ? 'Survived' : 'Neutralized'}`;
-            this.tooltip.style.display = 'block'; this.tooltip.style.left = `${event.clientX + 15}px`; this.tooltip.style.top = `${event.clientY}px`;
+            let content = `<strong>Zone:</strong> ${shot.zone}<br>`;
+            content += `<strong>Survival Chance:</strong> ${typeof shot.survivalChance === 'number' ? shot.survivalChance.toFixed(1) + '%' : 'N/A'}<br>`;
+            content += `<strong>Result:</strong> ${shot.survivedRoll ? 'Survived' : 'Neutralized'}<br>`;
+            content += `<strong>Depth:</strong> ${shot.details.isHit ? shot.depth.toFixed(1) + ' mm' : 'N/A'}<br>`;
+            this.tooltip.innerHTML = content;
+            this.tooltip.style.display = 'block';
+            this.tooltip.style.left = `${event.clientX + 15}px`;
+            this.tooltip.style.top = `${event.clientY}px`;
         }
+
         hideTooltip = () => { this.tooltip.style.display = 'none'; }
+
         setupEventListeners() {
             this.canvas.oncontextmenu = (e) => e.preventDefault();
+            this.canvas.onmousemove = (e) => { const rect = this.canvas.getBoundingClientRect(); this.mousePos.x = e.clientX - rect.left; this.mousePos.y = e.clientY - rect.top; };
+            this.canvas.onmousedown = (e) => { if (e.button === 0) this.fireShot(); };
+            document.onkeydown = (e) => { if (e.code === 'Space') { e.preventDefault(); if(!this.breath.cooldown) this.breath.isHolding = true; } };
+            document.onkeyup = (e) => { if (e.code === 'Space') this.breath.isHolding = false; };
             window.onresize = this.resizeCanvas;
-            if (isMobile) {
-                this.canvas.addEventListener('touchstart', this.handleTouchStart); this.canvas.addEventListener('touchmove', this.handleTouchMove); this.canvas.addEventListener('touchend', this.handleTouchEnd);
-                document.getElementById('mobile-fire-btn').addEventListener('click', () => this.fireShot());
-                const breathBtn = document.getElementById('mobile-breath-btn');
-                breathBtn.addEventListener('touchstart', (e) => { e.preventDefault(); if(!this.breath.cooldown) this.breath.isHolding = true; });
-                breathBtn.addEventListener('touchend', () => { this.breath.isHolding = false; });
-            } else {
-                this.canvas.onmousemove = (e) => { const rect = this.canvas.getBoundingClientRect(); this.mousePos.x = e.clientX - rect.left; this.mousePos.y = e.clientY - rect.top; };
-                this.canvas.onmousedown = (e) => { if (e.button === 0) this.fireShot(); };
-                document.onkeydown = (e) => { if (e.code === 'Space') { e.preventDefault(); if(!this.breath.cooldown) this.breath.isHolding = true; } };
-                document.onkeyup = (e) => { if (e.code === 'Space') this.breath.isHolding = false; };
-            }
         }
-        handleTouchStart = (e) => { e.preventDefault(); this.touchState.isDragging = true; const touch = e.touches[0]; this.touchState.startX = touch.clientX; this.touchState.startY = touch.clientY; this.touchState.startReticleX = this.mousePos.x; this.touchState.startReticleY = this.mousePos.y; }
-        handleTouchMove = (e) => { e.preventDefault(); if (!this.touchState.isDragging) return; const touch = e.touches[0]; const dx = touch.clientX - this.touchState.startX; const dy = touch.clientY - this.touchState.startY; this.mousePos.x = this.touchState.startReticleX + dx; this.mousePos.y = this.touchState.startReticleY + dy; }
-        handleTouchEnd = (e) => { e.preventDefault(); this.touchState.isDragging = false; }
-        resizeCanvas = () => { const container = document.getElementById('game-view'); this.canvas.width = container.clientWidth; this.canvas.height = container.clientWidth * (9 / 16); this.hrCanvas.width = 100; this.hrCanvas.height = 30; }
+        
+        resizeCanvas = () => { 
+            const container = document.getElementById('game-view'); 
+            this.canvas.width = container.clientWidth; 
+            this.canvas.height = container.clientWidth * (9 / 16); 
+            this.hrCanvas.width = 100;
+            this.hrCanvas.height = 30;
+        }
+
         updateHud() {
             document.getElementById('hud-wind').textContent = `${this.params.windSpeed} KPH ${this.params.windDir.name}`;
             document.getElementById('hud-range').textContent = `${this.params.distance}m / ${this.params.caliber}`;
@@ -587,20 +683,30 @@ body { font-family: 'Courier New', Courier, monospace; margin: 0; background-col
         document.getElementById('game-view').classList.remove('hidden');
         document.getElementById('reset-btn').classList.remove('hidden');
         sniperGame.start({ 
-            distance: parseInt(document.getElementById('distance').value), windSpeed: parseInt(document.getElementById('wind-speed').value), 
-            windDir: sniperGame.windModels[document.getElementById('wind-dir').value], caliber: document.getElementById('caliber').value,
-            shots: parseInt(document.getElementById('shot-count').value), movement: document.getElementById('target-movement').value,
+            distance: parseInt(document.getElementById('distance').value), 
+            windSpeed: parseInt(document.getElementById('wind-speed').value), 
+            windDir: sniperGame.windModels[document.getElementById('wind-dir').value], 
+            caliber: document.getElementById('caliber').value,
+            shots: parseInt(document.getElementById('shot-count').value),
+            movement: document.getElementById('target-movement').value,
             heartRate: parseInt(document.getElementById('heart-rate').value)
         });
     }
 
-    const dopeCard = document.getElementById('dope-card'), dopeCardHeader = document.getElementById('dope-card-header');
-    let isDragging = false, offsetX, offsetY;
+    const dopeCard = document.getElementById('dope-card');
+    const dopeCardHeader = document.getElementById('dope-card-header');
+    let isDragging = false;
+    let offsetX, offsetY;
     dopeCardHeader.addEventListener('mousedown', (e) => {
-        e.preventDefault(); isDragging = true; const rect = dopeCard.getBoundingClientRect();
-        offsetX = e.clientX - rect.left; offsetY = e.clientY - rect.top;
-        dopeCard.style.transform = 'none'; dopeCard.style.left = `${rect.left}px`; dopeCard.style.top = `${rect.top}px`;
-        document.addEventListener('mousemove', onMouseMove); document.addEventListener('mouseup', onMouseUp);
+        e.preventDefault(); isDragging = true;
+        const rect = dopeCard.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+        dopeCard.style.transform = 'none';
+        dopeCard.style.left = `${rect.left}px`;
+        dopeCard.style.top = `${rect.top}px`;
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
     });
     function onMouseMove(e) { if (!isDragging) return; dopeCard.style.left = `${e.clientX - offsetX}px`; dopeCard.style.top = `${e.clientY - offsetY}px`; }
     function onMouseUp() { isDragging = false; document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); }
