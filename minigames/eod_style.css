@@ -43,6 +43,7 @@ li strong { color: var(--accent-color); }
 #roll-result-display.crit { border-color: var(--success-color); color: var(--success-color); }
 #roll-result-display.success { border-color: var(--accent-color); }
 #roll-result-display.fail { border-color: var(--danger-color); color: var(--danger-color); }
+.bottom-controls { text-align: center; margin-top: 20px; }
 
 /* Module Styles */
 .module { background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); margin-bottom: 15px; position: relative; }
@@ -67,3 +68,44 @@ li strong { color: var(--accent-color); }
 .series-btn.green { border-color: #2E8B57; color: #2E8B57; } .series-btn.green:hover { background: #2E8B57; color: var(--bg-color); }
 .series-btn.blue { border-color: #4682B4; color: #4682B4; } .series-btn.blue:hover { background: #4682B4; color: var(--bg-color); }
 .series-btn.red { border-color: #B22222; color: #B22222; } .series-btn.red:hover { background: #B22222; color: var(--bg-color); }
+
+
+/* --- MOBILE RESPONSIVE STYLES --- */
+@media (max-width: 900px) {
+    /* Hide the logo on mobile to save horizontal space */
+    .header .logo {
+        display: none;
+    }
+    /* Reduce header size slightly */
+    h1 {
+        font-size: 18px;
+    }
+    /* Adjust main container for small screens */
+    .container {
+        margin: 5px;
+        padding: 5px;
+    }
+    /* Stack the main game view (device and manual) */
+    #game-view {
+        grid-template-columns: 1fr;
+    }
+    /* Stack the two-column input fields in the setup view */
+    .grid-2-col {
+        grid-template-columns: 1fr;
+    }
+    /* Make the bottom action buttons full-width and stacked */
+    .bottom-controls .button,
+    .bottom-controls button {
+        display: block;
+        width: 100%;
+        box-sizing: border-box; /* Ensures padding is inside the width */
+        margin: 5px 0;
+    }
+    /* On mobile, the timer can be smaller to prevent overflow */
+    .timer-display {
+        font-size: 2em;
+    }
+    .strike-display {
+        font-size: 1.2em;
+    }
+}
