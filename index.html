@@ -229,6 +229,63 @@
         #armor-preset-list .preset-item {
              cursor: pointer;
         }
+
+        /* --- MOBILE RESPONSIVE STYLES --- */
+        @media (max-width: 768px) {
+
+            /* Make the main two-column form grid stack vertically */
+            .form-grid {
+                grid-template-columns: 1fr; /* Change from 1fr 1.5fr to a single column */
+            }
+
+            /* Adjust the main page container for smaller screens */
+            .container {
+                margin: 5px; /* Reduce side margins */
+                padding: 5px;
+            }
+            
+            /* Make the header stack vertically on very small screens */
+            @media (max-width: 480px) {
+                .header {
+                    flex-direction: column; /* Stack logo and title */
+                    align-items: flex-start; /* Align to the left */
+                }
+            }
+
+            /* Reduce the size of the main title */
+            h1 {
+                font-size: 18px;
+            }
+            
+            /* Give the main menu less padding to save space */
+            .main-menu {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            /* Make buttons in the main menu stack for easier tapping */
+            .main-menu button, .main-menu .button {
+                display: block; /* Make each button take the full width */
+                width: 100%;
+                box-sizing: border-box; /* Ensure padding is included in width */
+            }
+
+            /* Stack the modal controls for better usability */
+            .modal-controls {
+                flex-direction: column;
+                align-items: flex-start; /* Align them left */
+                gap: 15px;
+            }
+            
+            /* Make sure the history/briefing section flows well */
+            #daily-briefing > div {
+                flex-direction: column;
+            }
+            #history-image {
+                width: 100%; /* Let the image take the full width */
+                max-height: 200px;
+            }
+        }
     </style>
 </head>
 <body>
