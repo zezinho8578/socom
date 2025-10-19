@@ -42,6 +42,7 @@
         .content-menu { text-align: left; padding: 30px; border: 1px solid var(--border-color); margin: 20px; background: var(--input-bg); }
         .content-menu > p { line-height: 1.6; margin: 0 0 1em 0; }
         
+        /* New Roster Card Styles */
         .roster-card {
             display: flex;
             gap: 20px;
@@ -63,8 +64,7 @@
             background-color: #000;
         }
         .card-rank {
-            max-height: 40px; /* UNIFORM RANK SIZE */
-            width: auto;
+            max-width: 80px;
             margin-top: 10px;
         }
         .card-info {
@@ -86,20 +86,7 @@
             line-height: 1.5;
             opacity: 0.9;
         }
-        .card-medals {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 15px;
-            align-items: center;
-        }
-        .card-medals img {
-            height: 35px; /* UNIFORM MEDAL SIZE */
-            width: auto;
-            background: rgba(255,255,255,0.85);
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
-        }
+
         .button {
             background: transparent; color: var(--accent-color); border: 1px solid var(--accent-color);
             padding: 8px 15px; font-size: 14px; cursor: pointer; margin: 5px;
@@ -132,53 +119,34 @@
                         <p class="card-summary">
                             A graduate of West Point and a veteran of numerous undisclosed conflicts, Colonel Vance is a senior authority within NEMESIS. His exact role and position in the command hierarchy remain intentionally ambiguous. It is unknown if he is the ultimate authority or answers to a higher, unseen power.
                         </p>
-                        <div class="card-medals">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Defense_Distinguished_Service_Medal.png" alt="Defense Distinguished Service Medal" title="Defense Distinguished Service Medal">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/Us_legion_of_merit_legionnaire.png" alt="Legion of Merit" title="Legion of Merit">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/7/72/Bronze_Star_medal.jpg" alt="Bronze Star" title="Bronze Star">
-                            <img src="https://static.wixstatic.com/media/135fa7_45f43d9b86c44c2a9aae30966c68b76f~mv2.png" alt="Parachutist Badge" title="Parachutist Badge">
-                        </div>
                     </div>
                 </div>
 
                 <h2>INTELLIGENCE & TECHNICAL SERVICES</h2>
                 <div class="roster-card">
                     <div class="card-assets">
-                        <img src="https://media.discordapp.net/attachments/1340163921851449455/1429557161314484495/Kobayashi.png" alt="Portrait: Kobayashi" class="card-portrait">
-                        <img src="https://media.discordapp.net/attachments/1340163921851449455/1429557049871700079/specialist.png" alt="Rank: Specialist" class="card-rank">
+                        <img src="https://media.discordapp.net/attachments/1340163921851449455/1429557161314484495/Kobayashi.png?ex=68f6925b&is=68f540db&hm=84647a538543dc26c65d651e7b4777566d56fa05a88a36ac06ef24a12f8dc3d0" alt="Portrait: Kobayashi" class="card-portrait">
+                        <img src="https://media.discordapp.net/attachments/1340163921851449455/1429557049871700079/specialist.png?ex=68f69240&is=68f540c0&hm=1d821ffc7f1fbbabee508234c64e78ab18b7df8a019b2919c4eb399d35a56c72" alt="Rank: Specialist" class="card-rank">
                     </div>
                     <div class="card-info">
                         <a href="/roster/kobayashi.html" class="card-name">SPECIALIST KOYAMO KOBAYASHI</a>
                         <p class="card-summary">
                             A prodigy in digital systems and network theory, Dr. Kobayashi was recruited from IBM Japan's advanced research division. Holding a PhD in Computer Science, he was granted the rank of Specialist E-4 upon recruitment to integrate him into the military command structure. He is the lead on all signals intelligence (SIGINT) and secure communications for NEMESIS operations.
                         </p>
-                        <div class="card-medals">
-                            <img src="https://militaryuniformsupply.com/cdn/shop/products/ML-F1301_W.png" alt="Army Good Conduct Medal" title="Army Good Conduct Medal">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/b/bc/Intelligence_Community_Medal_for_Valor.PNG" alt="Intelligence Community Medal for Valor" title="Intelligence Community Medal for Valor">
-                        </div>
                     </div>
                 </div>
 
                 <h2>OPERATIONS DIVISION // FIELD PERSONNEL</h2>
                 <div class="roster-card">
                     <div class="card-assets">
-                        <img src="https://cdn.discordapp.com/attachments/1340163921851449455/1429554771035033670/SSgt_Clancy.png" alt="Portrait: Clancy" class="card-portrait">
-                        <img src="https://cdn.discordapp.com/attachments/1340163921851449455/1429554147837087875/SSgt.png" alt="Rank: Staff Sergeant" class="card-rank">
+                        <img src="https://cdn.discordapp.com/attachments/1340163921851449455/1429554771035033670/SSgt_Clancy.png?ex=68f69021&is=68f53ea1&hm=f607763a070ba2f726d06b525c476660af52f001429b32495fe00def471a0a09" alt="Portrait: Clancy" class="card-portrait">
+                        <img src="https://cdn.discordapp.com/attachments/1340163921851449455/1429554147837087875/SSgt.png?ex=68f68f8c&is=68f53e0c&hm=2412456242023dad53137d53b03ac66945336839989178953fd7b83fc3bc1902" alt="Rank: Staff Sergeant" class="card-rank">
                     </div>
                     <div class="card-info">
                         <a href="#" class="card-name" style="cursor:not-allowed; text-decoration: none;">SSGT. DEAN CLANCY</a>
                         <p class="card-summary">
                             A living legend within the special forces community. Formerly assigned to the 5th Special Forces Group, Operational Detachment Alpha 525 (ODA-525), Clancy is a decorated Vietnam veteran and a recipient of the Medal of Honor for actions of extreme gallantry. Now in his early 60s, he serves NEMESIS as a senior tactical advisor and field training expert.
                         </p>
-                        <div class="card-medals">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/US_Army_Medal_of_Honor_Obverse.png/250px-US_Army_Medal_of_Honor_Obverse.png" alt="Medal of Honor" title="Medal of Honor">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/8/89/Silver_Star_medal.png" alt="Silver Star" title="Silver Star">
-                            <img src="https://i0.wp.com/norwoodhistoricalsociety.org/wp-content/uploads/2024/02/bronze-star-with-combat-v.png" alt="Bronze Star with V Device" title="Bronze Star with V Device">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/f/f5/Purple_Heart_Medal.png" alt="Purple Heart" title="Purple Heart">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Defense_Superior_Service_Medal.png/250px-Defense_Superior_Service_Medal.png" alt="Defense Superior Service Medal" title="Defense Superior Service Medal">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b4/Vietnam_Service_Medal%2C_obverse.png" alt="Vietnam Service Medal" title="Vietnam Service Medal">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/8/88/US_Army_Master_Combat_Infantryman_Badge_3rd_Award.png" alt="Combat Infantryman Badge (3rd Award)" title="Combat Infantryman Badge (3rd Award)">
-                        </div>
                     </div>
                 </div>
 
