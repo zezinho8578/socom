@@ -42,7 +42,7 @@
         .content-menu { text-align: left; padding: 30px; border: 1px solid var(--border-color); margin: 20px; background: var(--input-bg); }
         .content-menu > p { line-height: 1.6; margin: 0 0 1em 0; }
         
-        /* New Roster Card Styles */
+        /* Roster Card Styles */
         .roster-card {
             display: flex;
             gap: 20px;
@@ -64,22 +64,22 @@
             background-color: #000;
         }
         .card-rank {
-            max-width: 80px;
+            /* UNIFORM SIZING FOR ALL INSIGNIA */
+            height: 40px;
+            width: auto;
+            max-width: 100px;
+            object-fit: contain;
             margin-top: 10px;
         }
         .card-info {
             flex-grow: 1;
         }
         .card-name {
+            /* CHANGED FROM <a> to <p> */
             font-size: 1.4em;
             font-weight: bold;
             color: var(--accent-color);
             margin: 0 0 10px 0;
-            text-decoration: none;
-        }
-        .card-name:hover {
-            text-decoration: underline;
-            filter: brightness(1.5);
         }
         .card-summary {
             margin: 0;
@@ -115,9 +115,9 @@
                         <img src="https://upload.wikimedia.org/wikipedia/commons/c/c5/US-O6_insignia.svg" alt="Rank: Colonel" class="card-rank">
                     </div>
                     <div class="card-info">
-                        <a href="#" class="card-name" style="cursor:not-allowed; text-decoration: none;">COLONEL CHARLES VANCE</a>
+                        <p class="card-name">COLONEL CHARLES VANCE</p>
                         <p class="card-summary">
-                            A graduate of West Point and a veteran of numerous undisclosed conflicts, Colonel Vance is a senior authority within NEMESIS. His exact role and position in the command hierarchy remain intentionally ambiguous. It is unknown if he is the ultimate authority or answers to a higher, unseen power.
+                            West Point graduate. Veteran of multiple undisclosed conflicts. Colonel Vance acts as a senior authority within NEMESIS, though his specific title and position in the chain of command are not clearly defined. His oversight appears to be direct and far-reaching.
                         </p>
                     </div>
                 </div>
@@ -129,9 +129,9 @@
                         <img src="https://media.discordapp.net/attachments/1340163921851449455/1429557049871700079/specialist.png?ex=68f69240&is=68f540c0&hm=1d821ffc7f1fbbabee508234c64e78ab18b7df8a019b2919c4eb399d35a56c72" alt="Rank: Specialist" class="card-rank">
                     </div>
                     <div class="card-info">
-                        <a href="/roster/kobayashi.html" class="card-name">SPECIALIST KOYAMO KOBAYASHI</a>
+                        <p class="card-name">SPECIALIST KOYAMO KOBAYASHI</p>
                         <p class="card-summary">
-                            A prodigy in digital systems and network theory, Dr. Kobayashi was recruited from IBM Japan's advanced research division. Holding a PhD in Computer Science, he was granted the rank of Specialist E-4 upon recruitment to integrate him into the military command structure. He is the lead on all signals intelligence (SIGINT) and secure communications for NEMESIS operations.
+                           An exceptional talent in digital systems, Dr. Kobayashi was headhunted from an IBM Japan research team. After a brief integration period, he was laterally transferred into NEMESIS at the rank of Specialist E-4. He now manages all secure communications and signals intelligence analysis for the project.
                         </p>
                     </div>
                 </div>
@@ -143,9 +143,9 @@
                         <img src="https://cdn.discordapp.com/attachments/1340163921851449455/1429554147837087875/SSgt.png?ex=68f68f8c&is=68f53e0c&hm=2412456242023dad53137d53b03ac66945336839989178953fd7b83fc3bc1902" alt="Rank: Staff Sergeant" class="card-rank">
                     </div>
                     <div class="card-info">
-                        <a href="#" class="card-name" style="cursor:not-allowed; text-decoration: none;">SSGT. DEAN CLANCY</a>
+                        <p class="card-name">SSGT. DEAN CLANCY</p>
                         <p class="card-summary">
-                            A living legend within the special forces community. Formerly assigned to the 5th Special Forces Group, Operational Detachment Alpha 525 (ODA-525), Clancy is a decorated Vietnam veteran and a recipient of the Medal of Honor for actions of extreme gallantry. Now in his early 60s, he serves NEMESIS as a senior tactical advisor and field training expert.
+                            Highly respected veteran of the 5th Special Forces Group (ODA-525). Recipient of the Medal of Honor for actions during the Vietnam War. Though past recruitment age, Clancy was brought into NEMESIS for his unparalleled tactical experience. He serves as a senior instructor and field advisor for all operational teams.
                         </p>
                     </div>
                 </div>
