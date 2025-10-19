@@ -31,7 +31,7 @@
             background-size: 100% 2px; z-index: 100; pointer-events: none;
         }
 
-        .container { position: relative; max-width: 1400px; margin: 10px auto; padding: 10px; border: 1px solid var(--border-color); background: var(--container-bg); }
+        .container { position: relative; max-width: 1200px; /* Reduced max-width for tighter feel */ margin: 10px auto; padding: 10px; border: 1px solid var(--border-color); background: var(--container-bg); }
         .header { display: flex; align-items: center; border-bottom: 1px solid var(--accent-color); padding-bottom: 5px; margin-bottom: 15px; }
         .logo { max-width: 80px; margin-right: 15px; filter: grayscale(100%) brightness(200%) contrast(150%); }
 
@@ -39,52 +39,53 @@
         h1::after { content: '_'; animation: blink 1s step-end infinite; }
         h2 { font-size: 18px; margin-top: 25px; margin-bottom: 15px; text-transform: uppercase; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; }
         
-        .content-menu { text-align: left; padding: 30px; border: 1px solid var(--border-color); margin: 20px; background: var(--input-bg); }
+        .content-menu { text-align: left; padding: 20px; /* Reduced padding */ border: 1px solid var(--border-color); margin: 20px; background: var(--input-bg); }
         .content-menu > p { line-height: 1.6; margin: 0 0 1em 0; }
         
-        /* Roster Card Styles */
+        /* Roster Card Styles - More Compressed */
         .roster-card {
             display: flex;
-            gap: 20px;
+            gap: 15px; /* Reduced gap */
             background: rgba(0,0,0,0.2);
             border: 1px solid var(--border-color);
-            padding: 15px;
-            margin-bottom: 20px;
+            padding: 12px; /* Reduced padding */
+            margin-bottom: 15px; /* Reduced margin */
         }
         .card-assets {
             flex-shrink: 0;
-            width: 150px;
+            width: 120px; /* Reduced width */
             text-align: center;
         }
         .card-portrait {
             width: 100%;
-            height: 150px;
+            height: 120px; /* Reduced height */
             object-fit: cover;
             border: 1px solid var(--border-color);
             background-color: #000;
         }
         .card-rank {
-            /* UNIFORM SIZING FOR ALL INSIGNIA */
-            height: 40px;
-            width: auto;
-            max-width: 100px;
-            object-fit: contain;
+            /* --- UNIFORM SIZING FOR ALL INSIGNIA --- */
+            height: 35px; /* Set a consistent height */
+            max-width: 80px; /* Set a max width to prevent oversize */
+            object-fit: contain; /* Fit image inside without stretching */
             margin-top: 10px;
+            margin-left: auto;
+            margin-right: auto;
         }
         .card-info {
             flex-grow: 1;
         }
         .card-name {
-            /* CHANGED FROM <a> to <p> */
-            font-size: 1.4em;
+            font-size: 1.3em; /* Slightly smaller */
             font-weight: bold;
             color: var(--accent-color);
-            margin: 0 0 10px 0;
+            margin: 0 0 8px 0; /* Reduced margin */
         }
         .card-summary {
             margin: 0;
             line-height: 1.5;
             opacity: 0.9;
+            font-size: 0.95em; /* Slightly smaller text */
         }
 
         .button {
@@ -94,6 +95,30 @@
             text-decoration: none;
         }
         .button:hover { background: var(--accent-color); color: var(--bg-color); text-shadow: none; }
+
+        /* --- MOBILE ADAPTABILITY --- */
+        @media (max-width: 640px) {
+            .roster-card {
+                flex-direction: column; /* Stack elements vertically */
+                align-items: center;
+                text-align: center;
+            }
+            .card-assets {
+                width: 150px; /* Give portrait a bit more room on mobile */
+            }
+            .card-portrait {
+                height: 150px;
+            }
+            .card-info {
+                margin-top: 10px; /* Add space between rank and name */
+            }
+            .content-menu {
+                padding: 10px;
+                margin: 10px;
+            }
+            h1 { font-size: 18px; }
+            .header { flex-direction: column; align-items: flex-start; }
+        }
     </style>
 </head>
 <body>
@@ -112,12 +137,12 @@
                 <div class="roster-card">
                     <div class="card-assets">
                         <img src="https://bobritzema.wordpress.com/wp-content/uploads/2012/12/question-mark-face.jpg" alt="Portrait: Vance" class="card-portrait">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c5/US-O6_insignia.svg" alt="Rank: Colonel" class="card-rank">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Colonel_insignia.png/1024px-Colonel_insignia.png" alt="Rank: Colonel" class="card-rank">
                     </div>
                     <div class="card-info">
                         <p class="card-name">COLONEL CHARLES VANCE</p>
                         <p class="card-summary">
-                            West Point graduate. Veteran of multiple undisclosed conflicts. Colonel Vance acts as a senior authority within NEMESIS, though his specific title and position in the chain of command are not clearly defined. His oversight appears to be direct and far-reaching.
+                            A senior authority within NEMESIS. West Point graduate and veteran of numerous undisclosed conflicts. His specific role is deliberately ambiguous, but his oversight appears to be direct and far-reaching.
                         </p>
                     </div>
                 </div>
@@ -131,7 +156,7 @@
                     <div class="card-info">
                         <p class="card-name">SPECIALIST KOYAMO KOBAYASHI</p>
                         <p class="card-summary">
-                           An exceptional talent in digital systems, Dr. Kobayashi was headhunted from an IBM Japan research team. After a brief integration period, he was laterally transferred into NEMESIS at the rank of Specialist E-4. He now manages all secure communications and signals intelligence analysis for the project.
+                           Recruited from an IBM Japan research team for his exceptional talent in digital systems. After a brief integration period, he was brought into NEMESIS to handle all secure communications and SIGINT analysis.
                         </p>
                     </div>
                 </div>
@@ -140,12 +165,12 @@
                 <div class="roster-card">
                     <div class="card-assets">
                         <img src="https://cdn.discordapp.com/attachments/1340163921851449455/1429554771035033670/SSgt_Clancy.png?ex=68f69021&is=68f53ea1&hm=f607763a070ba2f726d06b525c476660af52f001429b32495fe00def471a0a09" alt="Portrait: Clancy" class="card-portrait">
-                        <img src="https://cdn.discordapp.com/attachments/1340163921851449455/1429554147837087875/SSgt.png?ex=68f68f8c&is=68f53e0c&hm=2412456242023dad53137d53b03ac66945336839989178953fd7b83fc3bc1902" alt="Rank: Staff Sergeant" class="card-rank">
+                        <img src="https_cdn.discordapp.com/attachments/1340163921851449455/1429554147837087875/SSgt.png?ex=68f68f8c&is=68f53e0c&hm=2412456242023dad53137d53b03ac66945336839989178953fd7b83fc3bc1902" alt="Rank: Staff Sergeant" class="card-rank">
                     </div>
                     <div class="card-info">
                         <p class="card-name">SSGT. DEAN CLANCY</p>
                         <p class="card-summary">
-                            Highly respected veteran of the 5th Special Forces Group (ODA-525). Recipient of the Medal of Honor for actions during the Vietnam War. Though past recruitment age, Clancy was brought into NEMESIS for his unparalleled tactical experience. He serves as a senior instructor and field advisor for all operational teams.
+                            Veteran of the 5th Special Forces Group (ODA-525) and Medal of Honor recipient for actions in Vietnam. Brought into NEMESIS for his legendary tactical expertise, Clancy now serves as a senior instructor and field advisor.
                         </p>
                     </div>
                 </div>
