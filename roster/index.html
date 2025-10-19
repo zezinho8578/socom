@@ -1,1 +1,162 @@
--
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.O.C.O.M. // Personnel Roster</title>
+    <link rel="icon" type="image/png" href="https://www.socom.mil/SOF-ATL/PublishingImages/eSOF-Logo.png">
+    <style>
+        @keyframes flicker { 0%, 100% { opacity: 0.95; } 50% { opacity: 1; } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        :root {
+            --bg-color: #050805; --scanline-color: rgba(0, 255, 85, 0.1); --text-color: #00ff55;
+            --accent-color: #00ff55; --border-color: #00521d; --input-bg: rgba(0, 31, 9, 0.95);
+            --danger-color: #ff4141; --danger-bg: rgba(255, 65, 65, 0.15); --container-bg: rgba(0,0,0,0.4);
+        }
+        body.officer-theme {
+            --bg-color: #1a160d; --scanline-color: rgba(255, 196, 0, 0.1); --text-color: #ffc400;
+            --accent-color: #ffc400; --border-color: #6d530e; --input-bg: rgba(43, 34, 13, 0.95);
+            --container-bg: rgba(10, 8, 3, 0.4);
+        }
+        /* ... other themes ... */
+
+        body {
+            font-family: 'Courier New', Courier, monospace; margin: 0; background-color: var(--bg-color); color: var(--text-color);
+            text-shadow: 0 0 4px var(--accent-color); animation: flicker 0.15s infinite; overflow-y: scroll;
+        }
+        body::before {
+            content: " "; display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(0deg, var(--scanline-color) 1px, transparent 1px);
+            background-size: 100% 2px; z-index: 100; pointer-events: none;
+        }
+
+        .container { position: relative; max-width: 1400px; margin: 10px auto; padding: 10px; border: 1px solid var(--border-color); background: var(--container-bg); }
+        .header { display: flex; align-items: center; border-bottom: 1px solid var(--accent-color); padding-bottom: 5px; margin-bottom: 15px; }
+        .logo { max-width: 80px; margin-right: 15px; filter: grayscale(100%) brightness(200%) contrast(150%); }
+
+        h1 { font-size: 22px; text-transform: uppercase; }
+        h1::after { content: '_'; animation: blink 1s step-end infinite; }
+        h2 { font-size: 18px; margin-top: 25px; margin-bottom: 15px; text-transform: uppercase; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; }
+        
+        .content-menu { text-align: left; padding: 30px; border: 1px solid var(--border-color); margin: 20px; background: var(--input-bg); }
+        .content-menu > p { line-height: 1.6; margin: 0 0 1em 0; }
+        
+        /* New Roster Card Styles */
+        .roster-card {
+            display: flex;
+            gap: 20px;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .card-assets {
+            flex-shrink: 0;
+            width: 150px;
+            text-align: center;
+        }
+        .card-portrait {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border: 1px solid var(--border-color);
+            background-color: #000;
+        }
+        .card-rank {
+            max-width: 80px;
+            margin-top: 10px;
+        }
+        .card-info {
+            flex-grow: 1;
+        }
+        .card-name {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin: 0 0 10px 0;
+            text-decoration: none;
+        }
+        .card-name:hover {
+            text-decoration: underline;
+            filter: brightness(1.5);
+        }
+        .card-summary {
+            margin: 0;
+            line-height: 1.5;
+            opacity: 0.9;
+        }
+
+        .button {
+            background: transparent; color: var(--accent-color); border: 1px solid var(--accent-color);
+            padding: 8px 15px; font-size: 14px; cursor: pointer; margin: 5px;
+            font-family: 'Courier New', Courier, monospace; text-transform: uppercase;
+            text-decoration: none;
+        }
+        .button:hover { background: var(--accent-color); color: var(--bg-color); text-shadow: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <img src="https://images.squarespace-cdn.com/content/v1/629e0596d168b365d297c6c4/cea70b06-895e-401c-9669-04fa59cfc5e6/socom-logo.png" alt="SOCOM Logo" class="logo">
+            <h1>S.O.C.O.M. // PERSONNEL ROSTER</h1>
+        </header>
+        <main>
+            <div class="content-menu">
+                <a href="/" class="button" style="float: right;">> RETURN TO MAIN</a>
+                <p>PERSONNEL MANIFEST FOR PROJECT NEMESIS. ACCESS TO THIS FILE IS RESTRICTED TO EYES-ONLY CLEARANCE.</p>
+
+                <h2>NEMESIS HQ // COMMAND ELEMENT</h2>
+                
+                <div class="roster-card">
+                    <div class="card-assets">
+                        <img src="https://bobritzema.wordpress.com/wp-content/uploads/2012/12/question-mark-face.jpg" alt="Portrait: Vance" class="card-portrait">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c5/US-O6_insignia.svg" alt="Rank: Colonel" class="card-rank">
+                    </div>
+                    <div class="card-info">
+                        <a href="#" class="card-name" style="cursor:not-allowed; text-decoration: none;">COLONEL CHARLES VANCE</a>
+                        <p class="card-summary">
+                            A graduate of West Point and a veteran of numerous undisclosed conflicts, Colonel Vance is a senior authority within NEMESIS. His exact role and position in the command hierarchy remain intentionally ambiguous. It is unknown if he is the ultimate authority or answers to a higher, unseen power.
+                        </p>
+                    </div>
+                </div>
+
+                <h2>INTELLIGENCE & TECHNICAL SERVICES</h2>
+                <div class="roster-card">
+                    <div class="card-assets">
+                        <img src="https://media.discordapp.net/attachments/1340163921851449455/1429557161314484495/Kobayashi.png?ex=68f6925b&is=68f540db&hm=84647a538543dc26c65d651e7b4777566d56fa05a88a36ac06ef24a12f8dc3d0" alt="Portrait: Kobayashi" class="card-portrait">
+                        <img src="https://media.discordapp.net/attachments/1340163921851449455/1429557049871700079/specialist.png?ex=68f69240&is=68f540c0&hm=1d821ffc7f1fbbabee508234c64e78ab18b7df8a019b2919c4eb399d35a56c72" alt="Rank: Specialist" class="card-rank">
+                    </div>
+                    <div class="card-info">
+                        <a href="/roster/kobayashi.html" class="card-name">SPECIALIST KOYAMO KOBAYASHI</a>
+                        <p class="card-summary">
+                            A prodigy in digital systems and network theory, Dr. Kobayashi was recruited from IBM Japan's advanced research division. Holding a PhD in Computer Science, he was granted the rank of Specialist E-4 upon recruitment to integrate him into the military command structure. He is the lead on all signals intelligence (SIGINT) and secure communications for NEMESIS operations.
+                        </p>
+                    </div>
+                </div>
+
+                <h2>OPERATIONS DIVISION // FIELD PERSONNEL</h2>
+                <div class="roster-card">
+                    <div class="card-assets">
+                        <img src="https://cdn.discordapp.com/attachments/1340163921851449455/1429554771035033670/SSgt_Clancy.png?ex=68f69021&is=68f53ea1&hm=f607763a070ba2f726d06b525c476660af52f001429b32495fe00def471a0a09" alt="Portrait: Clancy" class="card-portrait">
+                        <img src="https://cdn.discordapp.com/attachments/1340163921851449455/1429554147837087875/SSgt.png?ex=68f68f8c&is=68f53e0c&hm=2412456242023dad53137d53b03ac66945336839989178953fd7b83fc3bc1902" alt="Rank: Staff Sergeant" class="card-rank">
+                    </div>
+                    <div class="card-info">
+                        <a href="#" class="card-name" style="cursor:not-allowed; text-decoration: none;">SSGT. DEAN CLANCY</a>
+                        <p class="card-summary">
+                            A living legend within the special forces community. Formerly assigned to the 5th Special Forces Group, Operational Detachment Alpha 525 (ODA-525), Clancy is a decorated Vietnam veteran and a recipient of the Medal of Honor for actions of extreme gallantry. Now in his early 60s, he serves NEMESIS as a senior tactical advisor and field training expert.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+    <script>
+        function applyCurrentTheme(theme) { document.body.className = ''; if (theme && theme !== 'default') document.body.classList.add(theme + '-theme'); }
+        function applySavedTheme() { const savedTheme = localStorage.getItem('socom_theme'); if (savedTheme) applyCurrentTheme(savedTheme); }
+        window.onload = applySavedTheme;
+    </script>
+</body>
+</html>
