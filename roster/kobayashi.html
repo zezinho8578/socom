@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.O.C.O.M. // Dossier: Kobayashi</title>
+    <link rel="icon" type="image/png" href="https://www.socom.mil/SOF-ATL/PublishingImages/eSOF-Logo.png">
+    <!-- NOTE: The CSS is identical to roster.html for consistency -->
+    <style>
+        @keyframes flicker { 0%, 100% { opacity: 0.95; } 50% { opacity: 1; } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        :root {
+            --bg-color: #050805; --scanline-color: rgba(0, 255, 85, 0.1); --text-color: #00ff55;
+            --accent-color: #00ff55; --border-color: #00521d; --input-bg: rgba(0, 31, 9, 0.95);
+            --danger-color: #ff4141; --danger-bg: rgba(255, 65, 65, 0.15); --container-bg: rgba(0,0,0,0.4);
+        }
+        body.officer-theme {
+            --bg-color: #1a160d; --scanline-color: rgba(255, 196, 0, 0.1); --text-color: #ffc400;
+            --accent-color: #ffc400; --border-color: #6d530e; --input-bg: rgba(43, 34, 13, 0.95);
+            --container-bg: rgba(10, 8, 3, 0.4);
+        }
+        /* ... other themes ... */
+        body {
+            font-family: 'Courier New', Courier, monospace; margin: 0; background-color: var(--bg-color); color: var(--text-color);
+            text-shadow: 0 0 4px var(--accent-color); animation: flicker 0.15s infinite; overflow-y: scroll;
+        }
+        body::before {
+            content: " "; display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(0deg, var(--scanline-color) 1px, transparent 1px);
+            background-size: 100% 2px; z-index: 100; pointer-events: none;
+        }
+        .container { position: relative; max-width: 1400px; margin: 10px auto; padding: 10px; border: 1px solid var(--border-color); background: var(--container-bg); }
+        .header { display: flex; align-items: center; border-bottom: 1px solid var(--accent-color); padding-bottom: 5px; margin-bottom: 15px; }
+        .logo { max-width: 80px; margin-right: 15px; filter: grayscale(100%) brightness(200%) contrast(150%); }
+        h1 { font-size: 22px; text-transform: uppercase; }
+        h1::after { content: '_'; animation: blink 1s step-end infinite; }
+        h2 { font-size: 18px; margin-top: 25px; margin-bottom: 15px; text-transform: uppercase; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; }
+        .content-menu { text-align: left; padding: 30px; border: 1px solid var(--border-color); margin: 20px; background: var(--input-bg); }
+        .dossier-grid { display: flex; gap: 20px; }
+        .dossier-assets { flex-shrink: 0; width: 200px; text-align: center; }
+        .dossier-portrait { width: 100%; border: 1px solid var(--border-color); background-color: #000; }
+        .dossier-rank { max-width: 100px; margin-top: 10px; }
+        .dossier-info { flex-grow: 1; }
+        .dossier-info h3 { font-size: 14px; color: var(--accent-color); margin: 15px 0 5px 0; }
+        .dossier-info p { margin: 0 0 10px 0; line-height: 1.6; }
+        .dossier-info ul { list-style: none; padding-left: 0; }
+        .dossier-info li::before { content: '- '; }
+        .button {
+            background: transparent; color: var(--accent-color); border: 1px solid var(--accent-color);
+            padding: 8px 15px; font-size: 14px; cursor: pointer; margin: 5px;
+            font-family: 'Courier New', Courier, monospace; text-transform: uppercase;
+            text-decoration: none;
+        }
+        .button:hover { background: var(--accent-color); color: var(--bg-color); text-shadow: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <img src="https://images.squarespace-cdn.com/content/v1/629e0596d168b365d297c6c4/cea70b06-895e-401c-9669-04fa59cfc5e6/socom-logo.png" alt="SOCOM Logo" class="logo">
+            <h1>S.O.C.O.M. // PERSONNEL DOSSIER</h1>
+        </header>
+        <main>
+            <div class="content-menu">
+                <a href="/roster.html" class="button" style="float: right;">> RETURN TO ROSTER</a>
+                <h2>FILE: KOBAYASHI, KOYAMO [SPC]</h2>
+                
+                <div class="dossier-grid">
+                    <div class="dossier-assets">
+                        <img src="https://media.discordapp.net/attachments/1340163921851449455/1429557161314484495/Kobayashi.png?ex=68f6925b&is=68f540db&hm=84647a538543dc26c65d651e7b4777566d56fa05a88a36ac06ef24a12f8dc3d0" alt="Portrait: Kobayashi" class="dossier-portrait">
+                        <img src="https://media.discordapp.net/attachments/1340163921851449455/1429557049871700079/specialist.png?ex=68f69240&is=68f540c0&hm=1d821ffc7f1fbbabee508234c64e78ab18b7df8a019b2919c4eb399d35a56c72" alt="Rank: Specialist" class="dossier-rank">
+                    </div>
+                    <div class="dossier-info">
+                        <h3>BACKGROUND SUMMARY</h3>
+                        <p>
+                            Dr. Koyamo Kobayashi was a lead researcher at IBM Japan, specializing in quantum networking and secure data transmission. His theoretical work caught the attention of NSA monitors, who flagged him as a person of interest. NEMESIS initiated contact, offering him access to technology decades ahead of the civilian sector. Intrigued by the challenge, Kobayashi agreed to be recruited. He underwent an accelerated integration program and was granted the rank of Specialist to formalize his position within the command structure, bypassing traditional basic training.
+                        </p>
+                        <h3>PSYCHOLOGICAL PROFILE</h3>
+                        <p>
+                            Highly analytical, introverted, and motivated by complex problem-solving. Operates with calm detachment under pressure. Shows little deference to authority based on rank alone, respecting individuals based on demonstrated competence. His primary loyalty is to the intellectual integrity of the mission and the protection of his digital systems.
+                        </p>
+                        <h3>SERVICE RECORD & QUALIFICATIONS</h3>
+                        <ul>
+                            <li>Doctor of Philosophy (PhD), Computer Science - University of Tokyo</li>
+                            <li>Lead Researcher, Advanced Networking - IBM Japan (5 years)</li>
+                            <li>Recruited into Project NEMESIS, granted rank of Specialist (E-4)</li>
+                            <li>Expertise: Signals Intelligence (SIGINT), Cryptography, Network Warfare, Secure Communications.</li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+    <script>
+        function applyCurrentTheme(theme) { document.body.className = ''; if (theme && theme !== 'default') document.body.classList.add(theme + '-theme'); }
+        function applySavedTheme() { const savedTheme = localStorage.getItem('socom_theme'); if (savedTheme) applyCurrentTheme(savedTheme); }
+        window.onload = applySavedTheme;
+    </script>
+</body>
+</html>
